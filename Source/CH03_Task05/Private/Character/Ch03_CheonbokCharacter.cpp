@@ -39,7 +39,9 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		MovementComponent->bOrientRotationToMovement = true;
 		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 		MovementComponent->JumpZVelocity = 500.0f;
-		MovementComponent->AirControl = 0.35f;
+		MovementComponent->AirControl = 0.0f;
+		MovementComponent->FallingLateralFriction = 0.0f;
+		MovementComponent->BrakingDecelerationFalling = 0.0f;
 		MovementComponent->MaxWalkSpeed = NormalSpeed;
 	}
 
@@ -72,6 +74,14 @@ void ACh03_CheonbokCharacter::PawnClientRestart()
 		Controller->SetControlRotation(
 			FRotator(InitialCameraPitch, CurrentControlRotation.Yaw, 0.0f));
 	}
+}
+
+void ACh03_CheonbokCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	bIsAirMovementLocked = false;
+	RefreshMovementSpeed();
 }
 
 void ACh03_CheonbokCharacter::SetupPlayerInputComponent(
@@ -145,7 +155,7 @@ void ACh03_CheonbokCharacter::SetupPlayerInputComponent(
 
 void ACh03_CheonbokCharacter::Move(const FInputActionValue& Value)
 {
-	if (!Controller || bIsDead)
+	if (!Controller || bIsDead || IsAirMovementLocked())
 	{
 		return;
 	}
@@ -189,8 +199,9 @@ void ACh03_CheonbokCharacter::Look(const FInputActionValue& Value)
 
 void ACh03_CheonbokCharacter::StartJump(const FInputActionValue& Value)
 {
-	if (!bIsDead && Value.Get<bool>())
+	if (!bIsDead && Value.Get<bool>() && CanJump())
 	{
+		bIsAirMovementLocked = true;
 		Jump();
 	}
 }
@@ -211,14 +222,22 @@ void ACh03_CheonbokCharacter::StartSprint(const FInputActionValue& Value)
 	}
 
 	bIsSprinting = true;
-	RefreshMovementSpeed();
+
+	if (!IsAirMovementLocked())
+	{
+		RefreshMovementSpeed();
+	}
 }
 
 void ACh03_CheonbokCharacter::StopSprint(const FInputActionValue& Value)
 {
 	(void)Value;
 	bIsSprinting = false;
-	RefreshMovementSpeed();
+
+	if (!IsAirMovementLocked())
+	{
+		RefreshMovementSpeed();
+	}
 }
 
 void ACh03_CheonbokCharacter::AddDefaultMappingContext()
@@ -469,6 +488,7 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 	bIsDamageInvincible = false;
 	bIsDead = false;
 	bIsSprinting = false;
+	bIsAirMovementLocked = false;
 
 	ClearAllStatusEffects();
 	CurrentHealth = MaxHealth;
@@ -482,11 +502,24 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
+bool ACh03_CheonbokCharacter::IsAirMovementLocked() const
+{
+	if (bIsAirMovementLocked)
+	{
+		return true;
+	}
+
+	const UCharacterMovementComponent* MovementComponent =
+		GetCharacterMovement();
+
+	return MovementComponent && MovementComponent->IsFalling();
+}
+
 void ACh03_CheonbokCharacter::RefreshMovementSpeed()
 {
 	UCharacterMovementComponent* MovementComponent =
 		GetCharacterMovement();
-	if (!MovementComponent)
+	if (!MovementComponent || bIsDead || IsAirMovementLocked())
 	{
 		return;
 	}

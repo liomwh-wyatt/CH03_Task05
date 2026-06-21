@@ -9,4 +9,7 @@ UCLASS()
 class CH03_TASK05_API ACh03_GameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()	
+
+public:
+	ACh03_GameModeBase();
 };

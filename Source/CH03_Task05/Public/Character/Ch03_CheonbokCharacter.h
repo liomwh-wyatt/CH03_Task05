@@ -42,6 +42,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void PawnClientRestart() override;
+	virtual void Landed(const FHitResult& Hit) override;
 	virtual float TakeDamage(
 		float DamageAmount,
 		const FDamageEvent& DamageEvent,
@@ -117,6 +118,7 @@ protected:
 	void StopSprint(const FInputActionValue& Value);
 
 	void AddDefaultMappingContext();
+	bool IsAirMovementLocked() const;
 	void RefreshMovementSpeed();
 	void EndSlow();
 	void EndReverseControl();
@@ -190,6 +192,7 @@ private:
 	bool bIsDamageInvincible = false;
 	bool bIsSlowed = false;
 	bool bIsControlReversed = false;
+	bool bIsAirMovementLocked = false;
 
 	float ActiveSlowMultiplier = 1.0f;
 	int32 SlowStackCount = 0;
