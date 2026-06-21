@@ -6,6 +6,7 @@
 
 class UInputAction;
 class UInputMappingContext;
+class UCh03_GameHUDWidget;
 
 UCLASS()
 class CH03_TASK05_API ACh03_CheonbokController : public APlayerController
@@ -32,9 +33,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
 	TObjectPtr<UInputAction> SprintAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|UI")
+	TSubclassOf<UCh03_GameHUDWidget> GameHUDWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Cheonbok|UI")
+	TObjectPtr<UCh03_GameHUDWidget> GameHUDWidget;
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
 	void AddDefaultMappingContext();
+	void CreateGameHUD();
 };

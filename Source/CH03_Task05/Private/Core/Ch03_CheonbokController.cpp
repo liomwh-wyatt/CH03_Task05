@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputActionValue.h"
+#include "UI/Ch03_GameHUDWidget.h"
 
 ACh03_CheonbokController::ACh03_CheonbokController()
 {
@@ -12,6 +13,8 @@ ACh03_CheonbokController::ACh03_CheonbokController()
 	LookAction = nullptr;
 	JumpAction = nullptr;
 	SprintAction = nullptr;
+	GameHUDWidgetClass = nullptr;
+	GameHUDWidget = nullptr;
 }
 
 void ACh03_CheonbokController::BeginPlay()
@@ -19,6 +22,7 @@ void ACh03_CheonbokController::BeginPlay()
 	Super::BeginPlay();
 
 	AddDefaultMappingContext();
+	CreateGameHUD();
 }
 
 bool ACh03_CheonbokController::IsSprintInputHeld() const
@@ -68,3 +72,19 @@ void ACh03_CheonbokController::AddDefaultMappingContext()
 	InputSubsystem->AddMappingContext(DefaultMappingContext, 0);
 }
 
+void ACh03_CheonbokController::CreateGameHUD()
+{
+	if (!IsLocalController() || !GameHUDWidgetClass || GameHUDWidget)
+	{
+		return;
+	}
+
+	GameHUDWidget = CreateWidget<UCh03_GameHUDWidget>(
+		this,
+		GameHUDWidgetClass);
+
+	if (GameHUDWidget)
+	{
+		GameHUDWidget->AddToViewport();
+	}
+}
