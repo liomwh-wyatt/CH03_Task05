@@ -1,15 +1,11 @@
 #include "Character/Ch03_CheonbokCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Core/Ch03_CheonbokController.h"
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "InputAction.h"
 #include "InputActionValue.h"
-#include "InputMappingContext.h"
 
 ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 {
@@ -66,8 +62,6 @@ void ACh03_CheonbokCharacter::PawnClientRestart()
 {
 	Super::PawnClientRestart();
 
-	AddDefaultMappingContext();
-
 	if (Controller)
 	{
 		const FRotator CurrentControlRotation = Controller->GetControlRotation();
@@ -82,6 +76,7 @@ void ACh03_CheonbokCharacter::Landed(const FHitResult& Hit)
 
 	bIsAirMovementLocked = false;
 	RefreshMovementSpeed();
+	ClampHorizontalVelocityToMaxSpeed();
 }
 
 void ACh03_CheonbokCharacter::SetupPlayerInputComponent(
@@ -101,52 +96,63 @@ void ACh03_CheonbokCharacter::SetupPlayerInputComponent(
 		return;
 	}
 
-	if (MoveAction)
+	const ACh03_CheonbokController* CheonbokController =
+		Cast<ACh03_CheonbokController>(GetController());
+	if (!CheonbokController)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("CheonbokCharacter requires Ch03_CheonbokController."));
+		return;
+	}
+
+	if (CheonbokController->MoveAction)
 	{
 		EnhancedInputComponent->BindAction(
-			MoveAction,
+			CheonbokController->MoveAction,
 			ETriggerEvent::Triggered,
 			this,
 			&ACh03_CheonbokCharacter::Move);
 	}
 
-	if (LookAction)
+	if (CheonbokController->LookAction)
 	{
 		EnhancedInputComponent->BindAction(
-			LookAction,
+			CheonbokController->LookAction,
 			ETriggerEvent::Triggered,
 			this,
 			&ACh03_CheonbokCharacter::Look);
 	}
 
-	if (JumpAction)
+	if (CheonbokController->JumpAction)
 	{
 		EnhancedInputComponent->BindAction(
-			JumpAction,
+			CheonbokController->JumpAction,
 			ETriggerEvent::Started,
 			this,
 			&ACh03_CheonbokCharacter::StartJump);
 		EnhancedInputComponent->BindAction(
-			JumpAction,
+			CheonbokController->JumpAction,
 			ETriggerEvent::Completed,
 			this,
 			&ACh03_CheonbokCharacter::StopJump);
 	}
 
-	if (SprintAction)
+	if (CheonbokController->SprintAction)
 	{
 		EnhancedInputComponent->BindAction(
-			SprintAction,
+			CheonbokController->SprintAction,
 			ETriggerEvent::Started,
 			this,
 			&ACh03_CheonbokCharacter::StartSprint);
 		EnhancedInputComponent->BindAction(
-			SprintAction,
+			CheonbokController->SprintAction,
 			ETriggerEvent::Completed,
 			this,
 			&ACh03_CheonbokCharacter::StopSprint);
 		EnhancedInputComponent->BindAction(
-			SprintAction,
+			CheonbokController->SprintAction,
 			ETriggerEvent::Canceled,
 			this,
 			&ACh03_CheonbokCharacter::StopSprint);
@@ -216,63 +222,23 @@ void ACh03_CheonbokCharacter::StartSprint(const FInputActionValue& Value)
 {
 	(void)Value;
 
-	if (bIsDead)
+	if (bIsDead || IsAirMovementLocked())
 	{
 		return;
 	}
 
-	bIsSprinting = true;
-
-	if (!IsAirMovementLocked())
-	{
-		RefreshMovementSpeed();
-	}
+	RefreshMovementSpeed();
 }
 
 void ACh03_CheonbokCharacter::StopSprint(const FInputActionValue& Value)
 {
 	(void)Value;
-	bIsSprinting = false;
 
 	if (!IsAirMovementLocked())
 	{
 		RefreshMovementSpeed();
+		ClampHorizontalVelocityToMaxSpeed();
 	}
-}
-
-void ACh03_CheonbokCharacter::AddDefaultMappingContext()
-{
-	if (!DefaultMappingContext)
-	{
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("DefaultMappingContext is not assigned on CheonbokCharacter."));
-		return;
-	}
-
-	APlayerController* PlayerController =
-		Cast<APlayerController>(GetController());
-	if (!PlayerController)
-	{
-		return;
-	}
-
-	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
-	if (!LocalPlayer)
-	{
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* InputSubsystem =
-		LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-	if (!InputSubsystem)
-	{
-		return;
-	}
-
-	InputSubsystem->RemoveMappingContext(DefaultMappingContext);
-	InputSubsystem->AddMappingContext(DefaultMappingContext, 0);
 }
 
 float ACh03_CheonbokCharacter::GetHealthPercent() const
@@ -370,7 +336,6 @@ void ACh03_CheonbokCharacter::OnDeath()
 	}
 
 	bIsDead = true;
-	bIsSprinting = false;
 	StopJumping();
 	ClearAllStatusEffects();
 
@@ -487,7 +452,6 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 	GetWorldTimerManager().ClearTimer(DamageInvincibilityTimerHandle);
 	bIsDamageInvincible = false;
 	bIsDead = false;
-	bIsSprinting = false;
 	bIsAirMovementLocked = false;
 
 	ClearAllStatusEffects();
@@ -515,6 +479,15 @@ bool ACh03_CheonbokCharacter::IsAirMovementLocked() const
 	return MovementComponent && MovementComponent->IsFalling();
 }
 
+bool ACh03_CheonbokCharacter::IsSprintInputHeld() const
+{
+	const ACh03_CheonbokController* CheonbokController =
+		Cast<ACh03_CheonbokController>(GetController());
+
+	return CheonbokController
+		&& CheonbokController->IsSprintInputHeld();
+}
+
 void ACh03_CheonbokCharacter::RefreshMovementSpeed()
 {
 	UCharacterMovementComponent* MovementComponent =
@@ -525,12 +498,33 @@ void ACh03_CheonbokCharacter::RefreshMovementSpeed()
 	}
 
 	const float SprintMultiplier =
-		bIsSprinting ? SprintSpeedMultiplier : 1.0f;
+		IsSprintInputHeld() ? SprintSpeedMultiplier : 1.0f;
 	const float StatusMultiplier =
 		bIsSlowed ? ActiveSlowMultiplier : 1.0f;
 
 	MovementComponent->MaxWalkSpeed =
 		NormalSpeed * SprintMultiplier * StatusMultiplier;
+}
+
+void ACh03_CheonbokCharacter::ClampHorizontalVelocityToMaxSpeed()
+{
+	UCharacterMovementComponent* MovementComponent =
+		GetCharacterMovement();
+	if (!MovementComponent)
+	{
+		return;
+	}
+
+	FVector HorizontalVelocity(
+		MovementComponent->Velocity.X,
+		MovementComponent->Velocity.Y,
+		0.0f);
+
+	HorizontalVelocity = HorizontalVelocity.GetClampedToMaxSize(
+		MovementComponent->MaxWalkSpeed);
+
+	MovementComponent->Velocity.X = HorizontalVelocity.X;
+	MovementComponent->Velocity.Y = HorizontalVelocity.Y;
 }
 
 void ACh03_CheonbokCharacter::EndSlow()

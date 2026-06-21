@@ -6,8 +6,6 @@
 #include "Ch03_CheonbokCharacter.generated.h"
 
 class UCameraComponent;
-class UInputAction;
-class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
 
@@ -117,9 +115,10 @@ protected:
 	void StartSprint(const FInputActionValue& Value);
 	void StopSprint(const FInputActionValue& Value);
 
-	void AddDefaultMappingContext();
 	bool IsAirMovementLocked() const;
+	bool IsSprintInputHeld() const;
 	void RefreshMovementSpeed();
+	void ClampHorizontalVelocityToMaxSpeed();
 	void EndSlow();
 	void EndReverseControl();
 	void EndDamageInvincibility();
@@ -135,21 +134,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera")
 	TObjectPtr<UCameraComponent> CameraComponent;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
-	TObjectPtr<UInputMappingContext> DefaultMappingContext;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
-	TObjectPtr<UInputAction> MoveAction;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
-	TObjectPtr<UInputAction> LookAction;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
-	TObjectPtr<UInputAction> JumpAction;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
-	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
 		meta = (ClampMin = "-89.0", ClampMax = "0.0"))
@@ -187,7 +171,6 @@ protected:
 	float MaximumReverseControlDuration = 8.0f;
 
 private:
-	bool bIsSprinting = false;
 	bool bIsDead = false;
 	bool bIsDamageInvincible = false;
 	bool bIsSlowed = false;
