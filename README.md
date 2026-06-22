@@ -39,6 +39,7 @@
 - [ ] 웨이브별 장애물/비주얼 폴리싱
 - [x] 웨이브 배너 UI 애니메이션
 - [x] 천복이 머리 위 3D 체력바 WidgetComponent 수직 슬라이스
+- [x] Level Sequence 컷신 디렉터 기반 구조
 - [ ] 최종 테스트 및 시연 영상
 
 ## 조작법
@@ -61,6 +62,7 @@
 - 슬로우/조작 반전 디버프의 지속 시간, 중첩 수, HUD 표시
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 왕복 이동, 별도 안내 배너 구조
+- `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
 
 ## 프로젝트 구조
 

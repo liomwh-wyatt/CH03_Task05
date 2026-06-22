@@ -2,6 +2,7 @@
 
 #include "Components/InputComponent.h"
 #include "Core/Ch03_GameInstance.h"
+#include "Cutscene/Ch03_CutsceneDirector.h"
 #include "EnhancedPlayerInput.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -22,6 +23,7 @@ ACh03_CheonbokController::ACh03_CheonbokController()
 	GameHUDWidget = nullptr;
 	PauseMenuWidgetClass = UCh03_PauseMenuWidget::StaticClass();
 	PauseMenuWidget = nullptr;
+	ActiveCutsceneDirector = nullptr;
 }
 
 void ACh03_CheonbokController::BeginPlay()
@@ -126,6 +128,11 @@ void ACh03_CheonbokController::CreateGameHUD()
 
 void ACh03_CheonbokController::TogglePauseMenu()
 {
+	if (SkipActiveCutscene())
+	{
+		return;
+	}
+
 	if (PauseMenuWidget)
 	{
 		ClosePauseMenu();
@@ -215,6 +222,52 @@ void ACh03_CheonbokController::ReturnToMainMenuFromPause()
 	{
 		UGameplayStatics::OpenLevel(this, MainMenuLevelName);
 	}
+}
+
+void ACh03_CheonbokController::RegisterActiveCutsceneDirector(
+	ACh03_CutsceneDirector* CutsceneDirector)
+{
+	if (!CutsceneDirector)
+	{
+		return;
+	}
+
+	ActiveCutsceneDirector = CutsceneDirector;
+}
+
+void ACh03_CheonbokController::ClearActiveCutsceneDirector(
+	ACh03_CutsceneDirector* CutsceneDirector)
+{
+	if (!CutsceneDirector || ActiveCutsceneDirector == CutsceneDirector)
+	{
+		ActiveCutsceneDirector = nullptr;
+	}
+}
+
+bool ACh03_CheonbokController::SkipActiveCutscene()
+{
+	if (!ActiveCutsceneDirector
+		|| !ActiveCutsceneDirector->IsCutscenePlaying())
+	{
+		return false;
+	}
+
+	ActiveCutsceneDirector->SkipCutscene();
+	return true;
+}
+
+void ACh03_CheonbokController::SetGameHUDVisible(
+	const bool bIsVisible)
+{
+	if (!GameHUDWidget)
+	{
+		return;
+	}
+
+	GameHUDWidget->SetVisibility(
+		bIsVisible
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed);
 }
 
 void ACh03_CheonbokController::ApplyGameplayInputMode()

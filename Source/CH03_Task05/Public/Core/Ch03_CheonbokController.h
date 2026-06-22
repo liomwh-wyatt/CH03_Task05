@@ -6,6 +6,7 @@
 
 class UInputAction;
 class UInputMappingContext;
+class ACh03_CutsceneDirector;
 class UCh03_GameHUDWidget;
 class UCh03_PauseMenuWidget;
 
@@ -30,6 +31,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Pause")
 	void ReturnToMainMenuFromPause();
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Cutscene")
+	void RegisterActiveCutsceneDirector(ACh03_CutsceneDirector* CutsceneDirector);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Cutscene")
+	void ClearActiveCutsceneDirector(ACh03_CutsceneDirector* CutsceneDirector);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Cutscene")
+	bool SkipActiveCutscene();
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|UI")
+	void SetGameHUDVisible(bool bIsVisible);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -70,4 +83,7 @@ private:
 	void CreateGameHUD();
 	void ApplyGameplayInputMode();
 	void ApplyPauseInputMode();
+
+	UPROPERTY(Transient)
+	TObjectPtr<ACh03_CutsceneDirector> ActiveCutsceneDirector;
 };
