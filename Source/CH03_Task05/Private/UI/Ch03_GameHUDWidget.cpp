@@ -38,6 +38,15 @@ void UCh03_GameHUDWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+void UCh03_GameHUDWidget::NativeTick(
+	const FGeometry& MyGeometry,
+	const float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	UpdateWaveBannerAnimation(InDeltaTime);
+}
+
 void UCh03_GameHUDWidget::HandleScoreChanged(int32 NewScore)
 {
 	if (ScoreText)
@@ -141,11 +150,17 @@ void UCh03_GameHUDWidget::HandleAnnouncementChanged(
 
 	if (WaveBannerText)
 	{
-		WaveBannerText->SetText(NewAnnouncement);
-		WaveBannerText->SetVisibility(
-			bIsVisible
-				? ESlateVisibility::HitTestInvisible
-				: ESlateVisibility::Collapsed);
+		if (bIsVisible)
+		{
+			WaveBannerText->SetText(NewAnnouncement);
+			WaveBannerText->SetVisibility(
+				ESlateVisibility::HitTestInvisible);
+			PlayWaveBannerIntroAnimation();
+		}
+		else
+		{
+			PlayWaveBannerOutroAnimation();
+		}
 	}
 
 	OnAnnouncementUpdated(NewAnnouncement, bIsVisible);
@@ -365,6 +380,117 @@ void UCh03_GameHUDWidget::CreateWaveBannerTextFallback()
 	{
 		RootPanel->AddChild(WaveBannerText);
 	}
+}
+
+void UCh03_GameHUDWidget::PlayWaveBannerIntroAnimation()
+{
+	if (!WaveBannerText)
+	{
+		return;
+	}
+
+	WaveBannerAnimationTime = 0.0f;
+	bIsWaveBannerAnimationActive = true;
+	bIsWaveBannerOutroAnimation = false;
+
+	WaveBannerText->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	ApplyWaveBannerAnimation(0.0f, false);
+}
+
+void UCh03_GameHUDWidget::PlayWaveBannerOutroAnimation()
+{
+	if (!WaveBannerText)
+	{
+		return;
+	}
+
+	if (WaveBannerText->GetVisibility() == ESlateVisibility::Collapsed
+		|| WaveBannerText->GetText().IsEmpty())
+	{
+		FinishWaveBannerOutroAnimation();
+		return;
+	}
+
+	WaveBannerAnimationTime = 0.0f;
+	bIsWaveBannerAnimationActive = true;
+	bIsWaveBannerOutroAnimation = true;
+
+	WaveBannerText->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	ApplyWaveBannerAnimation(0.0f, true);
+}
+
+void UCh03_GameHUDWidget::UpdateWaveBannerAnimation(
+	const float DeltaTime)
+{
+	if (!bIsWaveBannerAnimationActive || !WaveBannerText)
+	{
+		return;
+	}
+
+	const float Duration = bIsWaveBannerOutroAnimation
+		? WaveBannerOutroDuration
+		: WaveBannerIntroDuration;
+
+	WaveBannerAnimationTime += FMath::Max(0.0f, DeltaTime);
+	const float Alpha = Duration > 0.0f
+		? FMath::Clamp(WaveBannerAnimationTime / Duration, 0.0f, 1.0f)
+		: 1.0f;
+
+	ApplyWaveBannerAnimation(Alpha, bIsWaveBannerOutroAnimation);
+
+	if (Alpha < 1.0f)
+	{
+		return;
+	}
+
+	if (bIsWaveBannerOutroAnimation)
+	{
+		FinishWaveBannerOutroAnimation();
+	}
+	else
+	{
+		bIsWaveBannerAnimationActive = false;
+		WaveBannerAnimationTime = 0.0f;
+		ApplyWaveBannerAnimation(1.0f, false);
+	}
+}
+
+void UCh03_GameHUDWidget::ApplyWaveBannerAnimation(
+	const float Alpha,
+	const bool bIsOutro)
+{
+	if (!WaveBannerText)
+	{
+		return;
+	}
+
+	const float SmoothedAlpha =
+		FMath::InterpEaseOut(0.0f, 1.0f, Alpha, 2.0f);
+
+	const float Opacity = bIsOutro
+		? 1.0f - SmoothedAlpha
+		: SmoothedAlpha;
+	const float Scale = bIsOutro
+		? FMath::Lerp(1.0f, 0.96f, SmoothedAlpha)
+		: FMath::Lerp(1.16f, 1.0f, SmoothedAlpha);
+
+	WaveBannerText->SetRenderOpacity(Opacity);
+	WaveBannerText->SetRenderScale(FVector2D(Scale, Scale));
+}
+
+void UCh03_GameHUDWidget::FinishWaveBannerOutroAnimation()
+{
+	if (WaveBannerText)
+	{
+		WaveBannerText->SetText(FText::GetEmpty());
+		WaveBannerText->SetRenderOpacity(0.0f);
+		WaveBannerText->SetRenderScale(FVector2D(1.0f, 1.0f));
+		WaveBannerText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	bIsWaveBannerAnimationActive = false;
+	bIsWaveBannerOutroAnimation = false;
+	WaveBannerAnimationTime = 0.0f;
 }
 
 void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()

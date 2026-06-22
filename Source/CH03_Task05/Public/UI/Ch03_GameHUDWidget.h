@@ -20,6 +20,9 @@ class CH03_TASK05_API UCh03_GameHUDWidget : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual void NativeTick(
+		const FGeometry& MyGeometry,
+		float InDeltaTime) override;
 
 	UFUNCTION()
 	void HandleScoreChanged(int32 NewScore);
@@ -98,6 +101,11 @@ private:
 	void BindToCharacter();
 	void UnbindFromCharacter();
 	void CreateWaveBannerTextFallback();
+	void PlayWaveBannerIntroAnimation();
+	void PlayWaveBannerOutroAnimation();
+	void UpdateWaveBannerAnimation(float DeltaTime);
+	void ApplyWaveBannerAnimation(float Alpha, bool bIsOutro);
+	void FinishWaveBannerOutroAnimation();
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
 	void UpdateStatusEffectText(
@@ -115,4 +123,11 @@ private:
 
 	FTimerHandle CharacterBindRetryTimerHandle;
 	FTimerHandle StatusEffectRefreshTimerHandle;
+
+	float WaveBannerAnimationTime = 0.0f;
+	bool bIsWaveBannerAnimationActive = false;
+	bool bIsWaveBannerOutroAnimation = false;
+
+	static constexpr float WaveBannerIntroDuration = 0.22f;
+	static constexpr float WaveBannerOutroDuration = 0.18f;
 };
