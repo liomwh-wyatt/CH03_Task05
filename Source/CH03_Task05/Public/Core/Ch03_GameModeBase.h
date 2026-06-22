@@ -6,6 +6,7 @@
 #include "Ch03_GameModeBase.generated.h"
 
 class ACh03_CheonbokCharacter;
+class ACh03_WaveEnvironmentActor;
 class ACh03_GameStateBase;
 class UCh03_GameResultWidget;
 class UCh03_GameInstance;
@@ -84,6 +85,10 @@ protected:
 		meta = (ClampMin = "0.0", Units = "s"))
 	float WaveStartAnnouncementDuration = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Presentation",
+		meta = (ClampMin = "0.0", Units = "s"))
+	float EnvironmentAnnouncementDuration = 2.5f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
 	TSubclassOf<UCh03_GameResultWidget> GameResultWidgetClass;
 
@@ -105,13 +110,20 @@ protected:
 
 private:
 	void CacheSpawnVolumes();
+	void CacheWaveEnvironmentActors();
 	void BindCharacterEvents();
 	void StartCurrentWave();
 	void TickWaveTimer();
 	void EndCurrentWave();
 	void CompleteLevel();
 	void StopAllSpawnVolumes(bool bClearItems);
+	FText ApplyWaveEnvironmentState(int32 CurrentWave, int32 MaxWave);
 	void ShowAnnouncement(const FText& Message, float DisplayDuration = 0.0f);
+	void QueueAnnouncement(
+		const FText& Message,
+		float Delay,
+		float DisplayDuration);
+	void ShowQueuedAnnouncement();
 	void ClearAnnouncement();
 	void ScheduleResultScreen(bool bWasVictory);
 	void ShowPendingResultScreen();
@@ -126,6 +138,9 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACh03_SpawnVolume>> SpawnVolumes;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<ACh03_WaveEnvironmentActor>> WaveEnvironmentActors;
 
 	UPROPERTY(Transient)
 	TObjectPtr<ACh03_CheonbokCharacter> BoundCharacter;
@@ -143,10 +158,14 @@ private:
 	int32 CurrentWaveIndex = INDEX_NONE;
 	int32 RemainingTime = 0;
 	bool bPendingResultWasVictory = false;
+	bool bHasCachedWaveEnvironmentActors = false;
+	float QueuedAnnouncementDuration = 0.0f;
+	FText QueuedAnnouncementText;
 
 	FTimerHandle WaveTimerHandle;
 	FTimerHandle WaveTransitionTimerHandle;
 	FTimerHandle CharacterBindRetryTimerHandle;
 	FTimerHandle AnnouncementTimerHandle;
+	FTimerHandle QueuedAnnouncementTimerHandle;
 	FTimerHandle ResultScreenTimerHandle;
 };

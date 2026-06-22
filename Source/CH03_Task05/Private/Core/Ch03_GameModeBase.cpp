@@ -6,6 +6,7 @@
 #include "Core/Ch03_GameInstance.h"
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/World.h"
+#include "Environment/Ch03_WaveEnvironmentActor.h"
 #include "Items/Ch03_BaseItem.h"
 #include "Items/Ch03_ReverseControlItem.h"
 #include "Items/Ch03_SlowingItem.h"
@@ -112,6 +113,7 @@ void ACh03_GameModeBase::BeginPlay()
 	}
 
 	CacheSpawnVolumes();
+	CacheWaveEnvironmentActors();
 	BindCharacterEvents();
 
 	if (bAutoStartWaveLoop)
@@ -137,6 +139,8 @@ void ACh03_GameModeBase::EndPlay(
 	CachedGameInstance = nullptr;
 	ActiveResultWidget = nullptr;
 	SpawnVolumes.Reset();
+	WaveEnvironmentActors.Reset();
+	bHasCachedWaveEnvironmentActors = false;
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -145,6 +149,7 @@ void ACh03_GameModeBase::StartWaveLoop()
 {
 	ClearWaveTimers();
 	StopAllSpawnVolumes(true);
+	ApplyWaveEnvironmentState(0, WaveConfigs.Num());
 
 	if (WaveConfigs.IsEmpty())
 	{
@@ -245,6 +250,33 @@ void ACh03_GameModeBase::CacheSpawnVolumes()
 		SpawnVolumes.Num());
 }
 
+void ACh03_GameModeBase::CacheWaveEnvironmentActors()
+{
+	WaveEnvironmentActors.Reset();
+	bHasCachedWaveEnvironmentActors = true;
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(
+		this,
+		ACh03_WaveEnvironmentActor::StaticClass(),
+		FoundActors);
+
+	for (AActor* FoundActor : FoundActors)
+	{
+		if (ACh03_WaveEnvironmentActor* EnvironmentActor =
+			Cast<ACh03_WaveEnvironmentActor>(FoundActor))
+		{
+			WaveEnvironmentActors.Add(EnvironmentActor);
+		}
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("GameMode found %d wave environment actor(s)."),
+		WaveEnvironmentActors.Num());
+}
+
 void ACh03_GameModeBase::BindCharacterEvents()
 {
 	ACh03_CheonbokCharacter* CheonbokCharacter =
@@ -330,6 +362,11 @@ void ACh03_GameModeBase::StartCurrentWave()
 		CachedGameState->SetRemainingTime(RemainingTime);
 	}
 
+	const FText EnvironmentAnnouncement =
+		ApplyWaveEnvironmentState(
+			CurrentWaveIndex + 1,
+			WaveConfigs.Num());
+
 	ShowAnnouncement(
 		FText::Format(
 			NSLOCTEXT(
@@ -338,6 +375,14 @@ void ACh03_GameModeBase::StartCurrentWave()
 				"Wave {0} Start!"),
 			FText::AsNumber(CurrentWaveIndex + 1)),
 		WaveStartAnnouncementDuration);
+
+	if (!EnvironmentAnnouncement.IsEmpty())
+	{
+		QueueAnnouncement(
+			EnvironmentAnnouncement,
+			WaveStartAnnouncementDuration + 0.05f,
+			EnvironmentAnnouncementDuration);
+	}
 
 	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
 	{
@@ -404,6 +449,7 @@ void ACh03_GameModeBase::EndCurrentWave()
 
 	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
 	StopAllSpawnVolumes(true);
+	ApplyWaveEnvironmentState(0, WaveConfigs.Num());
 
 	UE_LOG(
 		LogTemp,
@@ -460,6 +506,7 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 	SetGamePhase(ECh03_GamePhase::GameOver);
 	ClearGameTimers();
 	StopAllSpawnVolumes(true);
+	ApplyWaveEnvironmentState(0, WaveConfigs.Num());
 
 	if (CachedGameState)
 	{
@@ -487,6 +534,7 @@ void ACh03_GameModeBase::CompleteLevel()
 	SetGamePhase(ECh03_GamePhase::LevelComplete);
 	ClearGameTimers();
 	StopAllSpawnVolumes(true);
+	ApplyWaveEnvironmentState(0, WaveConfigs.Num());
 
 	if (CachedGameState)
 	{
@@ -542,6 +590,47 @@ void ACh03_GameModeBase::StopAllSpawnVolumes(
 	}
 }
 
+FText ACh03_GameModeBase::ApplyWaveEnvironmentState(
+	const int32 CurrentWave,
+	const int32 MaxWave)
+{
+	if (WaveEnvironmentActors.IsEmpty()
+		&& !bHasCachedWaveEnvironmentActors)
+	{
+		CacheWaveEnvironmentActors();
+	}
+
+	TArray<FString> ActiveAnnouncementLines;
+
+	for (ACh03_WaveEnvironmentActor* EnvironmentActor :
+		WaveEnvironmentActors)
+	{
+		if (!IsValid(EnvironmentActor))
+		{
+			continue;
+		}
+
+		const bool bNewlyActivated =
+			EnvironmentActor->ApplyWaveState(CurrentWave, MaxWave);
+
+		if (CurrentWave > 0
+			&& bNewlyActivated
+			&& !EnvironmentActor->GetActiveAnnouncementText().IsEmpty())
+		{
+			ActiveAnnouncementLines.Add(
+				EnvironmentActor->GetActiveAnnouncementText().ToString());
+		}
+	}
+
+	if (ActiveAnnouncementLines.IsEmpty())
+	{
+		return FText::GetEmpty();
+	}
+
+	return FText::FromString(
+		FString::Join(ActiveAnnouncementLines, TEXT("\n")));
+}
+
 void ACh03_GameModeBase::ShowAnnouncement(
 	const FText& Message,
 	const float DisplayDuration)
@@ -550,6 +639,10 @@ void ACh03_GameModeBase::ShowAnnouncement(
 	{
 		return;
 	}
+
+	GetWorldTimerManager().ClearTimer(QueuedAnnouncementTimerHandle);
+	QueuedAnnouncementText = FText::GetEmpty();
+	QueuedAnnouncementDuration = 0.0f;
 
 	GetWorldTimerManager().ClearTimer(AnnouncementTimerHandle);
 	CachedGameState->SetAnnouncementText(Message);
@@ -563,6 +656,46 @@ void ACh03_GameModeBase::ShowAnnouncement(
 			DisplayDuration,
 			false);
 	}
+}
+
+void ACh03_GameModeBase::QueueAnnouncement(
+	const FText& Message,
+	const float Delay,
+	const float DisplayDuration)
+{
+	if (Message.IsEmpty() || !GetWorld())
+	{
+		return;
+	}
+
+	QueuedAnnouncementText = Message;
+	QueuedAnnouncementDuration = DisplayDuration;
+
+	GetWorldTimerManager().ClearTimer(QueuedAnnouncementTimerHandle);
+
+	if (Delay <= 0.0f)
+	{
+		ShowQueuedAnnouncement();
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(
+		QueuedAnnouncementTimerHandle,
+		this,
+		&ACh03_GameModeBase::ShowQueuedAnnouncement,
+		Delay,
+		false);
+}
+
+void ACh03_GameModeBase::ShowQueuedAnnouncement()
+{
+	const FText MessageToShow = QueuedAnnouncementText;
+	const float DisplayDuration = QueuedAnnouncementDuration;
+
+	QueuedAnnouncementText = FText::GetEmpty();
+	QueuedAnnouncementDuration = 0.0f;
+
+	ShowAnnouncement(MessageToShow, DisplayDuration);
 }
 
 void ACh03_GameModeBase::ClearAnnouncement()
@@ -745,6 +878,9 @@ void ACh03_GameModeBase::ClearWaveTimers()
 	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
 	GetWorldTimerManager().ClearTimer(WaveTransitionTimerHandle);
 	GetWorldTimerManager().ClearTimer(AnnouncementTimerHandle);
+	GetWorldTimerManager().ClearTimer(QueuedAnnouncementTimerHandle);
+	QueuedAnnouncementText = FText::GetEmpty();
+	QueuedAnnouncementDuration = 0.0f;
 }
 
 void ACh03_GameModeBase::SetGamePhase(

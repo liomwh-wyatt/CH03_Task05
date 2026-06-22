@@ -16,6 +16,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	CreateWaveBannerTextFallback();
 	CreateStatusEffectTextFallbacks();
 	BindToGameState();
 	BindToCharacter();
@@ -316,6 +317,54 @@ void UCh03_GameHUDWidget::UnbindFromCharacter()
 	}
 
 	BoundCharacter = nullptr;
+}
+
+void UCh03_GameHUDWidget::CreateWaveBannerTextFallback()
+{
+	if (!WidgetTree || WaveBannerText)
+	{
+		return;
+	}
+
+	UPanelWidget* RootPanel =
+		Cast<UPanelWidget>(WidgetTree->RootWidget);
+	if (!RootPanel)
+	{
+		return;
+	}
+
+	WaveBannerText =
+		WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			TEXT("WaveBannerText_NativeFallback"));
+
+	WaveBannerText->SetVisibility(ESlateVisibility::Collapsed);
+	WaveBannerText->SetJustification(ETextJustify::Center);
+	WaveBannerText->SetAutoWrapText(true);
+	WaveBannerText->SetColorAndOpacity(
+		FSlateColor(FLinearColor(1.0f, 0.88f, 0.35f, 1.0f)));
+	WaveBannerText->SetShadowOffset(FVector2D(2.0f, 2.0f));
+	WaveBannerText->SetShadowColorAndOpacity(
+		FLinearColor(0.0f, 0.0f, 0.0f, 0.9f));
+
+	FSlateFontInfo BannerFont = WaveBannerText->GetFont();
+	BannerFont.Size = 48;
+	WaveBannerText->SetFont(BannerFont);
+
+	if (UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(RootPanel))
+	{
+		UCanvasPanelSlot* CanvasSlot =
+			RootCanvas->AddChildToCanvas(WaveBannerText);
+		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.35f));
+		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		CanvasSlot->SetPosition(FVector2D::ZeroVector);
+		CanvasSlot->SetSize(FVector2D(720.0f, 120.0f));
+		CanvasSlot->SetZOrder(50);
+	}
+	else
+	{
+		RootPanel->AddChild(WaveBannerText);
+	}
 }
 
 void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()

@@ -97,6 +97,7 @@ private:
 	void UnbindFromGameState();
 	void BindToCharacter();
 	void UnbindFromCharacter();
+	void CreateWaveBannerTextFallback();
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
 	void UpdateStatusEffectText(
