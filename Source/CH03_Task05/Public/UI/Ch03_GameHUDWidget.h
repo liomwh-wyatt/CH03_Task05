@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Character/Ch03_CheonbokCharacter.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
 #include "Ch03_GameHUDWidget.generated.h"
 
-class ACh03_CheonbokCharacter;
 class ACh03_GameStateBase;
 class UProgressBar;
 class UTextBlock;
@@ -36,6 +36,13 @@ protected:
 	UFUNCTION()
 	void HandleAnnouncementChanged(FText NewAnnouncement);
 
+	UFUNCTION()
+	void HandleStatusEffectChanged(
+		ECheonbokStatusEffect EffectType,
+		bool bIsActive,
+		int32 StackCount,
+		float RemainingTime);
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnScoreUpdated(int32 NewScore);
 
@@ -53,6 +60,13 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnAnnouncementUpdated(const FText& NewAnnouncement, bool bIsVisible);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnStatusEffectUpdated(
+		ECheonbokStatusEffect EffectType,
+		bool bIsActive,
+		int32 StackCount,
+		float RemainingTime);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ScoreText;
@@ -72,11 +86,25 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> WaveBannerText;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> SlowStatusText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> ReverseControlStatusText;
+
 private:
 	void BindToGameState();
 	void UnbindFromGameState();
 	void BindToCharacter();
 	void UnbindFromCharacter();
+	void CreateStatusEffectTextFallbacks();
+	void RefreshStatusEffectTexts();
+	void UpdateStatusEffectText(
+		UTextBlock* TargetText,
+		const FText& Label,
+		bool bIsActive,
+		int32 StackCount,
+		float RemainingTime);
 
 	UPROPERTY()
 	TObjectPtr<ACh03_GameStateBase> BoundGameState;
@@ -85,4 +113,5 @@ private:
 	TObjectPtr<ACh03_CheonbokCharacter> BoundCharacter;
 
 	FTimerHandle CharacterBindRetryTimerHandle;
+	FTimerHandle StatusEffectRefreshTimerHandle;
 };

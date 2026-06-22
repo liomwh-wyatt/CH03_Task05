@@ -7,6 +7,8 @@
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/World.h"
 #include "Items/Ch03_BaseItem.h"
+#include "Items/Ch03_ReverseControlItem.h"
+#include "Items/Ch03_SlowingItem.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "UI/Ch03_GameResultWidget.h"
@@ -79,11 +81,14 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 	AddSpawnEntry(WaveConfigs[1], LargeFeedClass.Class, 20.0f);
 	AddSpawnEntry(WaveConfigs[1], HeartTreatClass.Class, 15.0f);
 	AddSpawnEntry(WaveConfigs[1], ToyBombClass.Class, 15.0f);
+	AddSpawnEntry(WaveConfigs[1], ACh03_SlowingItem::StaticClass(), 8.0f);
 
 	AddSpawnEntry(WaveConfigs[2], SmallFeedClass.Class, 40.0f);
 	AddSpawnEntry(WaveConfigs[2], LargeFeedClass.Class, 20.0f);
 	AddSpawnEntry(WaveConfigs[2], HeartTreatClass.Class, 15.0f);
 	AddSpawnEntry(WaveConfigs[2], ToyBombClass.Class, 25.0f);
+	AddSpawnEntry(WaveConfigs[2], ACh03_SlowingItem::StaticClass(), 12.0f);
+	AddSpawnEntry(WaveConfigs[2], ACh03_ReverseControlItem::StaticClass(), 10.0f);
 }
 
 void ACh03_GameModeBase::BeginPlay()

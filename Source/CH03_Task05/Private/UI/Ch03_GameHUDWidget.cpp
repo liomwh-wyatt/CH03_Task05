@@ -2,7 +2,11 @@
 
 #include "UI/Ch03_GameHUDWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/PanelWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Core/Ch03_GameStateBase.h"
@@ -12,6 +16,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	CreateStatusEffectTextFallbacks();
 	BindToGameState();
 	BindToCharacter();
 }
@@ -25,6 +30,8 @@ void UCh03_GameHUDWidget::NativeDestruct()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(
 			CharacterBindRetryTimerHandle);
+		GetWorld()->GetTimerManager().ClearTimer(
+			StatusEffectRefreshTimerHandle);
 	}
 
 	Super::NativeDestruct();
@@ -143,6 +150,21 @@ void UCh03_GameHUDWidget::HandleAnnouncementChanged(
 	OnAnnouncementUpdated(NewAnnouncement, bIsVisible);
 }
 
+void UCh03_GameHUDWidget::HandleStatusEffectChanged(
+	const ECheonbokStatusEffect EffectType,
+	const bool bIsActive,
+	const int32 StackCount,
+	const float RemainingTime)
+{
+	RefreshStatusEffectTexts();
+
+	OnStatusEffectUpdated(
+		EffectType,
+		bIsActive,
+		StackCount,
+		RemainingTime);
+}
+
 void UCh03_GameHUDWidget::BindToGameState()
 {
 	ACh03_GameStateBase* GameState =
@@ -253,9 +275,25 @@ void UCh03_GameHUDWidget::BindToCharacter()
 		this,
 		&UCh03_GameHUDWidget::HandleHealthChanged);
 
+	BoundCharacter->OnStatusEffectChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleStatusEffectChanged);
+
 	HandleHealthChanged(
 		BoundCharacter->GetHealth(),
 		BoundCharacter->GetMaxHealth());
+
+	RefreshStatusEffectTexts();
+
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			StatusEffectRefreshTimerHandle,
+			this,
+			&UCh03_GameHUDWidget::RefreshStatusEffectTexts,
+			0.2f,
+			true);
+	}
 }
 
 void UCh03_GameHUDWidget::UnbindFromCharacter()
@@ -265,7 +303,149 @@ void UCh03_GameHUDWidget::UnbindFromCharacter()
 		BoundCharacter->OnHealthChanged.RemoveDynamic(
 			this,
 			&UCh03_GameHUDWidget::HandleHealthChanged);
+
+		BoundCharacter->OnStatusEffectChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleStatusEffectChanged);
+	}
+
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(
+			StatusEffectRefreshTimerHandle);
 	}
 
 	BoundCharacter = nullptr;
+}
+
+void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()
+{
+	if (!WidgetTree || (SlowStatusText && ReverseControlStatusText))
+	{
+		return;
+	}
+
+	UPanelWidget* RootPanel =
+		Cast<UPanelWidget>(WidgetTree->RootWidget);
+	if (!RootPanel)
+	{
+		return;
+	}
+
+	auto CreateStatusText =
+		[this, RootPanel](
+			const FName WidgetName,
+			const FVector2D Position) -> UTextBlock*
+		{
+			UTextBlock* StatusText =
+				WidgetTree->ConstructWidget<UTextBlock>(
+					UTextBlock::StaticClass(),
+					WidgetName);
+
+			StatusText->SetVisibility(ESlateVisibility::Collapsed);
+			StatusText->SetColorAndOpacity(
+				FSlateColor(FLinearColor(1.0f, 0.65f, 0.25f, 1.0f)));
+			StatusText->SetShadowOffset(FVector2D(1.5f, 1.5f));
+			StatusText->SetShadowColorAndOpacity(
+				FLinearColor(0.0f, 0.0f, 0.0f, 0.85f));
+
+			if (UCanvasPanel* RootCanvas =
+				Cast<UCanvasPanel>(RootPanel))
+			{
+				UCanvasPanelSlot* CanvasSlot =
+					RootCanvas->AddChildToCanvas(StatusText);
+				CanvasSlot->SetAnchors(FAnchors(0.0f, 1.0f));
+				CanvasSlot->SetAlignment(FVector2D(0.0f, 1.0f));
+				CanvasSlot->SetPosition(Position);
+				CanvasSlot->SetSize(FVector2D(320.0f, 32.0f));
+			}
+			else
+			{
+				RootPanel->AddChild(StatusText);
+			}
+
+			return StatusText;
+		};
+
+	if (!SlowStatusText)
+	{
+		SlowStatusText = CreateStatusText(
+			TEXT("SlowStatusText_NativeFallback"),
+			FVector2D(32.0f, -104.0f));
+	}
+
+	if (!ReverseControlStatusText)
+	{
+		ReverseControlStatusText = CreateStatusText(
+			TEXT("ReverseControlStatusText_NativeFallback"),
+			FVector2D(32.0f, -68.0f));
+	}
+}
+
+void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
+{
+	if (!BoundCharacter)
+	{
+		UpdateStatusEffectText(
+			SlowStatusText,
+			NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+			false,
+			0,
+			0.0f);
+		UpdateStatusEffectText(
+			ReverseControlStatusText,
+			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+			false,
+			0,
+			0.0f);
+		return;
+	}
+
+	UpdateStatusEffectText(
+		SlowStatusText,
+		NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+		BoundCharacter->IsSlowActive(),
+		BoundCharacter->GetSlowStackCount(),
+		BoundCharacter->GetSlowRemainingTime());
+
+	UpdateStatusEffectText(
+		ReverseControlStatusText,
+		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+		BoundCharacter->IsReverseControlActive(),
+		BoundCharacter->GetReverseControlStackCount(),
+		BoundCharacter->GetReverseControlRemainingTime());
+}
+
+void UCh03_GameHUDWidget::UpdateStatusEffectText(
+	UTextBlock* TargetText,
+	const FText& Label,
+	const bool bIsActive,
+	const int32 StackCount,
+	const float RemainingTime)
+{
+	if (!TargetText)
+	{
+		return;
+	}
+
+	TargetText->SetVisibility(
+		bIsActive
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed);
+
+	if (!bIsActive)
+	{
+		TargetText->SetText(FText::GetEmpty());
+		return;
+	}
+
+	TargetText->SetText(
+		FText::Format(
+			NSLOCTEXT(
+				"CheonbokHUD",
+				"StatusEffectFormat",
+				"{0} x{1}  {2}s"),
+			Label,
+			FText::AsNumber(FMath::Max(1, StackCount)),
+			FText::AsNumber(FMath::CeilToInt(RemainingTime))));
 }

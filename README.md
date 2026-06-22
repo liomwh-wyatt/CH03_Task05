@@ -27,13 +27,34 @@
 - [x] Unreal Engine 5.8 C++ 프로젝트 생성
 - [x] Git 저장소 및 원격 저장소 연결
 - [x] Git ignore와 Git LFS 기본 설정
-- [ ] 천복이 Skeletal Mesh 및 애니메이션 임포트
-- [ ] 플레이어 캐릭터와 Enhanced Input
-- [ ] 아이템 인터페이스와 Spawn Volume
-- [ ] 멀티 웨이브 시스템
-- [ ] HUD 및 메뉴
-- [ ] 디버프와 환경 변화
+- [x] 천복이 Skeletal Mesh 및 애니메이션 임포트
+- [x] 플레이어 캐릭터와 Enhanced Input
+- [x] 아이템 인터페이스와 Spawn Volume
+- [x] 멀티 웨이브 시스템
+- [x] HUD, 메인 메뉴, 결과 메뉴
+- [x] 최고 점수 SaveGame
+- [x] 일시정지 메뉴
+- [x] 슬로우 및 조작 반전 디버프 수직 슬라이스
+- [ ] 웨이브별 환경 변화
+- [ ] UI 애니메이션 및 3D 위젯
 - [ ] 최종 테스트 및 시연 영상
+
+## 조작법
+
+- `WASD`: 이동
+- `Mouse`: 시점 조작
+- `Space`: 점프
+- `Shift`: 지상 스프린트
+- `Esc` / `P`: 일시정지 메뉴 열기/닫기
+- `Shift + Esc`: 에디터 PIE 프리뷰 종료
+
+## 주요 구현 포인트
+
+- `GameMode` 기반 3개 웨이브 진행 및 레벨 전환
+- `GameState` 델리게이트 기반 HUD 실시간 갱신
+- `GameInstance` 기반 레벨 진행도 및 최고 점수 저장
+- `UUserWidget` C++ 부모 클래스를 통한 메인 메뉴, 결과 메뉴, 일시정지 메뉴 제어
+- 슬로우/조작 반전 디버프의 지속 시간, 중첩 수, HUD 표시
 
 ## 프로젝트 구조
 
