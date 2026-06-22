@@ -7,6 +7,7 @@
 
 class ACh03_CheonbokCharacter;
 class ACh03_GameStateBase;
+class UCh03_GameResultWidget;
 
 UENUM(BlueprintType)
 enum class ECh03_GamePhase : uint8
@@ -82,6 +83,16 @@ protected:
 		meta = (ClampMin = "0.0", Units = "s"))
 	float WaveStartAnnouncementDuration = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
+	TSubclassOf<UCh03_GameResultWidget> GameResultWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result",
+		meta = (ClampMin = "0.0", Units = "s"))
+	float ResultScreenDelay = 1.5f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
+	FName NextLevelName = NAME_None;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Game Flow")
 	void OnWaveStarted(int32 CurrentWave, int32 MaxWave);
 
@@ -101,6 +112,9 @@ private:
 	void StopAllSpawnVolumes(bool bClearItems);
 	void ShowAnnouncement(const FText& Message, float DisplayDuration = 0.0f);
 	void ClearAnnouncement();
+	void ScheduleResultScreen(bool bWasVictory);
+	void ShowPendingResultScreen();
+	void LockPlayerInput();
 	void ClearWaveTimers();
 	void ClearGameTimers();
 	void SetGamePhase(ECh03_GamePhase NewPhase);
@@ -117,12 +131,17 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<ACh03_GameStateBase> CachedGameState;
 
+	UPROPERTY(Transient)
+	TObjectPtr<UCh03_GameResultWidget> ActiveResultWidget;
+
 	ECh03_GamePhase CurrentPhase = ECh03_GamePhase::Waiting;
 	int32 CurrentWaveIndex = INDEX_NONE;
 	int32 RemainingTime = 0;
+	bool bPendingResultWasVictory = false;
 
 	FTimerHandle WaveTimerHandle;
 	FTimerHandle WaveTransitionTimerHandle;
 	FTimerHandle CharacterBindRetryTimerHandle;
 	FTimerHandle AnnouncementTimerHandle;
+	FTimerHandle ResultScreenTimerHandle;
 };

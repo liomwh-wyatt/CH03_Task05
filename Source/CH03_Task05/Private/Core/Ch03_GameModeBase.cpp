@@ -7,6 +7,7 @@
 #include "Items/Ch03_BaseItem.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "UI/Ch03_GameResultWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -59,6 +60,13 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		TEXT("/Game/Blueprints/Items/BP_Item_HeartTreat"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ToyBombClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_ToyBomb"));
+	static ConstructorHelpers::FClassFinder<UCh03_GameResultWidget> ResultWidgetClass(
+		TEXT("/Game/UI/WBP_GameResult"));
+
+	if (ResultWidgetClass.Succeeded())
+	{
+		GameResultWidgetClass = ResultWidgetClass.Class;
+	}
 
 	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 60.0f);
 	AddSpawnEntry(WaveConfigs[0], LargeFeedClass.Class, 20.0f);
@@ -104,6 +112,7 @@ void ACh03_GameModeBase::EndPlay(
 
 	BoundCharacter = nullptr;
 	CachedGameState = nullptr;
+	ActiveResultWidget = nullptr;
 	SpawnVolumes.Reset();
 
 	Super::EndPlay(EndPlayReason);
@@ -439,6 +448,7 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 
 	UE_LOG(LogTemp, Error, TEXT("Game Over: Cheonbok is dead."));
 	OnGameOver();
+	ScheduleResultScreen(false);
 }
 
 void ACh03_GameModeBase::CompleteLevel()
@@ -473,6 +483,7 @@ void ACh03_GameModeBase::CompleteLevel()
 		FinalScore);
 
 	OnLevelCompleted();
+	ScheduleResultScreen(true);
 }
 
 void ACh03_GameModeBase::StopAllSpawnVolumes(
@@ -525,6 +536,97 @@ void ACh03_GameModeBase::ClearAnnouncement()
 	}
 }
 
+void ACh03_GameModeBase::ScheduleResultScreen(
+	const bool bWasVictory)
+{
+	bPendingResultWasVictory = bWasVictory;
+	LockPlayerInput();
+
+	if (ResultScreenDelay <= 0.0f)
+	{
+		ShowPendingResultScreen();
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(
+		ResultScreenTimerHandle,
+		this,
+		&ACh03_GameModeBase::ShowPendingResultScreen,
+		ResultScreenDelay,
+		false);
+}
+
+void ACh03_GameModeBase::ShowPendingResultScreen()
+{
+	APlayerController* PlayerController =
+		UGameplayStatics::GetPlayerController(this, 0);
+
+	if (!PlayerController)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Cannot show result screen: player controller is missing."));
+		return;
+	}
+
+	if (!GameResultWidgetClass)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Cannot show result screen: GameResultWidgetClass is not set."));
+		return;
+	}
+
+	if (ActiveResultWidget)
+	{
+		ActiveResultWidget->RemoveFromParent();
+		ActiveResultWidget = nullptr;
+	}
+
+	ActiveResultWidget = CreateWidget<UCh03_GameResultWidget>(
+		PlayerController,
+		GameResultWidgetClass);
+
+	if (!ActiveResultWidget)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Failed to create Ch03_GameResultWidget."));
+		return;
+	}
+
+	const int32 FinalScore =
+		CachedGameState ? CachedGameState->GetScore() : 0;
+
+	ActiveResultWidget->AddToViewport(100);
+	ActiveResultWidget->InitializeResult(
+		bPendingResultWasVictory,
+		FinalScore,
+		NextLevelName);
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(ActiveResultWidget->TakeWidget());
+	InputMode.SetLockMouseToViewportBehavior(
+		EMouseLockMode::DoNotLock);
+
+	PlayerController->SetInputMode(InputMode);
+	PlayerController->bShowMouseCursor = true;
+	UGameplayStatics::SetGamePaused(this, true);
+}
+
+void ACh03_GameModeBase::LockPlayerInput()
+{
+	if (APlayerController* PlayerController =
+		UGameplayStatics::GetPlayerController(this, 0))
+	{
+		PlayerController->SetIgnoreMoveInput(true);
+		PlayerController->SetIgnoreLookInput(true);
+	}
+}
+
 void ACh03_GameModeBase::ClearGameTimers()
 {
 	ClearWaveTimers();
@@ -535,6 +637,7 @@ void ACh03_GameModeBase::ClearGameTimers()
 	}
 
 	GetWorldTimerManager().ClearTimer(CharacterBindRetryTimerHandle);
+	GetWorldTimerManager().ClearTimer(ResultScreenTimerHandle);
 }
 
 void ACh03_GameModeBase::ClearWaveTimers()
