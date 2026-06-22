@@ -1,11 +1,567 @@
 #include "Core/Ch03_GameModeBase.h"
+
+#include "Character/Ch03_CheonbokCharacter.h"
 #include "Core/Ch03_CheonbokController.h"
 #include "Core/Ch03_GameStateBase.h"
-#include "Character/Ch03_CheonbokCharacter.h"
+#include "Engine/World.h"
+#include "Items/Ch03_BaseItem.h"
+#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
+
+namespace
+{
+void AddSpawnEntry(
+	FCh03_WaveConfig& WaveConfig,
+	const TSubclassOf<ACh03_BaseItem> ItemClass,
+	const float Weight)
+{
+	if (!ItemClass || Weight <= 0.0f)
+	{
+		return;
+	}
+
+	FCh03_SpawnItemEntry& NewEntry =
+		WaveConfig.SpawnEntries.AddDefaulted_GetRef();
+	NewEntry.ItemClass = ItemClass;
+	NewEntry.Weight = Weight;
+}
+}
 
 ACh03_GameModeBase::ACh03_GameModeBase()
 {
 	PlayerControllerClass = ACh03_CheonbokController::StaticClass();
 	DefaultPawnClass = ACh03_CheonbokCharacter::StaticClass();
 	GameStateClass = ACh03_GameStateBase::StaticClass();
+
+	WaveConfigs.SetNum(3);
+
+	WaveConfigs[0].Duration = 45;
+	WaveConfigs[0].InitialItemsPerVolume = 2;
+	WaveConfigs[0].MaxAliveItemsPerVolume = 3;
+	WaveConfigs[0].SpawnInterval = 1.8f;
+
+	WaveConfigs[1].Duration = 40;
+	WaveConfigs[1].InitialItemsPerVolume = 3;
+	WaveConfigs[1].MaxAliveItemsPerVolume = 4;
+	WaveConfigs[1].SpawnInterval = 1.4f;
+
+	WaveConfigs[2].Duration = 35;
+	WaveConfigs[2].InitialItemsPerVolume = 4;
+	WaveConfigs[2].MaxAliveItemsPerVolume = 5;
+	WaveConfigs[2].SpawnInterval = 1.0f;
+
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> SmallFeedClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_SmallFeed"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> LargeFeedClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_Largefeed"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> HeartTreatClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_HeartTreat"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ToyBombClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_ToyBomb"));
+
+	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 60.0f);
+	AddSpawnEntry(WaveConfigs[0], LargeFeedClass.Class, 20.0f);
+	AddSpawnEntry(WaveConfigs[0], HeartTreatClass.Class, 15.0f);
+	AddSpawnEntry(WaveConfigs[0], ToyBombClass.Class, 5.0f);
+
+	AddSpawnEntry(WaveConfigs[1], SmallFeedClass.Class, 50.0f);
+	AddSpawnEntry(WaveConfigs[1], LargeFeedClass.Class, 20.0f);
+	AddSpawnEntry(WaveConfigs[1], HeartTreatClass.Class, 15.0f);
+	AddSpawnEntry(WaveConfigs[1], ToyBombClass.Class, 15.0f);
+
+	AddSpawnEntry(WaveConfigs[2], SmallFeedClass.Class, 40.0f);
+	AddSpawnEntry(WaveConfigs[2], LargeFeedClass.Class, 20.0f);
+	AddSpawnEntry(WaveConfigs[2], HeartTreatClass.Class, 15.0f);
+	AddSpawnEntry(WaveConfigs[2], ToyBombClass.Class, 25.0f);
+}
+
+void ACh03_GameModeBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CachedGameState = GetGameState<ACh03_GameStateBase>();
+	CacheSpawnVolumes();
+	BindCharacterEvents();
+
+	if (bAutoStartWaveLoop)
+	{
+		StartWaveLoop();
+	}
+}
+
+void ACh03_GameModeBase::EndPlay(
+	const EEndPlayReason::Type EndPlayReason)
+{
+	ClearGameTimers();
+
+	if (BoundCharacter)
+	{
+		BoundCharacter->OnCharacterDeath.RemoveDynamic(
+			this,
+			&ACh03_GameModeBase::HandleCharacterDeath);
+	}
+
+	BoundCharacter = nullptr;
+	CachedGameState = nullptr;
+	SpawnVolumes.Reset();
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void ACh03_GameModeBase::StartWaveLoop()
+{
+	ClearWaveTimers();
+	StopAllSpawnVolumes(true);
+
+	if (WaveConfigs.IsEmpty())
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("GameMode cannot start: WaveConfigs is empty."));
+		return;
+	}
+
+	if (SpawnVolumes.IsEmpty())
+	{
+		CacheSpawnVolumes();
+	}
+
+	if (SpawnVolumes.IsEmpty())
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("GameMode cannot start: no Ch03_SpawnVolume found."));
+		return;
+	}
+
+	if (!CachedGameState)
+	{
+		CachedGameState = GetGameState<ACh03_GameStateBase>();
+	}
+
+	if (!CachedGameState)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("GameMode cannot start: Ch03_GameStateBase is missing."));
+		return;
+	}
+
+	CurrentWaveIndex = 0;
+	RemainingTime = 0;
+	SetGamePhase(ECh03_GamePhase::Waiting);
+
+	CachedGameState->ResetScore();
+	CachedGameState->SetWave(0, WaveConfigs.Num());
+	CachedGameState->SetRemainingTime(0);
+	ShowAnnouncement(
+		NSLOCTEXT(
+			"CheonbokGameFlow",
+			"GetReady",
+			"Get Ready!"));
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Wave loop will start in %.1f seconds."),
+		FirstWaveDelay);
+
+	if (FirstWaveDelay <= 0.0f)
+	{
+		StartCurrentWave();
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(
+		WaveTransitionTimerHandle,
+		this,
+		&ACh03_GameModeBase::StartCurrentWave,
+		FirstWaveDelay,
+		false);
+}
+
+void ACh03_GameModeBase::CacheSpawnVolumes()
+{
+	SpawnVolumes.Reset();
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(
+		this,
+		ACh03_SpawnVolume::StaticClass(),
+		FoundActors);
+
+	for (AActor* FoundActor : FoundActors)
+	{
+		if (ACh03_SpawnVolume* SpawnVolume =
+			Cast<ACh03_SpawnVolume>(FoundActor))
+		{
+			SpawnVolumes.Add(SpawnVolume);
+		}
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("GameMode found %d spawn volume(s)."),
+		SpawnVolumes.Num());
+}
+
+void ACh03_GameModeBase::BindCharacterEvents()
+{
+	ACh03_CheonbokCharacter* CheonbokCharacter =
+		Cast<ACh03_CheonbokCharacter>(
+			UGameplayStatics::GetPlayerCharacter(this, 0));
+
+	if (!CheonbokCharacter)
+	{
+		if (GetWorld()
+			&& !GetWorldTimerManager().IsTimerActive(
+				CharacterBindRetryTimerHandle))
+		{
+			GetWorldTimerManager().SetTimer(
+				CharacterBindRetryTimerHandle,
+				this,
+				&ACh03_GameModeBase::BindCharacterEvents,
+				0.2f,
+				true);
+		}
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(CharacterBindRetryTimerHandle);
+
+	if (BoundCharacter && BoundCharacter != CheonbokCharacter)
+	{
+		BoundCharacter->OnCharacterDeath.RemoveDynamic(
+			this,
+			&ACh03_GameModeBase::HandleCharacterDeath);
+	}
+
+	BoundCharacter = CheonbokCharacter;
+	BoundCharacter->OnCharacterDeath.AddUniqueDynamic(
+		this,
+		&ACh03_GameModeBase::HandleCharacterDeath);
+}
+
+void ACh03_GameModeBase::StartCurrentWave()
+{
+	if (CurrentPhase == ECh03_GamePhase::GameOver
+		|| CurrentPhase == ECh03_GamePhase::LevelComplete)
+	{
+		return;
+	}
+
+	if (!WaveConfigs.IsValidIndex(CurrentWaveIndex))
+	{
+		CompleteLevel();
+		return;
+	}
+
+	const FCh03_WaveConfig& WaveConfig =
+		WaveConfigs[CurrentWaveIndex];
+
+	float TotalSpawnWeight = 0.0f;
+	int32 ValidSpawnEntryCount = 0;
+	for (const FCh03_SpawnItemEntry& Entry : WaveConfig.SpawnEntries)
+	{
+		if (Entry.ItemClass && Entry.Weight > 0.0f)
+		{
+			TotalSpawnWeight += Entry.Weight;
+			++ValidSpawnEntryCount;
+		}
+	}
+
+	if (ValidSpawnEntryCount == 0)
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Wave %d has no item entries. Spawn volumes will keep their existing item entries."),
+			CurrentWaveIndex + 1);
+	}
+
+	SetGamePhase(ECh03_GamePhase::Playing);
+	RemainingTime = FMath::Max(1, WaveConfig.Duration);
+
+	if (CachedGameState)
+	{
+		CachedGameState->SetWave(
+			CurrentWaveIndex + 1,
+			WaveConfigs.Num());
+		CachedGameState->SetRemainingTime(RemainingTime);
+	}
+
+	ShowAnnouncement(
+		FText::Format(
+			NSLOCTEXT(
+				"CheonbokGameFlow",
+				"WaveStart",
+				"Wave {0} Start!"),
+			FText::AsNumber(CurrentWaveIndex + 1)),
+		WaveStartAnnouncementDuration);
+
+	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (!IsValid(SpawnVolume))
+		{
+			continue;
+		}
+
+		SpawnVolume->ApplyWaveSettings(
+			WaveConfig.SpawnEntries,
+			WaveConfig.InitialItemsPerVolume,
+			WaveConfig.MaxAliveItemsPerVolume,
+			WaveConfig.SpawnInterval);
+		SpawnVolume->SpawnInitialItems();
+		SpawnVolume->StartSpawning();
+	}
+
+	GetWorldTimerManager().SetTimer(
+		WaveTimerHandle,
+		this,
+		&ACh03_GameModeBase::TickWaveTimer,
+		1.0f,
+		true);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Wave %d / %d started. Duration=%d, Entries=%d, TotalWeight=%.1f"),
+		CurrentWaveIndex + 1,
+		WaveConfigs.Num(),
+		RemainingTime,
+		ValidSpawnEntryCount,
+		TotalSpawnWeight);
+
+	OnWaveStarted(CurrentWaveIndex + 1, WaveConfigs.Num());
+}
+
+void ACh03_GameModeBase::TickWaveTimer()
+{
+	if (CurrentPhase != ECh03_GamePhase::Playing)
+	{
+		return;
+	}
+
+	RemainingTime = FMath::Max(0, RemainingTime - 1);
+
+	if (CachedGameState)
+	{
+		CachedGameState->SetRemainingTime(RemainingTime);
+	}
+
+	if (RemainingTime <= 0)
+	{
+		EndCurrentWave();
+	}
+}
+
+void ACh03_GameModeBase::EndCurrentWave()
+{
+	if (CurrentPhase != ECh03_GamePhase::Playing)
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
+	StopAllSpawnVolumes(true);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Wave %d / %d ended."),
+		CurrentWaveIndex + 1,
+		WaveConfigs.Num());
+
+	ShowAnnouncement(
+		FText::Format(
+			NSLOCTEXT(
+				"CheonbokGameFlow",
+				"WaveComplete",
+				"Wave {0} Complete!"),
+			FText::AsNumber(CurrentWaveIndex + 1)));
+
+	if (CurrentWaveIndex >= WaveConfigs.Num() - 1)
+	{
+		CompleteLevel();
+		return;
+	}
+
+	++CurrentWaveIndex;
+	RemainingTime = 0;
+	SetGamePhase(ECh03_GamePhase::WaveInterval);
+
+	if (CachedGameState)
+	{
+		CachedGameState->SetRemainingTime(0);
+	}
+
+	if (WaveIntervalDuration <= 0.0f)
+	{
+		StartCurrentWave();
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(
+		WaveTransitionTimerHandle,
+		this,
+		&ACh03_GameModeBase::StartCurrentWave,
+		WaveIntervalDuration,
+		false);
+}
+
+void ACh03_GameModeBase::HandleCharacterDeath()
+{
+	if (CurrentPhase == ECh03_GamePhase::GameOver
+		|| CurrentPhase == ECh03_GamePhase::LevelComplete)
+	{
+		return;
+	}
+
+	SetGamePhase(ECh03_GamePhase::GameOver);
+	ClearGameTimers();
+	StopAllSpawnVolumes(true);
+
+	if (CachedGameState)
+	{
+		CachedGameState->SetRemainingTime(0);
+	}
+
+	ShowAnnouncement(
+		NSLOCTEXT(
+			"CheonbokGameFlow",
+			"GameOver",
+			"Game Over"));
+
+	UE_LOG(LogTemp, Error, TEXT("Game Over: Cheonbok is dead."));
+	OnGameOver();
+}
+
+void ACh03_GameModeBase::CompleteLevel()
+{
+	if (CurrentPhase == ECh03_GamePhase::LevelComplete)
+	{
+		return;
+	}
+
+	SetGamePhase(ECh03_GamePhase::LevelComplete);
+	ClearGameTimers();
+	StopAllSpawnVolumes(true);
+
+	if (CachedGameState)
+	{
+		CachedGameState->SetRemainingTime(0);
+	}
+
+	ShowAnnouncement(
+		NSLOCTEXT(
+			"CheonbokGameFlow",
+			"LivingRoomComplete",
+			"Living Room Complete!"));
+
+	const int32 FinalScore =
+		CachedGameState ? CachedGameState->GetScore() : 0;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Living Room completed. Final score=%d"),
+		FinalScore);
+
+	OnLevelCompleted();
+}
+
+void ACh03_GameModeBase::StopAllSpawnVolumes(
+	const bool bClearItems)
+{
+	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (!IsValid(SpawnVolume))
+		{
+			continue;
+		}
+
+		SpawnVolume->StopSpawning();
+
+		if (bClearItems)
+		{
+			SpawnVolume->ClearSpawnedItems();
+		}
+	}
+}
+
+void ACh03_GameModeBase::ShowAnnouncement(
+	const FText& Message,
+	const float DisplayDuration)
+{
+	if (!CachedGameState)
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(AnnouncementTimerHandle);
+	CachedGameState->SetAnnouncementText(Message);
+
+	if (DisplayDuration > 0.0f)
+	{
+		GetWorldTimerManager().SetTimer(
+			AnnouncementTimerHandle,
+			this,
+			&ACh03_GameModeBase::ClearAnnouncement,
+			DisplayDuration,
+			false);
+	}
+}
+
+void ACh03_GameModeBase::ClearAnnouncement()
+{
+	if (CachedGameState)
+	{
+		CachedGameState->ClearAnnouncementText();
+	}
+}
+
+void ACh03_GameModeBase::ClearGameTimers()
+{
+	ClearWaveTimers();
+
+	if (!GetWorld())
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(CharacterBindRetryTimerHandle);
+}
+
+void ACh03_GameModeBase::ClearWaveTimers()
+{
+	if (!GetWorld())
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
+	GetWorldTimerManager().ClearTimer(WaveTransitionTimerHandle);
+	GetWorldTimerManager().ClearTimer(AnnouncementTimerHandle);
+}
+
+void ACh03_GameModeBase::SetGamePhase(
+	const ECh03_GamePhase NewPhase)
+{
+	if (CurrentPhase == NewPhase)
+	{
+		return;
+	}
+
+	CurrentPhase = NewPhase;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Game phase changed: %s"),
+		*UEnum::GetValueAsString(CurrentPhase));
 }

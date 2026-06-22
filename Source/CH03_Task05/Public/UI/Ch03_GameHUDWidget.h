@@ -27,6 +27,15 @@ protected:
 	UFUNCTION()
 	void HandleHealthChanged(float CurrentHealth, float MaxHealth);
 
+	UFUNCTION()
+	void HandleWaveChanged(int32 CurrentWave, int32 MaxWave);
+
+	UFUNCTION()
+	void HandleRemainingTimeChanged(int32 NewRemainingTime);
+
+	UFUNCTION()
+	void HandleAnnouncementChanged(FText NewAnnouncement);
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnScoreUpdated(int32 NewScore);
 
@@ -35,6 +44,15 @@ protected:
 		float CurrentHealth,
 		float MaxHealth,
 		float HealthPercent);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnWaveUpdated(int32 CurrentWave, int32 MaxWave);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnRemainingTimeUpdated(int32 NewRemainingTime);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnAnnouncementUpdated(const FText& NewAnnouncement, bool bIsVisible);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ScoreText;
@@ -45,8 +63,18 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> HealthBar;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> WaveText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> TimerText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> WaveBannerText;
+
 private:
 	void BindToGameState();
+	void UnbindFromGameState();
 	void BindToCharacter();
 	void UnbindFromCharacter();
 

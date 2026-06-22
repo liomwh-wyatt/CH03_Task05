@@ -26,7 +26,7 @@ void ACh03_SpawnVolume::BeginPlay()
 
 	if (bAutoStart)
 	{
-		SpawnItems(InitialSpawnCount);
+		SpawnInitialItems();
 		StartSpawning();
 	}
 }
@@ -37,6 +37,73 @@ void ACh03_SpawnVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	SpawnedItems.Reset();
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void ACh03_SpawnVolume::ApplyWaveSettings(
+	const TArray<FCh03_SpawnItemEntry>& NewSpawnEntries,
+	const int32 NewInitialSpawnCount,
+	const int32 NewMaxAliveItems,
+	const float NewSpawnInterval)
+{
+	StopSpawning();
+	ClearSpawnedItems();
+
+	const bool bHasNewValidItemEntry =
+		NewSpawnEntries.ContainsByPredicate(
+			[](const FCh03_SpawnItemEntry& Entry)
+			{
+				return Entry.ItemClass && Entry.Weight > 0.0f;
+			});
+
+	if (bHasNewValidItemEntry)
+	{
+		SpawnEntries = NewSpawnEntries;
+	}
+
+	MaxAliveItems = FMath::Max(1, NewMaxAliveItems);
+	InitialSpawnCount = FMath::Clamp(
+		NewInitialSpawnCount,
+		0,
+		MaxAliveItems);
+	SpawnInterval = FMath::Max(0.1f, NewSpawnInterval);
+
+	const bool bHasValidItemEntry =
+		SpawnEntries.ContainsByPredicate(
+		[](const FCh03_SpawnItemEntry& Entry)
+		{
+			return Entry.ItemClass && Entry.Weight > 0.0f;
+		});
+
+	if (!bHasValidItemEntry)
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("%s: Applied wave settings have no valid item entry."),
+			*GetName());
+	}
+	else if (!bHasNewValidItemEntry)
+	{
+		UE_LOG(
+			LogTemp,
+			Verbose,
+			TEXT("%s: Wave item entries are empty. Keeping existing item entries."),
+			*GetName());
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("%s: Wave settings applied. Initial=%d, MaxAlive=%d, Interval=%.2f"),
+		*GetName(),
+		InitialSpawnCount,
+		MaxAliveItems,
+		SpawnInterval);
+}
+
+void ACh03_SpawnVolume::SpawnInitialItems()
+{
+	SpawnItems(InitialSpawnCount);
 }
 
 void ACh03_SpawnVolume::StartSpawning()

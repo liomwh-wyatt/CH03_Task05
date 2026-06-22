@@ -18,14 +18,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 
 void UCh03_GameHUDWidget::NativeDestruct()
 {
-	if (BoundGameState)
-	{
-		BoundGameState->OnScoreChanged.RemoveDynamic(
-			this,
-			&UCh03_GameHUDWidget::HandleScoreChanged);
-	}
-
-	BoundGameState = nullptr;
+	UnbindFromGameState();
 	UnbindFromCharacter();
 
 	if (GetWorld())
@@ -81,12 +74,81 @@ void UCh03_GameHUDWidget::HandleHealthChanged(
 	OnHealthUpdated(CurrentHealth, MaxHealth, HealthPercent);
 }
 
+void UCh03_GameHUDWidget::HandleWaveChanged(
+	const int32 CurrentWave,
+	const int32 MaxWave)
+{
+	if (WaveText)
+	{
+		if (CurrentWave <= 0)
+		{
+			WaveText->SetText(
+				NSLOCTEXT(
+					"CheonbokHUD",
+					"WaveReady",
+					"Ready"));
+		}
+		else
+		{
+			WaveText->SetText(
+				FText::Format(
+					NSLOCTEXT(
+						"CheonbokHUD",
+						"WaveFormat",
+						"Wave {0} / {1}"),
+					FText::AsNumber(CurrentWave),
+					FText::AsNumber(MaxWave)));
+		}
+	}
+
+	OnWaveUpdated(CurrentWave, MaxWave);
+}
+
+void UCh03_GameHUDWidget::HandleRemainingTimeChanged(
+	const int32 NewRemainingTime)
+{
+	const int32 SafeRemainingTime = FMath::Max(
+		0,
+		NewRemainingTime);
+	const int32 Minutes = SafeRemainingTime / 60;
+	const int32 Seconds = SafeRemainingTime % 60;
+
+	if (TimerText)
+	{
+		TimerText->SetText(
+			FText::FromString(
+				FString::Printf(
+					TEXT("%02d:%02d"),
+					Minutes,
+					Seconds)));
+	}
+
+	OnRemainingTimeUpdated(SafeRemainingTime);
+}
+
+void UCh03_GameHUDWidget::HandleAnnouncementChanged(
+	const FText NewAnnouncement)
+{
+	const bool bIsVisible = !NewAnnouncement.IsEmpty();
+
+	if (WaveBannerText)
+	{
+		WaveBannerText->SetText(NewAnnouncement);
+		WaveBannerText->SetVisibility(
+			bIsVisible
+				? ESlateVisibility::HitTestInvisible
+				: ESlateVisibility::Collapsed);
+	}
+
+	OnAnnouncementUpdated(NewAnnouncement, bIsVisible);
+}
+
 void UCh03_GameHUDWidget::BindToGameState()
 {
-	BoundGameState =
+	ACh03_GameStateBase* GameState =
 		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr;
 
-	if (!BoundGameState)
+	if (!GameState)
 	{
 		UE_LOG(
 			LogTemp,
@@ -95,11 +157,60 @@ void UCh03_GameHUDWidget::BindToGameState()
 		return;
 	}
 
+	if (BoundGameState != GameState)
+	{
+		UnbindFromGameState();
+		BoundGameState = GameState;
+	}
+
 	BoundGameState->OnScoreChanged.AddUniqueDynamic(
 		this,
 		&UCh03_GameHUDWidget::HandleScoreChanged);
 
+	BoundGameState->OnWaveChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleWaveChanged);
+
+	BoundGameState->OnRemainingTimeChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleRemainingTimeChanged);
+
+	BoundGameState->OnAnnouncementChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleAnnouncementChanged);
+
 	HandleScoreChanged(BoundGameState->GetScore());
+	HandleWaveChanged(
+		BoundGameState->GetCurrentWave(),
+		BoundGameState->GetMaxWave());
+	HandleRemainingTimeChanged(
+		BoundGameState->GetRemainingTime());
+	HandleAnnouncementChanged(
+		BoundGameState->GetAnnouncementText());
+}
+
+void UCh03_GameHUDWidget::UnbindFromGameState()
+{
+	if (BoundGameState)
+	{
+		BoundGameState->OnScoreChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleScoreChanged);
+
+		BoundGameState->OnWaveChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleWaveChanged);
+
+		BoundGameState->OnRemainingTimeChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleRemainingTimeChanged);
+
+		BoundGameState->OnAnnouncementChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleAnnouncementChanged);
+	}
+
+	BoundGameState = nullptr;
 }
 
 void UCh03_GameHUDWidget::BindToCharacter()

@@ -29,6 +29,16 @@ class CH03_TASK05_API ACh03_SpawnVolume : public AActor
 public:
 	ACh03_SpawnVolume();
 
+	UFUNCTION(BlueprintCallable, Category = "Spawn|Wave")
+	void ApplyWaveSettings(
+		const TArray<FCh03_SpawnItemEntry>& NewSpawnEntries,
+		int32 NewInitialSpawnCount,
+		int32 NewMaxAliveItems,
+		float NewSpawnInterval);
+
+	UFUNCTION(BlueprintCallable, Category = "Spawn|Wave")
+	void SpawnInitialItems();
+
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
 	void StartSpawning();
 
