@@ -18,15 +18,24 @@ void UCh03_GameInstance::Init()
 {
 	Super::Init();
 
+	ResetProgress();
+}
+
+void UCh03_GameInstance::ResetProgress()
+{
 	CommittedScore = 0;
 	CurrentLevelIndex = 0;
 	bRunInProgress = false;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Cheonbok Land progress reset."));
 }
 
 void UCh03_GameInstance::StartNewGame()
 {
-	CommittedScore = 0;
-	CurrentLevelIndex = 0;
+	ResetProgress();
 	bRunInProgress = true;
 
 	UE_LOG(

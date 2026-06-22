@@ -20,6 +20,9 @@ public:
 	void StartNewGame();
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Progress")
+	void ResetProgress();
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Progress")
 	void PrepareForLevel(FName LoadedLevelName);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Progress")

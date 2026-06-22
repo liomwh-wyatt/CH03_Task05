@@ -36,6 +36,9 @@ protected:
 	void HandleContinueClicked();
 
 	UFUNCTION()
+	void HandleMainMenuClicked();
+
+	UFUNCTION()
 	void HandleQuitClicked();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
@@ -57,7 +60,13 @@ protected:
 	TObjectPtr<UButton> ContinueButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UButton> MainMenuButton;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> QuitButton;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
+	FName MainMenuLevelName = TEXT("L_MainMenu");
 
 private:
 	void UnbindButtons();

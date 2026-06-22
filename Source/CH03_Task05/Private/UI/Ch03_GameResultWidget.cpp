@@ -33,6 +33,13 @@ void UCh03_GameResultWidget::NativeConstruct()
 			this,
 			&UCh03_GameResultWidget::HandleQuitClicked);
 	}
+
+	if (MainMenuButton)
+	{
+		MainMenuButton->OnClicked.AddUniqueDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleMainMenuClicked);
+	}
 }
 
 void UCh03_GameResultWidget::NativeDestruct()
@@ -154,6 +161,24 @@ void UCh03_GameResultWidget::HandleContinueClicked()
 	UGameplayStatics::OpenLevel(this, NextLevelName);
 }
 
+void UCh03_GameResultWidget::HandleMainMenuClicked()
+{
+	if (MainMenuLevelName.IsNone())
+	{
+		return;
+	}
+
+	if (UCh03_GameInstance* CheonbokGameInstance =
+		GetGameInstance<UCh03_GameInstance>())
+	{
+		CheonbokGameInstance->ResetProgress();
+	}
+
+	ResumeGameBeforeTravel();
+	RemoveFromParent();
+	UGameplayStatics::OpenLevel(this, MainMenuLevelName);
+}
+
 void UCh03_GameResultWidget::HandleQuitClicked()
 {
 	UKismetSystemLibrary::QuitGame(
@@ -184,6 +209,13 @@ void UCh03_GameResultWidget::UnbindButtons()
 		QuitButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleQuitClicked);
+	}
+
+	if (MainMenuButton)
+	{
+		MainMenuButton->OnClicked.RemoveDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleMainMenuClicked);
 	}
 }
 
