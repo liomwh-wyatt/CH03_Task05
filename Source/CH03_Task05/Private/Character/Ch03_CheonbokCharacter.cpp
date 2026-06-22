@@ -6,6 +6,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "UI/Ch03_WorldHealthWidget.h"
+#include "Components/WidgetComponent.h"
 
 ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 {
@@ -25,6 +27,21 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		SpringArmComponent,
 		USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+
+	WorldHealthWidgetComponent =
+		CreateDefaultSubobject<UWidgetComponent>(
+			TEXT("WorldHealthWidgetComponent"));
+	WorldHealthWidgetComponent->SetupAttachment(RootComponent);
+	WorldHealthWidgetComponent->SetRelativeLocation(
+		FVector(0.0f, 0.0f, 120.0f));
+	WorldHealthWidgetComponent->SetDrawSize(FVector2D(220.0f, 52.0f));
+	WorldHealthWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	WorldHealthWidgetComponent->SetCollisionEnabled(
+		ECollisionEnabled::NoCollision);
+	WorldHealthWidgetComponent->SetGenerateOverlapEvents(false);
+	WorldHealthWidgetComponent->SetWidgetClass(
+		UCh03_WorldHealthWidget::StaticClass());
+	WorldHealthWidgetClass = UCh03_WorldHealthWidget::StaticClass();
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -49,6 +66,7 @@ void ACh03_CheonbokCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHealth = MaxHealth;
+	InitializeWorldHealthWidget();
 	RefreshMovementSpeed();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
@@ -261,6 +279,7 @@ void ACh03_CheonbokCharacter::AddHealth(float Amount)
 
 	if (!FMath::IsNearlyEqual(PreviousHealth, CurrentHealth))
 	{
+		UpdateWorldHealthWidget();
 		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 		UE_LOG(
 			LogTemp,
@@ -301,6 +320,7 @@ float ACh03_CheonbokCharacter::TakeDamage(
 	const float AppliedDamage = PreviousHealth - CurrentHealth;
 
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+	UpdateWorldHealthWidget();
 
 	UE_LOG(
 		LogTemp,
@@ -338,6 +358,7 @@ void ACh03_CheonbokCharacter::OnDeath()
 	bIsDead = true;
 	StopJumping();
 	ClearAllStatusEffects();
+	UpdateWorldHealthWidget();
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
 	{
@@ -463,6 +484,8 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 	}
 
 	RefreshMovementSpeed();
+	InitializeWorldHealthWidget();
+	UpdateWorldHealthWidget();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
@@ -558,6 +581,43 @@ void ACh03_CheonbokCharacter::EndReverseControl()
 void ACh03_CheonbokCharacter::EndDamageInvincibility()
 {
 	bIsDamageInvincible = false;
+}
+
+void ACh03_CheonbokCharacter::InitializeWorldHealthWidget()
+{
+	if (!WorldHealthWidgetComponent)
+	{
+		return;
+	}
+
+	if (WorldHealthWidgetClass)
+	{
+		WorldHealthWidgetComponent->SetWidgetClass(WorldHealthWidgetClass);
+	}
+
+	WorldHealthWidgetComponent->SetVisibility(
+		bShowWorldHealthWidget && !bIsDead);
+	WorldHealthWidgetComponent->InitWidget();
+
+	UpdateWorldHealthWidget();
+}
+
+void ACh03_CheonbokCharacter::UpdateWorldHealthWidget()
+{
+	if (!WorldHealthWidgetComponent)
+	{
+		return;
+	}
+
+	WorldHealthWidgetComponent->SetVisibility(
+		bShowWorldHealthWidget && !bIsDead);
+
+	if (UCh03_WorldHealthWidget* WorldHealthWidget =
+		Cast<UCh03_WorldHealthWidget>(
+			WorldHealthWidgetComponent->GetUserWidgetObject()))
+	{
+		WorldHealthWidget->SetHealthValues(CurrentHealth, MaxHealth);
+	}
 }
 
 float ACh03_CheonbokCharacter::ExtendEffectTimer(

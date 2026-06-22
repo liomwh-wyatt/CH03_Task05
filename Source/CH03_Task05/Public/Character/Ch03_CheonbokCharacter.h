@@ -7,6 +7,8 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UCh03_WorldHealthWidget;
+class UWidgetComponent;
 struct FInputActionValue;
 
 UENUM(BlueprintType)
@@ -122,6 +124,8 @@ protected:
 	void EndSlow();
 	void EndReverseControl();
 	void EndDamageInvincibility();
+	void InitializeWorldHealthWidget();
+	void UpdateWorldHealthWidget();
 
 	float ExtendEffectTimer(
 		FTimerHandle& TimerHandle,
@@ -134,6 +138,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera")
 	TObjectPtr<UCameraComponent> CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
+	TObjectPtr<UWidgetComponent> WorldHealthWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|UI")
+	TSubclassOf<UCh03_WorldHealthWidget> WorldHealthWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
+	bool bShowWorldHealthWidget = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
 		meta = (ClampMin = "-89.0", ClampMax = "0.0"))
