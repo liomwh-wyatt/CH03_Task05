@@ -47,11 +47,22 @@ protected:
 		int32 FinalScore,
 		bool bCanContinue);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
+	void OnHighScoreEvaluated(
+		int32 HighestScore,
+		bool bIsNewHighScore);
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ResultTitleText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> FinalScoreText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> HighScoreText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> NewHighScoreText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> RestartButton;

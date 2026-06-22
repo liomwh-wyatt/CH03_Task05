@@ -7,6 +7,7 @@
 #include "Ch03_MainMenuWidget.generated.h"
 
 class UButton;
+class UTextBlock;
 class UWidget;
 
 UCLASS()
@@ -33,7 +34,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> QuitButton;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> HighScoreText;
+
 private:
+	void UpdateHighScoreText();
 	void UnbindButtons();
 	void SetButtonsEnabled(bool bEnabled);
 

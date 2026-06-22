@@ -59,6 +59,18 @@ void UCh03_GameResultWidget::InitializeResult(
 	NextLevelName = InNextLevelName;
 	bResultWasVictory = bWasVictory;
 
+	int32 HighestScore = FMath::Max(0, FinalScore);
+	bool bIsNewHighScore = false;
+
+	if (UCh03_GameInstance* CheonbokGameInstance =
+		GetGameInstance<UCh03_GameInstance>())
+	{
+		bIsNewHighScore =
+			CheonbokGameInstance->SubmitScore(FinalScore);
+		HighestScore =
+			CheonbokGameInstance->GetHighestScore();
+	}
+
 	if (ResultTitleText)
 	{
 		ResultTitleText->SetText(
@@ -86,6 +98,30 @@ void UCh03_GameResultWidget::InitializeResult(
 				FText::AsNumber(FMath::Max(0, FinalScore))));
 	}
 
+	if (HighScoreText)
+	{
+		HighScoreText->SetText(
+			FText::Format(
+				NSLOCTEXT(
+					"CheonbokResult",
+					"HighScore",
+					"Best Snack Score: {0}"),
+				FText::AsNumber(HighestScore)));
+	}
+
+	if (NewHighScoreText)
+	{
+		NewHighScoreText->SetText(
+			NSLOCTEXT(
+				"CheonbokResult",
+				"NewHighScore",
+				"New Best!"));
+		NewHighScoreText->SetVisibility(
+			bIsNewHighScore
+				? ESlateVisibility::Visible
+				: ESlateVisibility::Collapsed);
+	}
+
 	const bool bCanContinue =
 		bWasVictory && !NextLevelName.IsNone();
 
@@ -102,6 +138,10 @@ void UCh03_GameResultWidget::InitializeResult(
 		bWasVictory,
 		FMath::Max(0, FinalScore),
 		bCanContinue);
+
+	OnHighScoreEvaluated(
+		HighestScore,
+		bIsNewHighScore);
 }
 
 UWidget* UCh03_GameResultWidget::GetInitialFocusWidget() const

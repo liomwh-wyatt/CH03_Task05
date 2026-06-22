@@ -2,6 +2,8 @@
 
 #include "Core/Ch03_GameInstance.h"
 
+#include "Core/Ch03_SaveGame.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
 
 UCh03_GameInstance::UCh03_GameInstance()
@@ -18,6 +20,7 @@ void UCh03_GameInstance::Init()
 {
 	Super::Init();
 
+	LoadSaveData();
 	ResetProgress();
 }
 
@@ -87,6 +90,42 @@ void UCh03_GameInstance::CommitLevelScore(
 		Log,
 		TEXT("Level score committed: %d"),
 		CommittedScore);
+}
+
+bool UCh03_GameInstance::SubmitScore(
+	const int32 Score)
+{
+	const int32 SanitizedScore = FMath::Max(0, Score);
+
+	if (SanitizedScore <= HighestScore)
+	{
+		return false;
+	}
+
+	HighestScore = SanitizedScore;
+
+	if (!SaveGameObject)
+	{
+		SaveGameObject = Cast<UCh03_SaveGame>(
+			UGameplayStatics::CreateSaveGameObject(
+				UCh03_SaveGame::StaticClass()));
+	}
+
+	if (SaveGameObject)
+	{
+		SaveGameObject->HighestScore = HighestScore;
+	}
+
+	const bool bSaved = SaveCurrentData();
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("New Cheonbok Land high score submitted: %d. Saved=%s"),
+		HighestScore,
+		bSaved ? TEXT("true") : TEXT("false"));
+
+	return true;
 }
 
 bool UCh03_GameInstance::PrepareTravelToLevel(
@@ -162,4 +201,54 @@ bool UCh03_GameInstance::IsLevelAvailable(
 	}
 
 	return FPackageName::DoesPackageExist(PackageName);
+}
+
+void UCh03_GameInstance::LoadSaveData()
+{
+	USaveGame* LoadedSaveGame = nullptr;
+
+	if (UGameplayStatics::DoesSaveGameExist(
+		SaveSlotName,
+		SaveUserIndex))
+	{
+		LoadedSaveGame = UGameplayStatics::LoadGameFromSlot(
+			SaveSlotName,
+			SaveUserIndex);
+	}
+
+	SaveGameObject = Cast<UCh03_SaveGame>(LoadedSaveGame);
+
+	if (!SaveGameObject)
+	{
+		SaveGameObject = Cast<UCh03_SaveGame>(
+			UGameplayStatics::CreateSaveGameObject(
+				UCh03_SaveGame::StaticClass()));
+	}
+
+	HighestScore = SaveGameObject
+		? FMath::Max(0, SaveGameObject->HighestScore)
+		: 0;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Cheonbok Land save loaded. HighestScore=%d"),
+		HighestScore);
+}
+
+bool UCh03_GameInstance::SaveCurrentData() const
+{
+	if (!SaveGameObject)
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Cannot save Cheonbok Land data: SaveGameObject is missing."));
+		return false;
+	}
+
+	return UGameplayStatics::SaveGameToSlot(
+		SaveGameObject,
+		SaveSlotName,
+		SaveUserIndex);
 }

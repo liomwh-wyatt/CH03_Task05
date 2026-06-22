@@ -4,6 +4,7 @@
 #include "UI/Ch03_MainMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 #include "Core/Ch03_GameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -28,6 +29,8 @@ void UCh03_MainMenuWidget::NativeConstruct()
 			this,
 			&UCh03_MainMenuWidget::HandleQuitClicked);
 	}
+
+	UpdateHighScoreText();
 }
 
 void UCh03_MainMenuWidget::NativeDestruct()
@@ -100,6 +103,29 @@ void UCh03_MainMenuWidget::HandleQuitClicked()
 		GetOwningPlayer(),
 		EQuitPreference::Quit,
 		false);
+}
+
+void UCh03_MainMenuWidget::UpdateHighScoreText()
+{
+	if (!HighScoreText)
+	{
+		return;
+	}
+
+	const UCh03_GameInstance* CheonbokGameInstance =
+		GetGameInstance<UCh03_GameInstance>();
+
+	const int32 HighestScore = CheonbokGameInstance
+		? CheonbokGameInstance->GetHighestScore()
+		: 0;
+
+	HighScoreText->SetText(
+		FText::Format(
+			NSLOCTEXT(
+				"CheonbokMainMenu",
+				"HighScoreFormat",
+				"Best Snack Score: {0}"),
+			FText::AsNumber(HighestScore)));
 }
 
 void UCh03_MainMenuWidget::UnbindButtons()
