@@ -31,8 +31,27 @@ void ACh03_GameStateBase::AddScore(int32 Amount)
 
 void ACh03_GameStateBase::ResetScore()
 {
-	CurrentScore = 0;
+	SetScore(0);
+}
+
+void ACh03_GameStateBase::SetScore(
+	const int32 NewScore)
+{
+	const int32 SanitizedScore = FMath::Max(0, NewScore);
+
+	if (CurrentScore == SanitizedScore)
+	{
+		return;
+	}
+
+	CurrentScore = SanitizedScore;
 	OnScoreChanged.Broadcast(CurrentScore);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Cheonbok score set: %d"),
+		CurrentScore);
 }
 
 void ACh03_GameStateBase::SetWave(

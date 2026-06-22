@@ -1,7 +1,9 @@
 #include "Core/Ch03_GameModeBase.h"
 
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Components/Widget.h"
 #include "Core/Ch03_CheonbokController.h"
+#include "Core/Ch03_GameInstance.h"
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/World.h"
 #include "Items/Ch03_BaseItem.h"
@@ -89,6 +91,21 @@ void ACh03_GameModeBase::BeginPlay()
 	Super::BeginPlay();
 
 	CachedGameState = GetGameState<ACh03_GameStateBase>();
+	CachedGameInstance = GetGameInstance<UCh03_GameInstance>();
+
+	if (CachedGameInstance)
+	{
+		CachedGameInstance->PrepareForLevel(
+			FName(*UGameplayStatics::GetCurrentLevelName(this, true)));
+	}
+	else
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Ch03_GameInstance is not configured."));
+	}
+
 	CacheSpawnVolumes();
 	BindCharacterEvents();
 
@@ -112,6 +129,7 @@ void ACh03_GameModeBase::EndPlay(
 
 	BoundCharacter = nullptr;
 	CachedGameState = nullptr;
+	CachedGameInstance = nullptr;
 	ActiveResultWidget = nullptr;
 	SpawnVolumes.Reset();
 
@@ -164,7 +182,10 @@ void ACh03_GameModeBase::StartWaveLoop()
 	RemainingTime = 0;
 	SetGamePhase(ECh03_GamePhase::Waiting);
 
-	CachedGameState->ResetScore();
+	CachedGameState->SetScore(
+		CachedGameInstance
+			? CachedGameInstance->GetCommittedScore()
+			: 0);
 	CachedGameState->SetWave(0, WaveConfigs.Num());
 	CachedGameState->SetRemainingTime(0);
 	ShowAnnouncement(
@@ -467,19 +488,30 @@ void ACh03_GameModeBase::CompleteLevel()
 		CachedGameState->SetRemainingTime(0);
 	}
 
+	const FText LevelDisplayName =
+		GetCurrentLevelDisplayName();
+
 	ShowAnnouncement(
-		NSLOCTEXT(
-			"CheonbokGameFlow",
-			"LivingRoomComplete",
-			"Living Room Complete!"));
+		FText::Format(
+			NSLOCTEXT(
+				"CheonbokGameFlow",
+				"LevelComplete",
+				"{0} Complete!"),
+			LevelDisplayName));
 
 	const int32 FinalScore =
 		CachedGameState ? CachedGameState->GetScore() : 0;
 
+	if (CachedGameInstance)
+	{
+		CachedGameInstance->CommitLevelScore(FinalScore);
+	}
+
 	UE_LOG(
 		LogTemp,
 		Log,
-		TEXT("Living Room completed. Final score=%d"),
+		TEXT("%s completed. Final score=%d"),
+		*LevelDisplayName.ToString(),
 		FinalScore);
 
 	OnLevelCompleted();
@@ -602,13 +634,35 @@ void ACh03_GameModeBase::ShowPendingResultScreen()
 		CachedGameState ? CachedGameState->GetScore() : 0;
 
 	ActiveResultWidget->AddToViewport(100);
+	FName ResolvedNextLevelName = NextLevelName;
+
+	if (CachedGameInstance)
+	{
+		if (ResolvedNextLevelName.IsNone())
+		{
+			ResolvedNextLevelName =
+				CachedGameInstance->GetNextLevelName();
+		}
+		else if (!CachedGameInstance->IsLevelAvailable(
+			ResolvedNextLevelName))
+		{
+			ResolvedNextLevelName = NAME_None;
+		}
+	}
+
 	ActiveResultWidget->InitializeResult(
 		bPendingResultWasVictory,
 		FinalScore,
-		NextLevelName);
+		ResolvedNextLevelName,
+		GetCurrentLevelDisplayName());
 
 	FInputModeUIOnly InputMode;
-	InputMode.SetWidgetToFocus(ActiveResultWidget->TakeWidget());
+	if (UWidget* InitialFocusWidget =
+		ActiveResultWidget->GetInitialFocusWidget())
+	{
+		InputMode.SetWidgetToFocus(
+			InitialFocusWidget->TakeWidget());
+	}
 	InputMode.SetLockMouseToViewportBehavior(
 		EMouseLockMode::DoNotLock);
 
@@ -625,6 +679,42 @@ void ACh03_GameModeBase::LockPlayerInput()
 		PlayerController->SetIgnoreMoveInput(true);
 		PlayerController->SetIgnoreLookInput(true);
 	}
+}
+
+FText ACh03_GameModeBase::GetCurrentLevelDisplayName() const
+{
+	const FString CurrentLevelName =
+		UGameplayStatics::GetCurrentLevelName(this, true);
+
+	if (CurrentLevelName == TEXT("L_LivingRoom"))
+	{
+		return NSLOCTEXT(
+			"CheonbokLevel",
+			"LivingRoom",
+			"Living Room");
+	}
+
+	if (CurrentLevelName == TEXT("L_Kitchen"))
+	{
+		return NSLOCTEXT(
+			"CheonbokLevel",
+			"Kitchen",
+			"Kitchen");
+	}
+
+	if (CurrentLevelName == TEXT("L_CheonbokLand"))
+	{
+		return NSLOCTEXT(
+			"CheonbokLevel",
+			"CheonbokLand",
+			"Cheonbok Land");
+	}
+
+	FString FallbackDisplayName = CurrentLevelName;
+	FallbackDisplayName.RemoveFromStart(TEXT("L_"));
+	FallbackDisplayName.ReplaceInline(TEXT("_"), TEXT(" "));
+
+	return FText::FromString(FallbackDisplayName);
 }
 
 void ACh03_GameModeBase::ClearGameTimers()

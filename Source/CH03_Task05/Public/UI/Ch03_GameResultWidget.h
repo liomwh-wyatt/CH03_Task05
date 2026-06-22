@@ -8,6 +8,7 @@
 
 class UButton;
 class UTextBlock;
+class UWidget;
 
 UCLASS()
 class CH03_TASK05_API UCh03_GameResultWidget : public UUserWidget
@@ -19,7 +20,10 @@ public:
 	void InitializeResult(
 		bool bWasVictory,
 		int32 FinalScore,
-		FName InNextLevelName = NAME_None);
+		FName InNextLevelName,
+		const FText& LevelDisplayName);
+
+	UWidget* GetInitialFocusWidget() const;
 
 protected:
 	virtual void NativeConstruct() override;
@@ -61,4 +65,5 @@ private:
 
 	FName CurrentLevelName = NAME_None;
 	FName NextLevelName = NAME_None;
+	bool bResultWasVictory = false;
 };

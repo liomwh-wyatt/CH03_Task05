@@ -4,6 +4,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Core/Ch03_GameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -43,20 +44,24 @@ void UCh03_GameResultWidget::NativeDestruct()
 void UCh03_GameResultWidget::InitializeResult(
 	const bool bWasVictory,
 	const int32 FinalScore,
-	const FName InNextLevelName)
+	const FName InNextLevelName,
+	const FText& LevelDisplayName)
 {
 	CurrentLevelName = FName(
 		*UGameplayStatics::GetCurrentLevelName(this, true));
 	NextLevelName = InNextLevelName;
+	bResultWasVictory = bWasVictory;
 
 	if (ResultTitleText)
 	{
 		ResultTitleText->SetText(
 			bWasVictory
-				? NSLOCTEXT(
-					"CheonbokResult",
-					"LivingRoomComplete",
-					"Living Room Complete!")
+				? FText::Format(
+					NSLOCTEXT(
+						"CheonbokResult",
+						"LevelComplete",
+						"{0} Complete!"),
+					LevelDisplayName)
 				: NSLOCTEXT(
 					"CheonbokResult",
 					"GameOver",
@@ -92,15 +97,40 @@ void UCh03_GameResultWidget::InitializeResult(
 		bCanContinue);
 }
 
+UWidget* UCh03_GameResultWidget::GetInitialFocusWidget() const
+{
+	return RestartButton && RestartButton->GetIsFocusable()
+		? RestartButton
+		: nullptr;
+}
+
 void UCh03_GameResultWidget::HandleRestartClicked()
 {
-	if (CurrentLevelName.IsNone())
+	FName RestartLevelName = CurrentLevelName;
+
+	if (UCh03_GameInstance* CheonbokGameInstance =
+		GetGameInstance<UCh03_GameInstance>())
+	{
+		if (bResultWasVictory)
+		{
+			CheonbokGameInstance->StartNewGame();
+			RestartLevelName =
+				CheonbokGameInstance->GetFirstLevelName();
+		}
+		else
+		{
+			CheonbokGameInstance->PrepareTravelToLevel(
+				CurrentLevelName);
+		}
+	}
+
+	if (RestartLevelName.IsNone())
 	{
 		return;
 	}
 
 	ResumeGameBeforeTravel();
-	UGameplayStatics::OpenLevel(this, CurrentLevelName);
+	UGameplayStatics::OpenLevel(this, RestartLevelName);
 }
 
 void UCh03_GameResultWidget::HandleContinueClicked()
@@ -108,6 +138,16 @@ void UCh03_GameResultWidget::HandleContinueClicked()
 	if (NextLevelName.IsNone())
 	{
 		return;
+	}
+
+	if (UCh03_GameInstance* CheonbokGameInstance =
+		GetGameInstance<UCh03_GameInstance>())
+	{
+		if (!CheonbokGameInstance->PrepareTravelToLevel(
+			NextLevelName))
+		{
+			return;
+		}
 	}
 
 	ResumeGameBeforeTravel();

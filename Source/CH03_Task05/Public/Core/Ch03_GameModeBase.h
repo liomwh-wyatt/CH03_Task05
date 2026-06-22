@@ -8,6 +8,7 @@
 class ACh03_CheonbokCharacter;
 class ACh03_GameStateBase;
 class UCh03_GameResultWidget;
+class UCh03_GameInstance;
 
 UENUM(BlueprintType)
 enum class ECh03_GamePhase : uint8
@@ -115,6 +116,7 @@ private:
 	void ScheduleResultScreen(bool bWasVictory);
 	void ShowPendingResultScreen();
 	void LockPlayerInput();
+	FText GetCurrentLevelDisplayName() const;
 	void ClearWaveTimers();
 	void ClearGameTimers();
 	void SetGamePhase(ECh03_GamePhase NewPhase);
@@ -130,6 +132,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<ACh03_GameStateBase> CachedGameState;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCh03_GameInstance> CachedGameInstance;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCh03_GameResultWidget> ActiveResultWidget;

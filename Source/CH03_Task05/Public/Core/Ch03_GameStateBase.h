@@ -40,6 +40,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
 	void ResetScore();
 
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	void SetScore(int32 NewScore);
+
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
 	int32 GetCurrentWave() const { return CurrentWave; }
 
