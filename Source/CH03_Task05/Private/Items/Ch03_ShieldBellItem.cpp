@@ -8,6 +8,7 @@ ACh03_ShieldBellItem::ACh03_ShieldBellItem()
 	RotationSpeed = 120.0f;
 	BobAmplitude = 20.0f;
 	BobFrequency = 1.8f;
+	LifetimeAfterSpawn = 10.0f;
 }
 
 void ACh03_ShieldBellItem::ActivateItem_Implementation(AActor* Activator)

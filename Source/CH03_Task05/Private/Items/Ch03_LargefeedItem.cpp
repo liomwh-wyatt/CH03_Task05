@@ -6,4 +6,5 @@ ACh03_LargefeedItem::ACh03_LargefeedItem()
 {
 	ItemType = TEXT("LargeFeed");
 	ScoreValue = 100;
+	LifetimeAfterSpawn = 14.0f;
 }

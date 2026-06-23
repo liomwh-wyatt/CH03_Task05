@@ -5,6 +5,7 @@
 ACh03_HealingItem::ACh03_HealingItem()
 {
 	ItemType = TEXT("HealingItem");
+	LifetimeAfterSpawn = 14.0f;
 }
 
 void ACh03_HealingItem::ActivateItem_Implementation(AActor* Activator)

@@ -13,6 +13,8 @@ ACh03_ReverseControlItem::ACh03_ReverseControlItem()
 	RotationSpeed = 120.0f;
 	BobAmplitude = 18.0f;
 	BobFrequency = 2.0f;
+	LifetimeAfterSpawn = 9.0f;
+	BlinkStartTime = 2.0f;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(
 		TEXT("/Engine/BasicShapes/Sphere.Sphere"));

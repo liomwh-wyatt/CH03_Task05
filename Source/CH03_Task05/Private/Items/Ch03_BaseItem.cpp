@@ -55,6 +55,13 @@ void ACh03_BaseItem::Tick(float DeltaTime)
 	}
 
 	RunningTime += DeltaTime;
+	UpdateLifetime(DeltaTime);
+
+	if (bIsConsumed)
+	{
+		return;
+	}
+
 	AddActorLocalRotation(
 		FRotator(0.0f, RotationSpeed * DeltaTime, 0.0f));
 
@@ -65,6 +72,66 @@ void ACh03_BaseItem::Tick(float DeltaTime)
 			RunningTime * BobFrequency * 2.0f * PI) * BobAmplitude;
 		SetActorLocation(NewLocation);
 	}
+}
+
+void ACh03_BaseItem::UpdateLifetime(const float DeltaTime)
+{
+	if (!bExpireAfterSpawn || LifetimeAfterSpawn <= 0.0f)
+	{
+		return;
+	}
+
+	SpawnLifeElapsed += FMath::Max(0.0f, DeltaTime);
+	const float RemainingTime = LifetimeAfterSpawn - SpawnLifeElapsed;
+
+	if (bBlinkBeforeExpire
+		&& BlinkStartTime > 0.0f
+		&& RemainingTime <= BlinkStartTime
+		&& MeshComponent)
+	{
+		BlinkElapsed += FMath::Max(0.0f, DeltaTime);
+		if (BlinkElapsed >= BlinkInterval)
+		{
+			BlinkElapsed = 0.0f;
+			bIsBlinkVisible = !bIsBlinkVisible;
+			MeshComponent->SetVisibility(bIsBlinkVisible, true);
+		}
+	}
+
+	if (RemainingTime <= 0.0f)
+	{
+		ExpireItem();
+	}
+}
+
+void ACh03_BaseItem::ExpireItem()
+{
+	if (bIsConsumed)
+	{
+		return;
+	}
+
+	bIsConsumed = true;
+
+	if (CollisionComponent)
+	{
+		CollisionComponent->SetGenerateOverlapEvents(false);
+		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (MeshComponent)
+	{
+		MeshComponent->SetVisibility(false, true);
+	}
+
+	UE_LOG(
+		LogTemp,
+		Verbose,
+		TEXT("%s expired after %.1f seconds."),
+		*ItemType.ToString(),
+		SpawnLifeElapsed);
+
+	Destroy();
 }
 
 void ACh03_BaseItem::OnItemOverlap_Implementation(AActor* OverlapActor)

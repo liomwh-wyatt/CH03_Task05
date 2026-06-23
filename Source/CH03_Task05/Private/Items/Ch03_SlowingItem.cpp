@@ -13,6 +13,8 @@ ACh03_SlowingItem::ACh03_SlowingItem()
 	RotationSpeed = 90.0f;
 	BobAmplitude = 16.0f;
 	BobFrequency = 1.8f;
+	LifetimeAfterSpawn = 9.0f;
+	BlinkStartTime = 2.0f;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(
 		TEXT("/Engine/BasicShapes/Sphere.Sphere"));

@@ -83,8 +83,32 @@ protected:
 		meta = (ClampMin = "0.0"))
 	float DestroyDelay = 0.05f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Lifetime")
+	bool bExpireAfterSpawn = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Lifetime",
+		meta = (EditCondition = "bExpireAfterSpawn", ClampMin = "0.1", Units = "s"))
+	float LifetimeAfterSpawn = 14.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Lifetime")
+	bool bBlinkBeforeExpire = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Lifetime",
+		meta = (EditCondition = "bBlinkBeforeExpire", ClampMin = "0.0", Units = "s"))
+	float BlinkStartTime = 3.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Lifetime",
+		meta = (EditCondition = "bBlinkBeforeExpire", ClampMin = "0.03", Units = "s"))
+	float BlinkInterval = 0.18f;
+
 private:
+	void UpdateLifetime(float DeltaTime);
+	void ExpireItem();
+
 	bool bIsConsumed = false;
 	FVector InitialLocation = FVector::ZeroVector;
 	float RunningTime = 0.0f;
+	float SpawnLifeElapsed = 0.0f;
+	float BlinkElapsed = 0.0f;
+	bool bIsBlinkVisible = true;
 };

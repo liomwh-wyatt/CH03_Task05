@@ -8,6 +8,9 @@ ACh03_DamageItem::ACh03_DamageItem()
 {
 	ItemType = TEXT("DamageItem");
 	DamageTypeClass = UDamageType::StaticClass();
+	LifetimeAfterSpawn = 8.0f;
+	BlinkStartTime = 2.0f;
+	BlinkInterval = 0.13f;
 }
 
 void ACh03_DamageItem::ActivateItem_Implementation(AActor* Activator)

@@ -8,6 +8,7 @@ ACh03_StaminaRecoveryItem::ACh03_StaminaRecoveryItem()
 	RotationSpeed = 100.0f;
 	BobAmplitude = 14.0f;
 	BobFrequency = 1.7f;
+	LifetimeAfterSpawn = 12.0f;
 }
 
 void ACh03_StaminaRecoveryItem::ActivateItem_Implementation(

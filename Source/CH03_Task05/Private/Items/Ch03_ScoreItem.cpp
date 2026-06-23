@@ -5,6 +5,8 @@
 ACh03_ScoreItem::ACh03_ScoreItem()
 {
 	ItemType = TEXT("ScoreItem");
+	LifetimeAfterSpawn = 16.0f;
+	BlinkStartTime = 3.0f;
 }
 
 void ACh03_ScoreItem::ActivateItem_Implementation(AActor* Activator)

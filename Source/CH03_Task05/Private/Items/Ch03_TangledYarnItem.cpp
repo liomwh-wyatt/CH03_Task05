@@ -8,6 +8,8 @@ ACh03_TangledYarnItem::ACh03_TangledYarnItem()
 	RotationSpeed = 80.0f;
 	BobAmplitude = 16.0f;
 	BobFrequency = 1.4f;
+	LifetimeAfterSpawn = 8.0f;
+	BlinkStartTime = 2.0f;
 }
 
 void ACh03_TangledYarnItem::ActivateItem_Implementation(AActor* Activator)

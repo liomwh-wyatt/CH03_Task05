@@ -8,6 +8,13 @@ class UBoxComponent;
 class UStaticMeshComponent;
 class ACh03_CheonbokCharacter;
 
+UENUM(BlueprintType)
+enum class ECh03WaveEnvironmentMovementMode : uint8
+{
+	PingPong UMETA(DisplayName = "Ping Pong"),
+	RandomRoam UMETA(DisplayName = "Random Roam")
+};
+
 UCLASS()
 class CH03_TASK05_API ACh03_WaveEnvironmentActor : public AActor
 {
@@ -118,6 +125,10 @@ private:
 		const ACh03_CheonbokCharacter* CheonbokCharacter) const;
 	void CacheInitialLocationIfNeeded();
 	void UpdateActiveMovement(float DeltaSeconds);
+	void UpdatePingPongMovement(float DeltaSeconds);
+	void UpdateRandomRoamMovement(float DeltaSeconds);
+	void SelectNewRoamTarget();
+	FVector GetRandomRoamLocation() const;
 	void ResetMovement();
 
 	int32 LastAppliedWave = 0;
@@ -128,11 +139,20 @@ private:
 	float MovementAlpha = 0.0f;
 	float MovementDirection = 1.0f;
 	float LastKnockbackTime = -BIG_NUMBER;
+	FVector CurrentMovementDirection = FVector::ZeroVector;
+	FVector RoamTargetLocation = FVector::ZeroVector;
+	float CurrentRoamWaitTime = 0.0f;
 	bool bHasCachedInitialLocation = false;
+	bool bHasRoamTarget = false;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement")
 	bool bMoveWhenActive = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
+		meta = (EditCondition = "bMoveWhenActive"))
+	ECh03WaveEnvironmentMovementMode MovementMode =
+		ECh03WaveEnvironmentMovementMode::PingPong;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "cm/s"))
@@ -141,6 +161,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive"))
 	FVector MovementOffset = FVector(400.0f, 0.0f, 0.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
+		meta = (EditCondition = "bMoveWhenActive"))
+	FVector RoamBoundsExtent = FVector(600.0f, 450.0f, 0.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
+		meta = (EditCondition = "bMoveWhenActive", ClampMin = "1.0"))
+	float RoamTargetAcceptanceRadius = 45.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
+		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "s"))
+	float RoamWaitTimeMin = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
+		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "s"))
+	float RoamWaitTimeMax = 0.8f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive"))

@@ -204,7 +204,14 @@ FVector ACh03_WaveEnvironmentActor::GetKnockbackDirection(
 
 	if (bUseMovementDirectionForKnockback && bMoveWhenActive)
 	{
-		FVector MovementDirectionVector =
+		FVector MovementDirectionVector = CurrentMovementDirection;
+
+		if (!MovementDirectionVector.IsNearlyZero())
+		{
+			return MovementDirectionVector;
+		}
+
+		MovementDirectionVector =
 			MovementOffset.GetSafeNormal2D() * MovementDirection;
 		MovementDirectionVector.Z = 0.0f;
 
@@ -243,6 +250,18 @@ void ACh03_WaveEnvironmentActor::CacheInitialLocationIfNeeded()
 void ACh03_WaveEnvironmentActor::UpdateActiveMovement(
 	const float DeltaSeconds)
 {
+	if (MovementMode == ECh03WaveEnvironmentMovementMode::RandomRoam)
+	{
+		UpdateRandomRoamMovement(DeltaSeconds);
+		return;
+	}
+
+	UpdatePingPongMovement(DeltaSeconds);
+}
+
+void ACh03_WaveEnvironmentActor::UpdatePingPongMovement(
+	const float DeltaSeconds)
+{
 	CacheInitialLocationIfNeeded();
 
 	const float TravelDistance = MovementOffset.Size();
@@ -272,7 +291,82 @@ void ACh03_WaveEnvironmentActor::UpdateActiveMovement(
 	const FVector NewLocation =
 		FMath::Lerp(InitialActorLocation, TargetLocation, MovementAlpha);
 
+	CurrentMovementDirection =
+		(NewLocation - GetActorLocation()).GetSafeNormal2D();
 	SetActorLocation(NewLocation);
+}
+
+void ACh03_WaveEnvironmentActor::UpdateRandomRoamMovement(
+	const float DeltaSeconds)
+{
+	CacheInitialLocationIfNeeded();
+
+	if (MovementSpeed <= 0.0f
+		|| (RoamBoundsExtent.X <= 0.0f && RoamBoundsExtent.Y <= 0.0f))
+	{
+		CurrentMovementDirection = FVector::ZeroVector;
+		return;
+	}
+
+	if (CurrentRoamWaitTime > 0.0f)
+	{
+		CurrentRoamWaitTime =
+			FMath::Max(0.0f, CurrentRoamWaitTime - DeltaSeconds);
+		CurrentMovementDirection = FVector::ZeroVector;
+		return;
+	}
+
+	if (!bHasRoamTarget)
+	{
+		SelectNewRoamTarget();
+	}
+
+	const FVector CurrentLocation = GetActorLocation();
+	FVector ToTarget = RoamTargetLocation - CurrentLocation;
+	ToTarget.Z = 0.0f;
+
+	const float DistanceToTarget = ToTarget.Size2D();
+	if (DistanceToTarget <= RoamTargetAcceptanceRadius)
+	{
+		SetActorLocation(RoamTargetLocation);
+		bHasRoamTarget = false;
+		CurrentMovementDirection = FVector::ZeroVector;
+		CurrentRoamWaitTime =
+			FMath::FRandRange(
+				FMath::Min(RoamWaitTimeMin, RoamWaitTimeMax),
+				FMath::Max(RoamWaitTimeMin, RoamWaitTimeMax));
+		return;
+	}
+
+	const FVector MoveDirection = ToTarget.GetSafeNormal2D();
+	const float MoveDistance =
+		FMath::Min(MovementSpeed * DeltaSeconds, DistanceToTarget);
+
+	FVector NewLocation = CurrentLocation + MoveDirection * MoveDistance;
+	NewLocation.Z = InitialActorLocation.Z;
+
+	CurrentMovementDirection = MoveDirection;
+	SetActorLocation(NewLocation);
+}
+
+void ACh03_WaveEnvironmentActor::SelectNewRoamTarget()
+{
+	RoamTargetLocation = GetRandomRoamLocation();
+	bHasRoamTarget = true;
+}
+
+FVector ACh03_WaveEnvironmentActor::GetRandomRoamLocation() const
+{
+	const FVector SafeExtent(
+		FMath::Max(0.0f, RoamBoundsExtent.X),
+		FMath::Max(0.0f, RoamBoundsExtent.Y),
+		0.0f);
+
+	return InitialActorLocation
+		+ FVector(
+			FMath::FRandRange(-SafeExtent.X, SafeExtent.X),
+			FMath::FRandRange(-SafeExtent.Y, SafeExtent.Y),
+			0.0f);
 }
 
 void ACh03_WaveEnvironmentActor::ResetMovement()
@@ -281,5 +375,9 @@ void ACh03_WaveEnvironmentActor::ResetMovement()
 
 	MovementAlpha = 0.0f;
 	MovementDirection = 1.0f;
+	CurrentMovementDirection = FVector::ZeroVector;
+	RoamTargetLocation = InitialActorLocation;
+	CurrentRoamWaitTime = 0.0f;
+	bHasRoamTarget = false;
 	SetActorLocation(InitialActorLocation);
 }
