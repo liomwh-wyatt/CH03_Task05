@@ -132,6 +132,9 @@ protected:
 	TObjectPtr<UTextBlock> ComboText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> ComboRewardText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SlowStatusText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -156,6 +159,7 @@ private:
 	void UpdateWaveBannerAnimation(float DeltaTime);
 	void ApplyWaveBannerAnimation(float Alpha, bool bIsOutro);
 	void FinishWaveBannerOutroAnimation();
+	void UpdateComboRewardFeedback(float DeltaTime);
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
 	void UpdateStatusEffectText(
@@ -177,7 +181,9 @@ private:
 	float WaveBannerAnimationTime = 0.0f;
 	bool bIsWaveBannerAnimationActive = false;
 	bool bIsWaveBannerOutroAnimation = false;
+	float ComboRewardRemainingTime = 0.0f;
 
 	static constexpr float WaveBannerIntroDuration = 0.22f;
 	static constexpr float WaveBannerOutroDuration = 0.18f;
+	static constexpr float ComboRewardDisplayDuration = 1.6f;
 };

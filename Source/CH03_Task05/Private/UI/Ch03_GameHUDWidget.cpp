@@ -47,6 +47,7 @@ void UCh03_GameHUDWidget::NativeTick(
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
 	UpdateWaveBannerAnimation(InDeltaTime);
+	UpdateComboRewardFeedback(InDeltaTime);
 }
 
 void UCh03_GameHUDWidget::HandleScoreChanged(int32 NewScore)
@@ -238,6 +239,14 @@ void UCh03_GameHUDWidget::HandleComboRewardTriggered(
 	const int32 ComboCount,
 	const FText RewardText)
 {
+	if (ComboRewardText)
+	{
+		ComboRewardText->SetText(RewardText);
+		ComboRewardText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		ComboRewardText->SetRenderOpacity(1.0f);
+		ComboRewardRemainingTime = ComboRewardDisplayDuration;
+	}
+
 	OnComboRewardUpdated(ComboCount, RewardText);
 }
 
@@ -562,7 +571,7 @@ void UCh03_GameHUDWidget::CreateStaminaFallbacks()
 
 void UCh03_GameHUDWidget::CreateComboFallbacks()
 {
-	if (!WidgetTree || ComboText)
+	if (!WidgetTree || (ComboText && ComboRewardText))
 	{
 		return;
 	}
@@ -574,35 +583,108 @@ void UCh03_GameHUDWidget::CreateComboFallbacks()
 		return;
 	}
 
-	ComboText = WidgetTree->ConstructWidget<UTextBlock>(
-		UTextBlock::StaticClass(),
-		TEXT("ComboText_NativeFallback"));
-
-	ComboText->SetVisibility(ESlateVisibility::Collapsed);
-	ComboText->SetJustification(ETextJustify::Left);
-	ComboText->SetColorAndOpacity(
-		FSlateColor(FLinearColor(1.0f, 0.86f, 0.16f, 1.0f)));
-	ComboText->SetShadowOffset(FVector2D(1.5f, 1.5f));
-	ComboText->SetShadowColorAndOpacity(
-		FLinearColor(0.0f, 0.0f, 0.0f, 0.85f));
-
-	FSlateFontInfo ComboFont = ComboText->GetFont();
-	ComboFont.Size = 26;
-	ComboText->SetFont(ComboFont);
-
 	if (UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(RootPanel))
 	{
-		UCanvasPanelSlot* CanvasSlot =
-			RootCanvas->AddChildToCanvas(ComboText);
-		CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-		CanvasSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-		CanvasSlot->SetPosition(FVector2D(32.0f, 98.0f));
-		CanvasSlot->SetSize(FVector2D(360.0f, 40.0f));
-		CanvasSlot->SetZOrder(20);
+		if (!ComboText)
+		{
+			ComboText = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(),
+				TEXT("ComboText_NativeFallback"));
+
+			ComboText->SetVisibility(ESlateVisibility::Collapsed);
+			ComboText->SetJustification(ETextJustify::Left);
+			ComboText->SetColorAndOpacity(
+				FSlateColor(FLinearColor(1.0f, 0.86f, 0.16f, 1.0f)));
+			ComboText->SetShadowOffset(FVector2D(1.5f, 1.5f));
+			ComboText->SetShadowColorAndOpacity(
+				FLinearColor(0.0f, 0.0f, 0.0f, 0.85f));
+
+			FSlateFontInfo ComboFont = ComboText->GetFont();
+			ComboFont.Size = 26;
+			ComboText->SetFont(ComboFont);
+
+			UCanvasPanelSlot* CanvasSlot =
+				RootCanvas->AddChildToCanvas(ComboText);
+			CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			CanvasSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+			CanvasSlot->SetPosition(FVector2D(32.0f, 98.0f));
+			CanvasSlot->SetSize(FVector2D(360.0f, 40.0f));
+			CanvasSlot->SetZOrder(20);
+		}
+
+		if (!ComboRewardText)
+		{
+			ComboRewardText = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(),
+				TEXT("ComboRewardText_NativeFallback"));
+
+			ComboRewardText->SetVisibility(ESlateVisibility::Collapsed);
+			ComboRewardText->SetJustification(ETextJustify::Left);
+			ComboRewardText->SetColorAndOpacity(
+				FSlateColor(FLinearColor(1.0f, 0.55f, 0.12f, 1.0f)));
+			ComboRewardText->SetShadowOffset(FVector2D(1.5f, 1.5f));
+			ComboRewardText->SetShadowColorAndOpacity(
+				FLinearColor(0.0f, 0.0f, 0.0f, 0.9f));
+
+			FSlateFontInfo RewardFont = ComboRewardText->GetFont();
+			RewardFont.Size = 24;
+			ComboRewardText->SetFont(RewardFont);
+
+			UCanvasPanelSlot* RewardSlot =
+				RootCanvas->AddChildToCanvas(ComboRewardText);
+			RewardSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			RewardSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+			RewardSlot->SetPosition(FVector2D(32.0f, 132.0f));
+			RewardSlot->SetSize(FVector2D(540.0f, 40.0f));
+			RewardSlot->SetZOrder(21);
+		}
 	}
 	else
 	{
-		RootPanel->AddChild(ComboText);
+		if (!ComboText)
+		{
+			ComboText = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(),
+				TEXT("ComboText_NativeFallback"));
+			ComboText->SetVisibility(ESlateVisibility::Collapsed);
+			RootPanel->AddChild(ComboText);
+		}
+
+		if (!ComboRewardText)
+		{
+			ComboRewardText = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(),
+				TEXT("ComboRewardText_NativeFallback"));
+			ComboRewardText->SetVisibility(ESlateVisibility::Collapsed);
+			RootPanel->AddChild(ComboRewardText);
+		}
+	}
+}
+
+void UCh03_GameHUDWidget::UpdateComboRewardFeedback(
+	const float DeltaTime)
+{
+	if (!ComboRewardText || ComboRewardRemainingTime <= 0.0f)
+	{
+		return;
+	}
+
+	ComboRewardRemainingTime = FMath::Max(
+		0.0f,
+		ComboRewardRemainingTime - FMath::Max(0.0f, DeltaTime));
+
+	const float FadeStartTime = 0.35f;
+	const float Opacity = ComboRewardRemainingTime < FadeStartTime
+		? FMath::Clamp(ComboRewardRemainingTime / FadeStartTime, 0.0f, 1.0f)
+		: 1.0f;
+
+	ComboRewardText->SetRenderOpacity(Opacity);
+
+	if (ComboRewardRemainingTime <= 0.0f)
+	{
+		ComboRewardText->SetText(FText::GetEmpty());
+		ComboRewardText->SetVisibility(ESlateVisibility::Collapsed);
+		ComboRewardText->SetRenderOpacity(1.0f);
 	}
 }
 
