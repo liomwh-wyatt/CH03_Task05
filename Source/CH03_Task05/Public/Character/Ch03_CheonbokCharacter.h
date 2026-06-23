@@ -15,13 +15,20 @@ UENUM(BlueprintType)
 enum class ECheonbokStatusEffect : uint8
 {
 	Slow UMETA(DisplayName = "Slow"),
-	ReverseControl UMETA(DisplayName = "Reverse Control")
+	ReverseControl UMETA(DisplayName = "Reverse Control"),
+	MovementLock UMETA(DisplayName = "Movement Lock"),
+	DamageShield UMETA(DisplayName = "Damage Shield")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnCheonbokHealthChanged,
 	float, CurrentHealth,
 	float, MaxHealth);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnCheonbokStaminaChanged,
+	float, CurrentStamina,
+	float, MaxStamina);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCheonbokDeath);
 
@@ -67,11 +74,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Health")
 	virtual void OnDeath();
 
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Stamina")
+	float GetStamina() const { return CurrentStamina; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Stamina")
+	float GetMaxStamina() const { return MaxStamina; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Stamina")
+	float GetStaminaPercent() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Stamina")
+	void AddStamina(float Amount);
+
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Status Effect")
 	void ApplySlow(float Duration = 5.0f, float SpeedMultiplier = 0.5f);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Status Effect")
 	void ApplyReverseControl(float Duration = 4.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Status Effect")
+	void ApplyMovementLock(float Duration = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Shield")
+	void ApplyDamageShield(int32 StackAmount = 1);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Status Effect")
 	void ClearAllStatusEffects();
@@ -83,10 +108,25 @@ public:
 	bool IsReverseControlActive() const { return bIsControlReversed; }
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	bool IsMovementLockActive() const { return bIsMovementLocked; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Shield")
+	bool IsDamageShieldActive() const { return DamageShieldStackCount > 0; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	int32 GetSlowStackCount() const { return SlowStackCount; }
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	int32 GetReverseControlStackCount() const { return ReverseControlStackCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	int32 GetMovementLockStackCount() const { return MovementLockStackCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Shield")
+	int32 GetDamageShieldStackCount() const { return DamageShieldStackCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Shield")
+	bool CanAddDamageShield(int32 StackAmount = 1) const;
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	float GetSlowRemainingTime() const;
@@ -94,11 +134,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	float GetReverseControlRemainingTime() const;
 
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	float GetMovementLockRemainingTime() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|State")
 	void ResetCharacterState();
 
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokHealthChanged OnHealthChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	FOnCheonbokStaminaChanged OnStaminaChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokDeath OnCharacterDeath;
@@ -119,10 +165,14 @@ protected:
 
 	bool IsAirMovementLocked() const;
 	bool IsSprintInputHeld() const;
+	bool CanUseSprintSpeed() const;
+	bool IsMovingOnGround() const;
+	void UpdateStamina(float DeltaTime);
 	void RefreshMovementSpeed();
 	void ClampHorizontalVelocityToMaxSpeed();
 	void EndSlow();
 	void EndReverseControl();
+	void EndMovementLock();
 	void EndDamageInvincibility();
 	void InitializeWorldHealthWidget();
 	void UpdateWorldHealthWidget();
@@ -164,6 +214,25 @@ protected:
 		meta = (ClampMin = "1.0"))
 	float SprintSpeedMultiplier = 1.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Stamina",
+		meta = (ClampMin = "1.0"))
+	float MaxStamina = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|Stamina")
+	float CurrentStamina = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Stamina",
+		meta = (ClampMin = "0.0"))
+	float SprintStaminaCostPerSecond = 22.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Stamina",
+		meta = (ClampMin = "0.0"))
+	float StaminaRecoveryPerSecond = 14.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Stamina",
+		meta = (ClampMin = "0.0"))
+	float MinStaminaToStartSprint = 12.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Health",
 		meta = (ClampMin = "1.0"))
 	float MaxHealth = 100.0f;
@@ -183,18 +252,31 @@ protected:
 		meta = (ClampMin = "0.1"))
 	float MaximumReverseControlDuration = 8.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Status Effect",
+		meta = (ClampMin = "0.1"))
+	float MaximumMovementLockDuration = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Shield",
+		meta = (ClampMin = "1"))
+	int32 MaxDamageShieldStacks = 1;
+
 private:
 	bool bIsDead = false;
 	bool bIsDamageInvincible = false;
 	bool bIsSlowed = false;
 	bool bIsControlReversed = false;
+	bool bIsMovementLocked = false;
 	bool bIsAirMovementLocked = false;
+	bool bIsSprinting = false;
 
 	float ActiveSlowMultiplier = 1.0f;
 	int32 SlowStackCount = 0;
 	int32 ReverseControlStackCount = 0;
+	int32 MovementLockStackCount = 0;
+	int32 DamageShieldStackCount = 0;
 
 	FTimerHandle DamageInvincibilityTimerHandle;
 	FTimerHandle SlowTimerHandle;
 	FTimerHandle ReverseControlTimerHandle;
+	FTimerHandle MovementLockTimerHandle;
 };

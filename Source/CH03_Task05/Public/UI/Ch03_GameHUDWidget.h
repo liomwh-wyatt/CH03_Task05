@@ -31,6 +31,9 @@ protected:
 	void HandleHealthChanged(float CurrentHealth, float MaxHealth);
 
 	UFUNCTION()
+	void HandleStaminaChanged(float CurrentStamina, float MaxStamina);
+
+	UFUNCTION()
 	void HandleWaveChanged(int32 CurrentWave, int32 MaxWave);
 
 	UFUNCTION()
@@ -54,6 +57,12 @@ protected:
 		float CurrentHealth,
 		float MaxHealth,
 		float HealthPercent);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnStaminaUpdated(
+		float CurrentStamina,
+		float MaxStamina,
+		float StaminaPercent);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnWaveUpdated(int32 CurrentWave, int32 MaxWave);
@@ -81,6 +90,12 @@ protected:
 	TObjectPtr<UProgressBar> HealthBar;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> StaminaText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> StaminaBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> WaveText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -95,12 +110,19 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ReverseControlStatusText;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> MovementLockStatusText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> DamageShieldStatusText;
+
 private:
 	void BindToGameState();
 	void UnbindFromGameState();
 	void BindToCharacter();
 	void UnbindFromCharacter();
 	void CreateWaveBannerTextFallback();
+	void CreateStaminaFallbacks();
 	void PlayWaveBannerIntroAnimation();
 	void PlayWaveBannerOutroAnimation();
 	void UpdateWaveBannerAnimation(float DeltaTime);

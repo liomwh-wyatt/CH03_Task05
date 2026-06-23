@@ -11,7 +11,7 @@
 
 ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(
 		TEXT("SpringArmComponent"));
@@ -66,14 +66,19 @@ void ACh03_CheonbokCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHealth = MaxHealth;
+	CurrentStamina = MaxStamina;
 	InitializeWorldHealthWidget();
 	RefreshMovementSpeed();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+	OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }
 
 void ACh03_CheonbokCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	UpdateStamina(DeltaTime);
+	RefreshMovementSpeed();
 }
 
 void ACh03_CheonbokCharacter::PawnClientRestart()
@@ -179,7 +184,7 @@ void ACh03_CheonbokCharacter::SetupPlayerInputComponent(
 
 void ACh03_CheonbokCharacter::Move(const FInputActionValue& Value)
 {
-	if (!Controller || bIsDead || IsAirMovementLocked())
+	if (!Controller || bIsDead || bIsMovementLocked || IsAirMovementLocked())
 	{
 		return;
 	}
@@ -223,7 +228,7 @@ void ACh03_CheonbokCharacter::Look(const FInputActionValue& Value)
 
 void ACh03_CheonbokCharacter::StartJump(const FInputActionValue& Value)
 {
-	if (!bIsDead && Value.Get<bool>() && CanJump())
+	if (!bIsDead && !bIsMovementLocked && Value.Get<bool>() && CanJump())
 	{
 		bIsAirMovementLocked = true;
 		Jump();
@@ -252,6 +257,8 @@ void ACh03_CheonbokCharacter::StopSprint(const FInputActionValue& Value)
 {
 	(void)Value;
 
+	bIsSprinting = false;
+
 	if (!IsAirMovementLocked())
 	{
 		RefreshMovementSpeed();
@@ -262,6 +269,13 @@ void ACh03_CheonbokCharacter::StopSprint(const FInputActionValue& Value)
 float ACh03_CheonbokCharacter::GetHealthPercent() const
 {
 	return MaxHealth > 0.0f ? CurrentHealth / MaxHealth : 0.0f;
+}
+
+float ACh03_CheonbokCharacter::GetStaminaPercent() const
+{
+	return MaxStamina > 0.0f
+		? FMath::Clamp(CurrentStamina / MaxStamina, 0.0f, 1.0f)
+		: 0.0f;
 }
 
 void ACh03_CheonbokCharacter::AddHealth(float Amount)
@@ -290,6 +304,33 @@ void ACh03_CheonbokCharacter::AddHealth(float Amount)
 	}
 }
 
+void ACh03_CheonbokCharacter::AddStamina(float Amount)
+{
+	if (Amount <= 0.0f || bIsDead)
+	{
+		return;
+	}
+
+	const float PreviousStamina = CurrentStamina;
+	CurrentStamina = FMath::Clamp(
+		CurrentStamina + Amount,
+		0.0f,
+		MaxStamina);
+
+	if (!FMath::IsNearlyEqual(PreviousStamina, CurrentStamina))
+	{
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+		RefreshMovementSpeed();
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("Cheonbok stamina increased: %.1f / %.1f"),
+			CurrentStamina,
+			MaxStamina);
+	}
+}
+
 float ACh03_CheonbokCharacter::TakeDamage(
 	float DamageAmount,
 	const FDamageEvent& DamageEvent,
@@ -298,6 +339,25 @@ float ACh03_CheonbokCharacter::TakeDamage(
 {
 	if (DamageAmount <= 0.0f || bIsDead || bIsDamageInvincible)
 	{
+		return 0.0f;
+	}
+
+	if (DamageShieldStackCount > 0)
+	{
+		--DamageShieldStackCount;
+		OnStatusEffectChanged.Broadcast(
+			ECheonbokStatusEffect::DamageShield,
+			DamageShieldStackCount > 0,
+			DamageShieldStackCount,
+			-1.0f);
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("Cheonbok damage shield blocked %.1f damage. Remaining shield: %d"),
+			DamageAmount,
+			DamageShieldStackCount);
+
 		return 0.0f;
 	}
 
@@ -358,6 +418,7 @@ void ACh03_CheonbokCharacter::OnDeath()
 	bIsDead = true;
 	StopJumping();
 	ClearAllStatusEffects();
+	DamageShieldStackCount = 0;
 	UpdateWorldHealthWidget();
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
@@ -427,6 +488,63 @@ void ACh03_CheonbokCharacter::ApplyReverseControl(float Duration)
 		NewRemainingTime);
 }
 
+void ACh03_CheonbokCharacter::ApplyMovementLock(float Duration)
+{
+	if (Duration <= 0.0f || bIsDead)
+	{
+		return;
+	}
+
+	bIsMovementLocked = true;
+	bIsSprinting = false;
+	MovementLockStackCount = FMath::Max(1, MovementLockStackCount + 1);
+
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->StopMovementImmediately();
+	}
+
+	const float NewRemainingTime = ExtendEffectTimer(
+		MovementLockTimerHandle,
+		Duration,
+		MaximumMovementLockDuration,
+		FTimerDelegate::CreateUObject(
+			this,
+			&ACh03_CheonbokCharacter::EndMovementLock));
+
+	RefreshMovementSpeed();
+	OnStatusEffectChanged.Broadcast(
+		ECheonbokStatusEffect::MovementLock,
+		true,
+		MovementLockStackCount,
+		NewRemainingTime);
+}
+
+void ACh03_CheonbokCharacter::ApplyDamageShield(const int32 StackAmount)
+{
+	if (StackAmount <= 0 || bIsDead)
+	{
+		return;
+	}
+
+	DamageShieldStackCount = FMath::Clamp(
+		DamageShieldStackCount + StackAmount,
+		0,
+		FMath::Max(1, MaxDamageShieldStacks));
+
+	OnStatusEffectChanged.Broadcast(
+		ECheonbokStatusEffect::DamageShield,
+		DamageShieldStackCount > 0,
+		DamageShieldStackCount,
+		-1.0f);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Cheonbok damage shield applied. Shield stack: %d"),
+		DamageShieldStackCount);
+}
+
 void ACh03_CheonbokCharacter::ClearAllStatusEffects()
 {
 	if (bIsSlowed)
@@ -445,6 +563,15 @@ void ACh03_CheonbokCharacter::ClearAllStatusEffects()
 	else
 	{
 		GetWorldTimerManager().ClearTimer(ReverseControlTimerHandle);
+	}
+
+	if (bIsMovementLocked)
+	{
+		EndMovementLock();
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(MovementLockTimerHandle);
 	}
 }
 
@@ -468,15 +595,36 @@ float ACh03_CheonbokCharacter::GetReverseControlRemainingTime() const
 		: 0.0f;
 }
 
+float ACh03_CheonbokCharacter::GetMovementLockRemainingTime() const
+{
+	return GetWorld()
+		? FMath::Max(
+			0.0f,
+			GetWorld()->GetTimerManager().GetTimerRemaining(
+				MovementLockTimerHandle))
+		: 0.0f;
+}
+
+bool ACh03_CheonbokCharacter::CanAddDamageShield(
+	const int32 StackAmount) const
+{
+	return StackAmount > 0
+		&& !bIsDead
+		&& DamageShieldStackCount < FMath::Max(1, MaxDamageShieldStacks);
+}
+
 void ACh03_CheonbokCharacter::ResetCharacterState()
 {
 	GetWorldTimerManager().ClearTimer(DamageInvincibilityTimerHandle);
 	bIsDamageInvincible = false;
 	bIsDead = false;
+	bIsSprinting = false;
 	bIsAirMovementLocked = false;
+	DamageShieldStackCount = 0;
 
 	ClearAllStatusEffects();
 	CurrentHealth = MaxHealth;
+	CurrentStamina = MaxStamina;
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
 	{
@@ -487,6 +635,12 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 	InitializeWorldHealthWidget();
 	UpdateWorldHealthWidget();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+	OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+	OnStatusEffectChanged.Broadcast(
+		ECheonbokStatusEffect::DamageShield,
+		false,
+		0,
+		-1.0f);
 }
 
 bool ACh03_CheonbokCharacter::IsAirMovementLocked() const
@@ -511,20 +665,101 @@ bool ACh03_CheonbokCharacter::IsSprintInputHeld() const
 		&& CheonbokController->IsSprintInputHeld();
 }
 
+bool ACh03_CheonbokCharacter::CanUseSprintSpeed() const
+{
+	if (bIsDead
+		|| bIsMovementLocked
+		|| IsAirMovementLocked()
+		|| !IsSprintInputHeld())
+	{
+		return false;
+	}
+
+	const float RequiredStamina = bIsSprinting
+		? KINDA_SMALL_NUMBER
+		: MinStaminaToStartSprint;
+
+	return CurrentStamina >= RequiredStamina;
+}
+
+bool ACh03_CheonbokCharacter::IsMovingOnGround() const
+{
+	const UCharacterMovementComponent* MovementComponent =
+		GetCharacterMovement();
+
+	return MovementComponent
+		&& MovementComponent->IsMovingOnGround()
+		&& MovementComponent->GetCurrentAcceleration().SizeSquared2D()
+			> KINDA_SMALL_NUMBER;
+}
+
+void ACh03_CheonbokCharacter::UpdateStamina(const float DeltaTime)
+{
+	if (bIsDead || DeltaTime <= 0.0f || MaxStamina <= 0.0f)
+	{
+		return;
+	}
+
+	const float PreviousStamina = CurrentStamina;
+	const bool bShouldSpendStamina =
+		CanUseSprintSpeed()
+		&& IsMovingOnGround()
+		&& SprintStaminaCostPerSecond > 0.0f;
+
+	if (bShouldSpendStamina)
+	{
+		CurrentStamina = FMath::Clamp(
+			CurrentStamina - SprintStaminaCostPerSecond * DeltaTime,
+			0.0f,
+			MaxStamina);
+
+		if (CurrentStamina <= KINDA_SMALL_NUMBER)
+		{
+			CurrentStamina = 0.0f;
+			bIsSprinting = false;
+		}
+	}
+	else if (StaminaRecoveryPerSecond > 0.0f)
+	{
+		CurrentStamina = FMath::Clamp(
+			CurrentStamina + StaminaRecoveryPerSecond * DeltaTime,
+			0.0f,
+			MaxStamina);
+	}
+
+	if (!FMath::IsNearlyEqual(PreviousStamina, CurrentStamina, 0.05f))
+	{
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+	}
+}
+
 void ACh03_CheonbokCharacter::RefreshMovementSpeed()
 {
 	UCharacterMovementComponent* MovementComponent =
 		GetCharacterMovement();
-	if (!MovementComponent || bIsDead || IsAirMovementLocked())
+	if (!MovementComponent || bIsDead)
+	{
+		return;
+	}
+
+	if (bIsMovementLocked)
+	{
+		bIsSprinting = false;
+		MovementComponent->MaxWalkSpeed = 0.0f;
+		return;
+	}
+
+	if (IsAirMovementLocked())
 	{
 		return;
 	}
 
 	const float SprintMultiplier =
-		IsSprintInputHeld() ? SprintSpeedMultiplier : 1.0f;
+		CanUseSprintSpeed() ? SprintSpeedMultiplier : 1.0f;
 	const float StatusMultiplier =
 		bIsSlowed ? ActiveSlowMultiplier : 1.0f;
 
+	bIsSprinting = SprintMultiplier > 1.0f;
 	MovementComponent->MaxWalkSpeed =
 		NormalSpeed * SprintMultiplier * StatusMultiplier;
 }
@@ -573,6 +808,20 @@ void ACh03_CheonbokCharacter::EndReverseControl()
 
 	OnStatusEffectChanged.Broadcast(
 		ECheonbokStatusEffect::ReverseControl,
+		false,
+		0,
+		0.0f);
+}
+
+void ACh03_CheonbokCharacter::EndMovementLock()
+{
+	GetWorldTimerManager().ClearTimer(MovementLockTimerHandle);
+	bIsMovementLocked = false;
+	MovementLockStackCount = 0;
+
+	RefreshMovementSpeed();
+	OnStatusEffectChanged.Broadcast(
+		ECheonbokStatusEffect::MovementLock,
 		false,
 		0,
 		0.0f);

@@ -17,6 +17,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CreateWaveBannerTextFallback();
+	CreateStaminaFallbacks();
 	CreateStatusEffectTextFallbacks();
 	BindToGameState();
 	BindToCharacter();
@@ -89,6 +90,34 @@ void UCh03_GameHUDWidget::HandleHealthChanged(
 	}
 
 	OnHealthUpdated(CurrentHealth, MaxHealth, HealthPercent);
+}
+
+void UCh03_GameHUDWidget::HandleStaminaChanged(
+	const float CurrentStamina,
+	const float MaxStamina)
+{
+	const float StaminaPercent = MaxStamina > 0.0f
+		? FMath::Clamp(CurrentStamina / MaxStamina, 0.0f, 1.0f)
+		: 0.0f;
+
+	if (StaminaText)
+	{
+		StaminaText->SetText(
+			FText::Format(
+				NSLOCTEXT(
+					"CheonbokHUD",
+					"StaminaFormat",
+					"STA: {0} / {1}"),
+				FText::AsNumber(FMath::RoundToInt(CurrentStamina)),
+				FText::AsNumber(FMath::RoundToInt(MaxStamina))));
+	}
+
+	if (StaminaBar)
+	{
+		StaminaBar->SetPercent(StaminaPercent);
+	}
+
+	OnStaminaUpdated(CurrentStamina, MaxStamina, StaminaPercent);
 }
 
 void UCh03_GameHUDWidget::HandleWaveChanged(
@@ -291,6 +320,10 @@ void UCh03_GameHUDWidget::BindToCharacter()
 		this,
 		&UCh03_GameHUDWidget::HandleHealthChanged);
 
+	BoundCharacter->OnStaminaChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleStaminaChanged);
+
 	BoundCharacter->OnStatusEffectChanged.AddUniqueDynamic(
 		this,
 		&UCh03_GameHUDWidget::HandleStatusEffectChanged);
@@ -298,6 +331,10 @@ void UCh03_GameHUDWidget::BindToCharacter()
 	HandleHealthChanged(
 		BoundCharacter->GetHealth(),
 		BoundCharacter->GetMaxHealth());
+
+	HandleStaminaChanged(
+		BoundCharacter->GetStamina(),
+		BoundCharacter->GetMaxStamina());
 
 	RefreshStatusEffectTexts();
 
@@ -319,6 +356,10 @@ void UCh03_GameHUDWidget::UnbindFromCharacter()
 		BoundCharacter->OnHealthChanged.RemoveDynamic(
 			this,
 			&UCh03_GameHUDWidget::HandleHealthChanged);
+
+		BoundCharacter->OnStaminaChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleStaminaChanged);
 
 		BoundCharacter->OnStatusEffectChanged.RemoveDynamic(
 			this,
@@ -379,6 +420,75 @@ void UCh03_GameHUDWidget::CreateWaveBannerTextFallback()
 	else
 	{
 		RootPanel->AddChild(WaveBannerText);
+	}
+}
+
+void UCh03_GameHUDWidget::CreateStaminaFallbacks()
+{
+	if (!WidgetTree || (StaminaText && StaminaBar))
+	{
+		return;
+	}
+
+	UPanelWidget* RootPanel =
+		Cast<UPanelWidget>(WidgetTree->RootWidget);
+	if (!RootPanel)
+	{
+		return;
+	}
+
+	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(RootPanel);
+
+	if (!StaminaBar)
+	{
+		StaminaBar = WidgetTree->ConstructWidget<UProgressBar>(
+			UProgressBar::StaticClass(),
+			TEXT("StaminaBar_NativeFallback"));
+		StaminaBar->SetPercent(1.0f);
+		StaminaBar->SetFillColorAndOpacity(
+			FLinearColor(0.35f, 0.78f, 1.0f, 1.0f));
+
+		if (RootCanvas)
+		{
+			UCanvasPanelSlot* BarSlot =
+				RootCanvas->AddChildToCanvas(StaminaBar);
+			BarSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			BarSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+			BarSlot->SetPosition(FVector2D(32.0f, 74.0f));
+			BarSlot->SetSize(FVector2D(220.0f, 16.0f));
+			BarSlot->SetZOrder(10);
+		}
+		else
+		{
+			RootPanel->AddChild(StaminaBar);
+		}
+	}
+
+	if (!StaminaText)
+	{
+		StaminaText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			TEXT("StaminaText_NativeFallback"));
+		StaminaText->SetColorAndOpacity(
+			FSlateColor(FLinearColor(0.82f, 0.95f, 1.0f, 1.0f)));
+		StaminaText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+		StaminaText->SetShadowColorAndOpacity(
+			FLinearColor(0.0f, 0.0f, 0.0f, 0.8f));
+
+		if (RootCanvas)
+		{
+			UCanvasPanelSlot* TextSlot =
+				RootCanvas->AddChildToCanvas(StaminaText);
+			TextSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			TextSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+			TextSlot->SetPosition(FVector2D(32.0f, 48.0f));
+			TextSlot->SetSize(FVector2D(260.0f, 24.0f));
+			TextSlot->SetZOrder(10);
+		}
+		else
+		{
+			RootPanel->AddChild(StaminaText);
+		}
 	}
 }
 
@@ -495,7 +605,11 @@ void UCh03_GameHUDWidget::FinishWaveBannerOutroAnimation()
 
 void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()
 {
-	if (!WidgetTree || (SlowStatusText && ReverseControlStatusText))
+	if (!WidgetTree
+		|| (SlowStatusText
+			&& ReverseControlStatusText
+			&& MovementLockStatusText
+			&& DamageShieldStatusText))
 	{
 		return;
 	}
@@ -546,14 +660,28 @@ void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()
 	{
 		SlowStatusText = CreateStatusText(
 			TEXT("SlowStatusText_NativeFallback"),
-			FVector2D(32.0f, -104.0f));
+			FVector2D(32.0f, -140.0f));
 	}
 
 	if (!ReverseControlStatusText)
 	{
 		ReverseControlStatusText = CreateStatusText(
 			TEXT("ReverseControlStatusText_NativeFallback"),
+			FVector2D(32.0f, -104.0f));
+	}
+
+	if (!MovementLockStatusText)
+	{
+		MovementLockStatusText = CreateStatusText(
+			TEXT("MovementLockStatusText_NativeFallback"),
 			FVector2D(32.0f, -68.0f));
+	}
+
+	if (!DamageShieldStatusText)
+	{
+		DamageShieldStatusText = CreateStatusText(
+			TEXT("DamageShieldStatusText_NativeFallback"),
+			FVector2D(32.0f, -32.0f));
 	}
 }
 
@@ -573,6 +701,18 @@ void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
 			false,
 			0,
 			0.0f);
+		UpdateStatusEffectText(
+			MovementLockStatusText,
+			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+			false,
+			0,
+			0.0f);
+		UpdateStatusEffectText(
+			DamageShieldStatusText,
+			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+			false,
+			0,
+			-1.0f);
 		return;
 	}
 
@@ -589,6 +729,20 @@ void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
 		BoundCharacter->IsReverseControlActive(),
 		BoundCharacter->GetReverseControlStackCount(),
 		BoundCharacter->GetReverseControlRemainingTime());
+
+	UpdateStatusEffectText(
+		MovementLockStatusText,
+		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+		BoundCharacter->IsMovementLockActive(),
+		BoundCharacter->GetMovementLockStackCount(),
+		BoundCharacter->GetMovementLockRemainingTime());
+
+	UpdateStatusEffectText(
+		DamageShieldStatusText,
+		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+		BoundCharacter->IsDamageShieldActive(),
+		BoundCharacter->GetDamageShieldStackCount(),
+		-1.0f);
 }
 
 void UCh03_GameHUDWidget::UpdateStatusEffectText(
@@ -614,13 +768,26 @@ void UCh03_GameHUDWidget::UpdateStatusEffectText(
 		return;
 	}
 
+	if (RemainingTime >= 0.0f)
+	{
+		TargetText->SetText(
+			FText::Format(
+				NSLOCTEXT(
+					"CheonbokHUD",
+					"StatusEffectFormat",
+					"{0} x{1}  {2}s"),
+				Label,
+				FText::AsNumber(FMath::Max(1, StackCount)),
+				FText::AsNumber(FMath::CeilToInt(RemainingTime))));
+		return;
+	}
+
 	TargetText->SetText(
 		FText::Format(
 			NSLOCTEXT(
 				"CheonbokHUD",
-				"StatusEffectFormat",
-				"{0} x{1}  {2}s"),
+				"StatusEffectStackFormat",
+				"{0} x{1}"),
 			Label,
-			FText::AsNumber(FMath::Max(1, StackCount)),
-			FText::AsNumber(FMath::CeilToInt(RemainingTime))));
+			FText::AsNumber(FMath::Max(1, StackCount))));
 }

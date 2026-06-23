@@ -81,9 +81,15 @@ protected:
 private:
 	void AddDefaultMappingContext();
 	void CreateGameHUD();
+	void ApplyGameHUDVisibility();
 	void ApplyGameplayInputMode();
 	void ApplyPauseInputMode();
+	void HandleSprintStarted();
+	void HandleSprintStopped();
 
 	UPROPERTY(Transient)
 	TObjectPtr<ACh03_CutsceneDirector> ActiveCutsceneDirector;
+
+	bool bSprintInputHeld = false;
+	bool bShouldShowGameHUD = true;
 };

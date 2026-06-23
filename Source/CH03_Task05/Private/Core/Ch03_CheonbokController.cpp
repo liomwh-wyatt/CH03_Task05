@@ -3,6 +3,7 @@
 #include "Components/InputComponent.h"
 #include "Core/Ch03_GameInstance.h"
 #include "Cutscene/Ch03_CutsceneDirector.h"
+#include "EnhancedInputComponent.h"
 #include "EnhancedPlayerInput.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -11,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/Ch03_GameHUDWidget.h"
 #include "UI/Ch03_PauseMenuWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 ACh03_CheonbokController::ACh03_CheonbokController()
 {
@@ -24,6 +26,8 @@ ACh03_CheonbokController::ACh03_CheonbokController()
 	PauseMenuWidgetClass = UCh03_PauseMenuWidget::StaticClass();
 	PauseMenuWidget = nullptr;
 	ActiveCutsceneDirector = nullptr;
+	bSprintInputHeld = false;
+	bShouldShowGameHUD = true;
 }
 
 void ACh03_CheonbokController::BeginPlay()
@@ -60,6 +64,29 @@ void ACh03_CheonbokController::SetupInputComponent()
 		IE_Pressed,
 		this,
 		&ACh03_CheonbokController::TogglePauseMenu);
+
+	if (UEnhancedInputComponent* EnhancedInputComponent =
+		Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (SprintAction)
+		{
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Started,
+				this,
+				&ACh03_CheonbokController::HandleSprintStarted);
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Completed,
+				this,
+				&ACh03_CheonbokController::HandleSprintStopped);
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Canceled,
+				this,
+				&ACh03_CheonbokController::HandleSprintStopped);
+		}
+	}
 }
 
 bool ACh03_CheonbokController::IsSprintInputHeld() const
@@ -72,8 +99,13 @@ bool ACh03_CheonbokController::IsSprintInputHeld() const
 	const UEnhancedPlayerInput* EnhancedPlayerInput =
 		Cast<UEnhancedPlayerInput>(PlayerInput);
 
-	return EnhancedPlayerInput
-		&& EnhancedPlayerInput->GetActionValue(SprintAction).Get<bool>();
+	if (EnhancedPlayerInput
+		&& !EnhancedPlayerInput->GetActionValue(SprintAction).Get<bool>())
+	{
+		return false;
+	}
+
+	return bSprintInputHeld;
 }
 
 void ACh03_CheonbokController::AddDefaultMappingContext()
@@ -123,6 +155,7 @@ void ACh03_CheonbokController::CreateGameHUD()
 	if (GameHUDWidget)
 	{
 		GameHUDWidget->AddToViewport();
+		ApplyGameHUDVisibility();
 	}
 }
 
@@ -259,15 +292,37 @@ bool ACh03_CheonbokController::SkipActiveCutscene()
 void ACh03_CheonbokController::SetGameHUDVisible(
 	const bool bIsVisible)
 {
-	if (!GameHUDWidget)
+	bShouldShowGameHUD = bIsVisible;
+	CreateGameHUD();
+	ApplyGameHUDVisibility();
+}
+
+void ACh03_CheonbokController::ApplyGameHUDVisibility()
+{
+	const ESlateVisibility TargetVisibility =
+		bShouldShowGameHUD
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed;
+
+	if (GameHUDWidget)
 	{
-		return;
+		GameHUDWidget->SetVisibility(TargetVisibility);
 	}
 
-	GameHUDWidget->SetVisibility(
-		bIsVisible
-			? ESlateVisibility::HitTestInvisible
-			: ESlateVisibility::Collapsed);
+	TArray<UUserWidget*> HUDWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(
+		this,
+		HUDWidgets,
+		UCh03_GameHUDWidget::StaticClass(),
+		false);
+
+	for (UUserWidget* HUDWidget : HUDWidgets)
+	{
+		if (HUDWidget)
+		{
+			HUDWidget->SetVisibility(TargetVisibility);
+		}
+	}
 }
 
 void ACh03_CheonbokController::ApplyGameplayInputMode()
@@ -295,4 +350,14 @@ void ACh03_CheonbokController::ApplyPauseInputMode()
 	InputMode.SetHideCursorDuringCapture(false);
 
 	SetInputMode(InputMode);
+}
+
+void ACh03_CheonbokController::HandleSprintStarted()
+{
+	bSprintInputHeld = true;
+}
+
+void ACh03_CheonbokController::HandleSprintStopped()
+{
+	bSprintInputHeld = false;
 }
