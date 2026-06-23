@@ -55,10 +55,26 @@ protected:
 		meta = (EditCondition = "bUseFlutterMovement", ClampMin = "1.0"))
 	float PlayerEscapeSpeedMultiplier = 1.25f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground")
+	bool bKeepAboveGround = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
+		meta = (EditCondition = "bKeepAboveGround", ClampMin = "0.0", Units = "cm"))
+	float GroundClearance = 95.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
+		meta = (EditCondition = "bKeepAboveGround", ClampMin = "0.0", Units = "cm"))
+	float GroundTraceHeight = 400.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
+		meta = (EditCondition = "bKeepAboveGround", ClampMin = "1.0", Units = "cm"))
+	float GroundTraceDepth = 1200.0f;
+
 private:
 	void SelectNewFlutterTarget();
 	FVector GetRandomFlutterLocation() const;
 	FVector ClampToFlutterBounds(const FVector& Location) const;
+	FVector KeepLocationAboveGround(const FVector& Location) const;
 
 	FVector CurrentFlutterTarget = FVector::ZeroVector;
 	FVector CurrentFlutterDirection = FVector::ForwardVector;

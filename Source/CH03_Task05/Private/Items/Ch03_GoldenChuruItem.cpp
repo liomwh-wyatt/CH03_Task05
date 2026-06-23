@@ -1,5 +1,6 @@
 #include "Items/Ch03_GoldenChuruItem.h"
 
+#include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -25,6 +26,7 @@ void ACh03_GoldenChuruItem::BeginPlay()
 		CurrentFlutterDirection = FVector::ForwardVector;
 	}
 
+	SetActorLocation(KeepLocationAboveGround(GetActorLocation()));
 	SelectNewFlutterTarget();
 }
 
@@ -135,10 +137,11 @@ FVector ACh03_GoldenChuruItem::GetRandomFlutterLocation() const
 		FMath::Max(0.0f, FlutterBoundsExtent.Y),
 		FMath::Max(0.0f, FlutterBoundsExtent.Z));
 
-	return Origin + FVector(
-		FMath::FRandRange(-SafeExtent.X, SafeExtent.X),
-		FMath::FRandRange(-SafeExtent.Y, SafeExtent.Y),
-		FMath::FRandRange(-SafeExtent.Z, SafeExtent.Z));
+	return ClampToFlutterBounds(
+		Origin + FVector(
+			FMath::FRandRange(-SafeExtent.X, SafeExtent.X),
+			FMath::FRandRange(-SafeExtent.Y, SafeExtent.Y),
+			FMath::FRandRange(0.0f, SafeExtent.Z)));
 }
 
 FVector ACh03_GoldenChuruItem::ClampToFlutterBounds(
@@ -150,7 +153,7 @@ FVector ACh03_GoldenChuruItem::ClampToFlutterBounds(
 		FMath::Max(0.0f, FlutterBoundsExtent.Y),
 		FMath::Max(0.0f, FlutterBoundsExtent.Z));
 
-	return FVector(
+	const FVector ClampedLocation(
 		FMath::Clamp(
 			Location.X,
 			Origin.X - SafeExtent.X,
@@ -161,6 +164,50 @@ FVector ACh03_GoldenChuruItem::ClampToFlutterBounds(
 			Origin.Y + SafeExtent.Y),
 		FMath::Clamp(
 			Location.Z,
-			Origin.Z - SafeExtent.Z,
+			Origin.Z,
 			Origin.Z + SafeExtent.Z));
+
+	return KeepLocationAboveGround(ClampedLocation);
+}
+
+FVector ACh03_GoldenChuruItem::KeepLocationAboveGround(
+	const FVector& Location) const
+{
+	if (!bKeepAboveGround || !GetWorld())
+	{
+		return Location;
+	}
+
+	const FVector TraceStart =
+		Location + FVector::UpVector * GroundTraceHeight;
+	const FVector TraceEnd =
+		Location - FVector::UpVector * GroundTraceDepth;
+
+	FHitResult GroundHit;
+	FCollisionQueryParams TraceParams(
+		SCENE_QUERY_STAT(Ch03GoldenChuruGroundTrace),
+		false,
+		this);
+	TraceParams.AddIgnoredActor(this);
+
+	const bool bHitGround = GetWorld()->LineTraceSingleByChannel(
+		GroundHit,
+		TraceStart,
+		TraceEnd,
+		ECC_Visibility,
+		TraceParams);
+
+	if (!bHitGround || !GroundHit.bBlockingHit)
+	{
+		return Location;
+	}
+
+	FVector AdjustedLocation = Location;
+	const float MinimumZ = GroundHit.ImpactPoint.Z + GroundClearance;
+	if (AdjustedLocation.Z < MinimumZ)
+	{
+		AdjustedLocation.Z = MinimumZ;
+	}
+
+	return AdjustedLocation;
 }
