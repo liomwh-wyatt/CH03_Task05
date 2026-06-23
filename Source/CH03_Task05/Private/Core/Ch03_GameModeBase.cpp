@@ -793,6 +793,7 @@ FText ACh03_GameModeBase::ApplyWaveEnvironmentState(
 	}
 
 	TArray<FString> ActiveAnnouncementLines;
+	TSet<FString> AddedAnnouncementLines;
 
 	for (ACh03_WaveEnvironmentActor* EnvironmentActor :
 		WaveEnvironmentActors)
@@ -809,8 +810,14 @@ FText ACh03_GameModeBase::ApplyWaveEnvironmentState(
 			&& bNewlyActivated
 			&& !EnvironmentActor->GetActiveAnnouncementText().IsEmpty())
 		{
-			ActiveAnnouncementLines.Add(
-				EnvironmentActor->GetActiveAnnouncementText().ToString());
+			const FString AnnouncementLine =
+				EnvironmentActor->GetActiveAnnouncementText().ToString();
+
+			if (!AddedAnnouncementLines.Contains(AnnouncementLine))
+			{
+				AddedAnnouncementLines.Add(AnnouncementLine);
+				ActiveAnnouncementLines.Add(AnnouncementLine);
+			}
 		}
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/EngineTypes.h"
 #include "Items/Ch03_ScoreItem.h"
 #include "Ch03_GoldenChuruItem.generated.h"
 
@@ -70,11 +71,31 @@ protected:
 		meta = (EditCondition = "bKeepAboveGround", ClampMin = "1.0", Units = "cm"))
 	float GroundTraceDepth = 1200.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Obstacle")
+	bool bAvoidWorldObstacles = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Obstacle",
+		meta = (EditCondition = "bAvoidWorldObstacles"))
+	TEnumAsByte<ECollisionChannel> ObstacleTraceChannel = ECC_Visibility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Obstacle",
+		meta = (EditCondition = "bAvoidWorldObstacles", ClampMin = "1.0", Units = "cm"))
+	float ObstacleAvoidanceRadius = 65.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Obstacle",
+		meta = (EditCondition = "bAvoidWorldObstacles", ClampMin = "1"))
+	int32 FlutterTargetAttemptCount = 12;
+
 private:
 	void SelectNewFlutterTarget();
 	FVector GetRandomFlutterLocation() const;
 	FVector ClampToFlutterBounds(const FVector& Location) const;
 	FVector KeepLocationAboveGround(const FVector& Location) const;
+	bool IsFlutterLocationBlocked(const FVector& Location) const;
+	bool IsFlutterPathBlocked(
+		const FVector& StartLocation,
+		const FVector& EndLocation,
+		FHitResult& OutHit) const;
 
 	FVector CurrentFlutterTarget = FVector::ZeroVector;
 	FVector CurrentFlutterDirection = FVector::ForwardVector;

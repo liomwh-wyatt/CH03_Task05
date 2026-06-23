@@ -110,12 +110,55 @@ void ACh03_GoldenChuruItem::UpdateItemMovement(
 			* SpeedMultiplier
 			* DeltaTime);
 
+	FHitResult ObstacleHit;
+	if (IsFlutterPathBlocked(CurrentLocation, NewLocation, ObstacleHit))
+	{
+		FVector EscapeDirection = ObstacleHit.ImpactNormal;
+		EscapeDirection.Z = 0.0f;
+
+		if (EscapeDirection.IsNearlyZero())
+		{
+			EscapeDirection = -CurrentFlutterDirection;
+			EscapeDirection.Z = 0.0f;
+		}
+
+		CurrentFlutterDirection = EscapeDirection.GetSafeNormal();
+		if (CurrentFlutterDirection.IsNearlyZero())
+		{
+			CurrentFlutterDirection = FVector::ForwardVector;
+		}
+
+		SelectNewFlutterTarget();
+		return;
+	}
+
 	SetActorLocation(NewLocation);
 }
 
 void ACh03_GoldenChuruItem::SelectNewFlutterTarget()
 {
-	CurrentFlutterTarget = GetRandomFlutterLocation();
+	const int32 AttemptCount = FMath::Max(1, FlutterTargetAttemptCount);
+	const FVector CurrentLocation = GetActorLocation();
+	FVector FallbackTarget = CurrentLocation;
+	bool bFoundOpenTarget = false;
+
+	for (int32 AttemptIndex = 0; AttemptIndex < AttemptCount; ++AttemptIndex)
+	{
+		const FVector CandidateLocation = GetRandomFlutterLocation();
+		FallbackTarget = CandidateLocation;
+
+		if (!IsFlutterLocationBlocked(CandidateLocation))
+		{
+			CurrentFlutterTarget = CandidateLocation;
+			bFoundOpenTarget = true;
+			break;
+		}
+	}
+
+	if (!bFoundOpenTarget)
+	{
+		CurrentFlutterTarget = FallbackTarget;
+	}
 
 	const float MinInterval = FMath::Max(
 		0.05f,
@@ -210,4 +253,61 @@ FVector ACh03_GoldenChuruItem::KeepLocationAboveGround(
 	}
 
 	return AdjustedLocation;
+}
+
+bool ACh03_GoldenChuruItem::IsFlutterLocationBlocked(
+	const FVector& Location) const
+{
+	if (!bAvoidWorldObstacles || !GetWorld() || ObstacleAvoidanceRadius <= 0.0f)
+	{
+		return false;
+	}
+
+	FCollisionQueryParams QueryParams(
+		SCENE_QUERY_STAT(Ch03GoldenChuruObstacleOverlap),
+		false,
+		this);
+	QueryParams.AddIgnoredActor(this);
+
+	const FCollisionShape ProbeShape =
+		FCollisionShape::MakeSphere(ObstacleAvoidanceRadius);
+
+	return GetWorld()->OverlapBlockingTestByChannel(
+		Location,
+		FQuat::Identity,
+		ObstacleTraceChannel,
+		ProbeShape,
+		QueryParams);
+}
+
+bool ACh03_GoldenChuruItem::IsFlutterPathBlocked(
+	const FVector& StartLocation,
+	const FVector& EndLocation,
+	FHitResult& OutHit) const
+{
+	if (!bAvoidWorldObstacles
+		|| !GetWorld()
+		|| ObstacleAvoidanceRadius <= 0.0f
+		|| FVector::DistSquared(StartLocation, EndLocation) <= KINDA_SMALL_NUMBER)
+	{
+		return false;
+	}
+
+	FCollisionQueryParams QueryParams(
+		SCENE_QUERY_STAT(Ch03GoldenChuruObstacleSweep),
+		false,
+		this);
+	QueryParams.AddIgnoredActor(this);
+
+	const FCollisionShape ProbeShape =
+		FCollisionShape::MakeSphere(ObstacleAvoidanceRadius);
+
+	return GetWorld()->SweepSingleByChannel(
+		OutHit,
+		StartLocation,
+		EndLocation,
+		FQuat::Identity,
+		ObstacleTraceChannel,
+		ProbeShape,
+		QueryParams);
 }
