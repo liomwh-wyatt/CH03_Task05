@@ -8,8 +8,6 @@
 #include "Engine/World.h"
 #include "Environment/Ch03_WaveEnvironmentActor.h"
 #include "Items/Ch03_BaseItem.h"
-#include "Items/Ch03_ReverseControlItem.h"
-#include "Items/Ch03_SlowingItem.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "UI/Ch03_GameResultWidget.h"
@@ -65,6 +63,10 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		TEXT("/Game/Blueprints/Items/BP_Item_HeartTreat"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ToyBombClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_ToyBomb"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> SlowingClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_Slowing"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ReverseControlClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_ReverseControl"));
 	static ConstructorHelpers::FClassFinder<UCh03_GameResultWidget> ResultWidgetClass(
 		TEXT("/Game/UI/WBP_GameResult"));
 
@@ -82,14 +84,14 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 	AddSpawnEntry(WaveConfigs[1], LargeFeedClass.Class, 20.0f);
 	AddSpawnEntry(WaveConfigs[1], HeartTreatClass.Class, 15.0f);
 	AddSpawnEntry(WaveConfigs[1], ToyBombClass.Class, 15.0f);
-	AddSpawnEntry(WaveConfigs[1], ACh03_SlowingItem::StaticClass(), 8.0f);
+	AddSpawnEntry(WaveConfigs[1], SlowingClass.Class, 8.0f);
 
 	AddSpawnEntry(WaveConfigs[2], SmallFeedClass.Class, 40.0f);
 	AddSpawnEntry(WaveConfigs[2], LargeFeedClass.Class, 20.0f);
 	AddSpawnEntry(WaveConfigs[2], HeartTreatClass.Class, 15.0f);
 	AddSpawnEntry(WaveConfigs[2], ToyBombClass.Class, 25.0f);
-	AddSpawnEntry(WaveConfigs[2], ACh03_SlowingItem::StaticClass(), 12.0f);
-	AddSpawnEntry(WaveConfigs[2], ACh03_ReverseControlItem::StaticClass(), 10.0f);
+	AddSpawnEntry(WaveConfigs[2], SlowingClass.Class, 12.0f);
+	AddSpawnEntry(WaveConfigs[2], ReverseControlClass.Class, 10.0f);
 }
 
 void ACh03_GameModeBase::BeginPlay()
