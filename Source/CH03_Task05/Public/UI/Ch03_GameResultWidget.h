@@ -21,7 +21,8 @@ public:
 		bool bWasVictory,
 		int32 FinalScore,
 		FName InNextLevelName,
-		const FText& LevelDisplayName);
+		const FText& LevelDisplayName,
+		int32 BestComboCount = 0);
 
 	UWidget* GetInitialFocusWidget() const;
 
@@ -52,6 +53,9 @@ protected:
 		int32 HighestScore,
 		bool bIsNewHighScore);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
+	void OnBestComboEvaluated(int32 BestComboCount);
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ResultTitleText;
 
@@ -63,6 +67,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> NewHighScoreText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> BestComboText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> RestartButton;

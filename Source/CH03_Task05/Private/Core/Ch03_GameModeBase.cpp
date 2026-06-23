@@ -7,6 +7,7 @@
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/World.h"
 #include "Environment/Ch03_WaveEnvironmentActor.h"
+#include "GameFramework/Pawn.h"
 #include "Items/Ch03_BaseItem.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -219,7 +220,7 @@ void ACh03_GameModeBase::StartWaveLoop()
 		CachedGameInstance
 			? CachedGameInstance->GetCommittedScore()
 			: 0);
-	CachedGameState->BreakCombo();
+	CachedGameState->ResetComboStats();
 	CachedGameState->SetWave(0, WaveConfigs.Num());
 	CachedGameState->SetRemainingTime(0);
 	ShowAnnouncement(
@@ -502,7 +503,8 @@ void ACh03_GameModeBase::EndCurrentWave()
 
 	if (CachedGameState)
 	{
-		CachedGameState->BreakCombo();
+		CachedGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::GameFlow);
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -535,7 +537,8 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 
 	if (CachedGameState)
 	{
-		CachedGameState->BreakCombo();
+		CachedGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::GameFlow);
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -563,28 +566,13 @@ void ACh03_GameModeBase::HandleGoldenItemRequested(
 		CacheSpawnVolumes();
 	}
 
-	TArray<ACh03_SpawnVolume*> ValidSpawnVolumes;
-	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
-	{
-		if (IsValid(SpawnVolume))
-		{
-			ValidSpawnVolumes.Add(SpawnVolume);
-		}
-	}
-
-	if (ValidSpawnVolumes.IsEmpty())
-	{
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("Golden combo item requested, but no spawn volume is available."));
-		return;
-	}
-
-	ACh03_SpawnVolume* SelectedSpawnVolume =
-		ValidSpawnVolumes[FMath::RandRange(0, ValidSpawnVolumes.Num() - 1)];
 	ACh03_BaseItem* SpawnedGoldenItem =
-		SelectedSpawnVolume->SpawnItemOfClass(GoldenComboItemClass, true);
+		TrySpawnGoldenComboItemFromVolumes();
+
+	if (!IsValid(SpawnedGoldenItem) && bUseGoldenComboPlayerFallback)
+	{
+		SpawnedGoldenItem = SpawnGoldenComboItemNearPlayer();
+	}
 
 	if (!IsValid(SpawnedGoldenItem))
 	{
@@ -593,6 +581,7 @@ void ACh03_GameModeBase::HandleGoldenItemRequested(
 			Warning,
 			TEXT("Failed to spawn golden combo item. Combo=%d"),
 			ComboCount);
+		OnGoldenComboItemSpawnFailed(ComboCount);
 		return;
 	}
 
@@ -609,6 +598,120 @@ void ACh03_GameModeBase::HandleGoldenItemRequested(
 		TEXT("Golden combo item spawned. Combo=%d, Item=%s"),
 		ComboCount,
 		*GetNameSafe(SpawnedGoldenItem));
+
+	OnGoldenComboItemSpawned(SpawnedGoldenItem, ComboCount);
+}
+
+ACh03_BaseItem* ACh03_GameModeBase::TrySpawnGoldenComboItemFromVolumes()
+{
+	if (!GoldenComboItemClass)
+	{
+		return nullptr;
+	}
+
+	if (SpawnVolumes.IsEmpty())
+	{
+		CacheSpawnVolumes();
+	}
+
+	TArray<ACh03_SpawnVolume*> ValidSpawnVolumes;
+	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (IsValid(SpawnVolume))
+		{
+			ValidSpawnVolumes.Add(SpawnVolume);
+		}
+	}
+
+	if (ValidSpawnVolumes.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	const int32 AttemptCount = FMath::Max(
+		1,
+		GoldenComboSpawnAttemptCount);
+
+	for (int32 AttemptIndex = 0; AttemptIndex < AttemptCount; ++AttemptIndex)
+	{
+		ACh03_SpawnVolume* SelectedSpawnVolume =
+			ValidSpawnVolumes[
+				FMath::RandRange(0, ValidSpawnVolumes.Num() - 1)];
+
+		if (!IsValid(SelectedSpawnVolume))
+		{
+			continue;
+		}
+
+		if (ACh03_BaseItem* SpawnedItem =
+			SelectedSpawnVolume->SpawnItemOfClass(GoldenComboItemClass, true))
+		{
+			return SpawnedItem;
+		}
+	}
+
+	return nullptr;
+}
+
+ACh03_BaseItem* ACh03_GameModeBase::SpawnGoldenComboItemNearPlayer() const
+{
+	if (!GetWorld() || !GoldenComboItemClass)
+	{
+		return nullptr;
+	}
+
+	const APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!PlayerPawn)
+	{
+		return nullptr;
+	}
+
+	const FVector ForwardDirection =
+		PlayerPawn->GetActorForwardVector().GetSafeNormal2D();
+	const FVector SafeForwardDirection =
+		ForwardDirection.IsNearlyZero()
+			? FVector::ForwardVector
+			: ForwardDirection;
+
+	FVector SpawnLocation =
+		PlayerPawn->GetActorLocation()
+		+ SafeForwardDirection * GoldenComboFallbackDistanceFromPlayer;
+
+	const FVector TraceStart = SpawnLocation + FVector::UpVector * 500.0f;
+	const FVector TraceEnd = SpawnLocation - FVector::UpVector * 1500.0f;
+
+	FHitResult GroundHit;
+	FCollisionQueryParams TraceParams(
+		SCENE_QUERY_STAT(Ch03GoldenComboFallbackGroundTrace),
+		false,
+		this);
+	TraceParams.AddIgnoredActor(PlayerPawn);
+
+	if (GetWorld()->LineTraceSingleByChannel(
+		GroundHit,
+		TraceStart,
+		TraceEnd,
+		ECC_Visibility,
+		TraceParams)
+		&& GroundHit.bBlockingHit)
+	{
+		SpawnLocation.Z = GroundHit.ImpactPoint.Z + GoldenComboFallbackHeight;
+	}
+	else
+	{
+		SpawnLocation.Z += GoldenComboFallbackHeight;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = const_cast<ACh03_GameModeBase*>(this);
+	SpawnParameters.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	return GetWorld()->SpawnActor<ACh03_BaseItem>(
+		GoldenComboItemClass,
+		SpawnLocation,
+		FRotator(0.0f, FMath::FRandRange(0.0f, 360.0f), 0.0f),
+		SpawnParameters);
 }
 
 void ACh03_GameModeBase::CompleteLevel()
@@ -625,7 +728,8 @@ void ACh03_GameModeBase::CompleteLevel()
 
 	if (CachedGameState)
 	{
-		CachedGameState->BreakCombo();
+		CachedGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::GameFlow);
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -858,6 +962,8 @@ void ACh03_GameModeBase::ShowPendingResultScreen()
 
 	const int32 FinalScore =
 		CachedGameState ? CachedGameState->GetScore() : 0;
+	const int32 BestComboCount =
+		CachedGameState ? CachedGameState->GetBestComboCount() : 0;
 
 	ActiveResultWidget->AddToViewport(100);
 	FName ResolvedNextLevelName = NextLevelName;
@@ -880,7 +986,8 @@ void ACh03_GameModeBase::ShowPendingResultScreen()
 		bPendingResultWasVictory,
 		FinalScore,
 		ResolvedNextLevelName,
-		GetCurrentLevelDisplayName());
+		GetCurrentLevelDisplayName(),
+		BestComboCount);
 
 	FInputModeUIOnly InputMode;
 	if (UWidget* InitialFocusWidget =

@@ -156,7 +156,8 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 	if (ACh03_GameStateBase* CheonbokGameState =
 		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
 	{
-		CheonbokGameState->BreakCombo();
+		CheonbokGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::Hazard);
 	}
 
 	if (DamageAmount > 0.0f)

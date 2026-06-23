@@ -241,6 +241,8 @@ void UCh03_GameHUDWidget::HandleComboRewardTriggered(
 {
 	if (ComboRewardText)
 	{
+		ComboRewardText->SetColorAndOpacity(
+			FSlateColor(FLinearColor(1.0f, 0.55f, 0.12f, 1.0f)));
 		ComboRewardText->SetText(RewardText);
 		ComboRewardText->SetVisibility(ESlateVisibility::HitTestInvisible);
 		ComboRewardText->SetRenderOpacity(1.0f);
@@ -248,6 +250,29 @@ void UCh03_GameHUDWidget::HandleComboRewardTriggered(
 	}
 
 	OnComboRewardUpdated(ComboCount, RewardText);
+}
+
+void UCh03_GameHUDWidget::HandleComboBroken(
+	const int32 PreviousComboCount,
+	const ECh03ComboBreakReason BreakReason)
+{
+	if (ComboRewardText)
+	{
+		ComboRewardText->SetColorAndOpacity(
+			FSlateColor(FLinearColor(1.0f, 0.22f, 0.14f, 1.0f)));
+		ComboRewardText->SetText(
+			FText::Format(
+				NSLOCTEXT(
+					"CheonbokHUD",
+					"ComboBroken",
+					"우다다 끊김 x{0}"),
+				FText::AsNumber(FMath::Max(0, PreviousComboCount))));
+		ComboRewardText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		ComboRewardText->SetRenderOpacity(1.0f);
+		ComboRewardRemainingTime = ComboBreakDisplayDuration;
+	}
+
+	OnComboBroken(PreviousComboCount, BreakReason);
 }
 
 void UCh03_GameHUDWidget::HandleStatusEffectChanged(
@@ -309,6 +334,10 @@ void UCh03_GameHUDWidget::BindToGameState()
 		this,
 		&UCh03_GameHUDWidget::HandleComboRewardTriggered);
 
+	BoundGameState->OnComboBroken.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleComboBroken);
+
 	HandleScoreChanged(BoundGameState->GetScore());
 	HandleWaveChanged(
 		BoundGameState->GetCurrentWave(),
@@ -352,6 +381,10 @@ void UCh03_GameHUDWidget::UnbindFromGameState()
 		BoundGameState->OnComboRewardTriggered.RemoveDynamic(
 			this,
 			&UCh03_GameHUDWidget::HandleComboRewardTriggered);
+
+		BoundGameState->OnComboBroken.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleComboBroken);
 	}
 
 	BoundGameState = nullptr;

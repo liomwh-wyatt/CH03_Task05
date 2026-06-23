@@ -52,7 +52,8 @@ void UCh03_GameResultWidget::InitializeResult(
 	const bool bWasVictory,
 	const int32 FinalScore,
 	const FName InNextLevelName,
-	const FText& LevelDisplayName)
+	const FText& LevelDisplayName,
+	const int32 BestComboCount)
 {
 	CurrentLevelName = FName(
 		*UGameplayStatics::GetCurrentLevelName(this, true));
@@ -122,6 +123,17 @@ void UCh03_GameResultWidget::InitializeResult(
 				: ESlateVisibility::Collapsed);
 	}
 
+	if (BestComboText)
+	{
+		BestComboText->SetText(
+			FText::Format(
+				NSLOCTEXT(
+					"CheonbokResult",
+					"BestCombo",
+					"Best Udadada Combo: x{0}"),
+				FText::AsNumber(FMath::Max(0, BestComboCount))));
+	}
+
 	const bool bCanContinue =
 		bWasVictory && !NextLevelName.IsNone();
 
@@ -142,6 +154,8 @@ void UCh03_GameResultWidget::InitializeResult(
 	OnHighScoreEvaluated(
 		HighestScore,
 		bIsNewHighScore);
+
+	OnBestComboEvaluated(FMath::Max(0, BestComboCount));
 }
 
 UWidget* UCh03_GameResultWidget::GetInitialFocusWidget() const

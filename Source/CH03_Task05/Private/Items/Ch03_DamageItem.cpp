@@ -38,7 +38,8 @@ void ACh03_DamageItem::ActivateItem_Implementation(AActor* Activator)
 	if (ACh03_GameStateBase* CheonbokGameState =
 		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
 	{
-		CheonbokGameState->BreakCombo();
+		CheonbokGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::Hazard);
 	}
 
 	UE_LOG(

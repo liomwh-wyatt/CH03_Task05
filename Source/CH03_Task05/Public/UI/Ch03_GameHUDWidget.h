@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Core/Ch03_GameStateBase.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
 #include "Ch03_GameHUDWidget.generated.h"
@@ -55,6 +56,11 @@ protected:
 		FText RewardText);
 
 	UFUNCTION()
+	void HandleComboBroken(
+		int32 PreviousComboCount,
+		ECh03ComboBreakReason BreakReason);
+
+	UFUNCTION()
 	void HandleStatusEffectChanged(
 		ECheonbokStatusEffect EffectType,
 		bool bIsActive,
@@ -96,6 +102,11 @@ protected:
 	void OnComboRewardUpdated(
 		int32 ComboCount,
 		const FText& RewardText);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnComboBroken(
+		int32 PreviousComboCount,
+		ECh03ComboBreakReason BreakReason);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnStatusEffectUpdated(
@@ -186,4 +197,5 @@ private:
 	static constexpr float WaveBannerIntroDuration = 0.22f;
 	static constexpr float WaveBannerOutroDuration = 0.18f;
 	static constexpr float ComboRewardDisplayDuration = 1.6f;
+	static constexpr float ComboBreakDisplayDuration = 1.1f;
 };

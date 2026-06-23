@@ -102,6 +102,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
 	TSubclassOf<ACh03_BaseItem> GoldenComboItemClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
+		meta = (ClampMin = "1"))
+	int32 GoldenComboSpawnAttemptCount = 8;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	bool bUseGoldenComboPlayerFallback = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
+		meta = (ClampMin = "0.0", Units = "cm"))
+	float GoldenComboFallbackDistanceFromPlayer = 360.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
+		meta = (ClampMin = "0.0", Units = "cm"))
+	float GoldenComboFallbackHeight = 140.0f;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Game Flow")
 	void OnWaveStarted(int32 CurrentWave, int32 MaxWave);
 
@@ -110,6 +125,14 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Game Flow")
 	void OnLevelCompleted();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Combo|Feedback")
+	void OnGoldenComboItemSpawned(
+		ACh03_BaseItem* SpawnedItem,
+		int32 ComboCount);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Combo|Feedback")
+	void OnGoldenComboItemSpawnFailed(int32 ComboCount);
 
 private:
 	void CacheSpawnVolumes();
@@ -135,6 +158,8 @@ private:
 	void ClearWaveTimers();
 	void ClearGameTimers();
 	void SetGamePhase(ECh03_GamePhase NewPhase);
+	ACh03_BaseItem* TrySpawnGoldenComboItemFromVolumes();
+	ACh03_BaseItem* SpawnGoldenComboItemNearPlayer() const;
 
 	UFUNCTION()
 	void HandleCharacterDeath();

@@ -6,6 +6,15 @@
 #include "GameFramework/GameStateBase.h"
 #include "Ch03_GameStateBase.generated.h"
 
+UENUM(BlueprintType)
+enum class ECh03ComboBreakReason : uint8
+{
+	Manual		UMETA(DisplayName = "Manual"),
+	Timeout		UMETA(DisplayName = "Timeout"),
+	Hazard		UMETA(DisplayName = "Hazard"),
+	GameFlow	UMETA(DisplayName = "Game Flow")
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 	FOnCheonbokScoreChanged,
 	int32, NewScore);
@@ -25,6 +34,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 	FOnCheonbokGoldenItemRequested,
 	int32, ComboCount);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnCheonbokComboBroken,
+	int32, PreviousComboCount,
+	ECh03ComboBreakReason, BreakReason);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnCheonbokWaveChanged,
@@ -91,8 +105,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
 	void BreakCombo();
 
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	void BreakComboWithReason(ECh03ComboBreakReason BreakReason);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	void ResetComboStats();
+
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
 	int32 GetComboCount() const { return CurrentComboCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	int32 GetBestComboCount() const { return BestComboCount; }
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
 	float GetComboTimeRemaining() const { return ComboTimeRemaining; }
@@ -119,6 +142,9 @@ public:
 	FOnCheonbokGoldenItemRequested OnGoldenItemRequested;
 
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	FOnCheonbokComboBroken OnComboBroken;
+
+	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokWaveChanged OnWaveChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
@@ -133,14 +159,17 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
 		meta = (ClampMin = "0.1", Units = "s"))
-	float ComboWindowSeconds = 3.0f;
+	float ComboWindowSeconds = 5.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
 		meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float Combo12GoldenItemChance = 0.35f;
+	float Combo12GoldenItemChance = 1.0f;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
 	int32 CurrentComboCount = 0;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	int32 BestComboCount = 0;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
 	float ComboTimeRemaining = 0.0f;
@@ -163,7 +192,10 @@ protected:
 private:
 	float GetScoreMultiplierForCombo(int32 ComboCount) const;
 	void ProcessComboRewards(int32 ComboCount, AActor* ScoringActor);
-	void ResetComboState(bool bShouldBroadcast);
+	void ResetComboState(
+		bool bShouldBroadcast,
+		ECh03ComboBreakReason BreakReason,
+		bool bShouldBroadcastBreak);
 	void BroadcastComboChanged();
 
 	bool bNextScoreItemDouble = false;

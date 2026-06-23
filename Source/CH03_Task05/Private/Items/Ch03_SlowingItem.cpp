@@ -46,7 +46,8 @@ void ACh03_SlowingItem::ActivateItem_Implementation(
 	if (ACh03_GameStateBase* CheonbokGameState =
 		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
 	{
-		CheonbokGameState->BreakCombo();
+		CheonbokGameState->BreakComboWithReason(
+			ECh03ComboBreakReason::Hazard);
 	}
 
 	Super::ActivateItem_Implementation(Activator);

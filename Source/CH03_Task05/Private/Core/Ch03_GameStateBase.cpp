@@ -30,7 +30,10 @@ void ACh03_GameStateBase::Tick(const float DeltaSeconds)
 
 	if (ComboTimeRemaining <= 0.0f)
 	{
-		ResetComboState(true);
+		ResetComboState(
+			true,
+			ECh03ComboBreakReason::Timeout,
+			true);
 		return;
 	}
 
@@ -66,11 +69,15 @@ int32 ACh03_GameStateBase::AddComboScore(
 
 	if (ComboTimeRemaining <= 0.0f)
 	{
-		ResetComboState(false);
+		ResetComboState(
+			false,
+			ECh03ComboBreakReason::Timeout,
+			false);
 	}
 
 	++CurrentComboCount;
 	ComboTimeRemaining = ComboWindowSeconds;
+	BestComboCount = FMath::Max(BestComboCount, CurrentComboCount);
 
 	CurrentComboScoreMultiplier =
 		GetScoreMultiplierForCombo(CurrentComboCount);
@@ -105,7 +112,7 @@ int32 ACh03_GameStateBase::AddComboScore(
 void ACh03_GameStateBase::ResetScore()
 {
 	SetScore(0);
-	ResetComboState(true);
+	ResetComboStats();
 }
 
 void ACh03_GameStateBase::SetScore(
@@ -197,7 +204,25 @@ void ACh03_GameStateBase::ClearAnnouncementText()
 
 void ACh03_GameStateBase::BreakCombo()
 {
-	ResetComboState(true);
+	BreakComboWithReason(ECh03ComboBreakReason::Manual);
+}
+
+void ACh03_GameStateBase::BreakComboWithReason(
+	const ECh03ComboBreakReason BreakReason)
+{
+	ResetComboState(
+		true,
+		BreakReason,
+		true);
+}
+
+void ACh03_GameStateBase::ResetComboStats()
+{
+	ResetComboState(
+		true,
+		ECh03ComboBreakReason::GameFlow,
+		false);
+	BestComboCount = 0;
 }
 
 float ACh03_GameStateBase::GetScoreMultiplierForCombo(
@@ -338,8 +363,11 @@ void ACh03_GameStateBase::ProcessComboRewards(
 }
 
 void ACh03_GameStateBase::ResetComboState(
-	const bool bShouldBroadcast)
+	const bool bShouldBroadcast,
+	const ECh03ComboBreakReason BreakReason,
+	const bool bShouldBroadcastBreak)
 {
+	const int32 PreviousComboCount = CurrentComboCount;
 	const bool bHadCombo = CurrentComboCount > 0
 		|| ComboTimeRemaining > 0.0f
 		|| !FMath::IsNearlyEqual(CurrentComboScoreMultiplier, 1.0f)
@@ -351,6 +379,11 @@ void ACh03_GameStateBase::ResetComboState(
 	CurrentComboScoreMultiplier = 1.0f;
 	bNextScoreItemDouble = false;
 	RewardedComboThresholds.Reset();
+
+	if (bShouldBroadcastBreak && PreviousComboCount >= 2)
+	{
+		OnComboBroken.Broadcast(PreviousComboCount, BreakReason);
+	}
 
 	if (bShouldBroadcast && bHadCombo)
 	{
