@@ -160,6 +160,25 @@ ACh03_BaseItem* ACh03_SpawnVolume::SpawnOneItem()
 		return nullptr;
 	}
 
+	return SpawnItemOfClass(SelectedItemClass, false);
+}
+
+ACh03_BaseItem* ACh03_SpawnVolume::SpawnItemOfClass(
+	const TSubclassOf<ACh03_BaseItem> ItemClass,
+	const bool bAllowExceedMaxAliveItems)
+{
+	PruneInvalidItems();
+
+	if (!GetWorld() || !ItemClass)
+	{
+		return nullptr;
+	}
+
+	if (!bAllowExceedMaxAliveItems && SpawnedItems.Num() >= MaxAliveItems)
+	{
+		return nullptr;
+	}
+
 	FVector SpawnLocation;
 	if (!FindValidSpawnLocation(SpawnLocation))
 	{
@@ -174,7 +193,7 @@ ACh03_BaseItem* ACh03_SpawnVolume::SpawnOneItem()
 
 	const FRotator SpawnRotation(0.0f, FMath::FRandRange(0.0f, 360.0f), 0.0f);
 	ACh03_BaseItem* SpawnedItem = GetWorld()->SpawnActor<ACh03_BaseItem>(
-		SelectedItemClass,
+		ItemClass,
 		SpawnLocation,
 		SpawnRotation,
 		SpawnParameters);

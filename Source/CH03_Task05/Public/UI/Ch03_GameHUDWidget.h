@@ -43,6 +43,18 @@ protected:
 	void HandleAnnouncementChanged(FText NewAnnouncement);
 
 	UFUNCTION()
+	void HandleComboChanged(
+		int32 ComboCount,
+		float ComboTimeRemaining,
+		float ScoreMultiplier,
+		bool bIsActive);
+
+	UFUNCTION()
+	void HandleComboRewardTriggered(
+		int32 ComboCount,
+		FText RewardText);
+
+	UFUNCTION()
 	void HandleStatusEffectChanged(
 		ECheonbokStatusEffect EffectType,
 		bool bIsActive,
@@ -72,6 +84,18 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnAnnouncementUpdated(const FText& NewAnnouncement, bool bIsVisible);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnComboUpdated(
+		int32 ComboCount,
+		float ComboTimeRemaining,
+		float ScoreMultiplier,
+		bool bIsVisible);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnComboRewardUpdated(
+		int32 ComboCount,
+		const FText& RewardText);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
 	void OnStatusEffectUpdated(
@@ -105,6 +129,9 @@ protected:
 	TObjectPtr<UTextBlock> WaveBannerText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> ComboText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SlowStatusText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -123,6 +150,7 @@ private:
 	void UnbindFromCharacter();
 	void CreateWaveBannerTextFallback();
 	void CreateStaminaFallbacks();
+	void CreateComboFallbacks();
 	void PlayWaveBannerIntroAnimation();
 	void PlayWaveBannerOutroAnimation();
 	void UpdateWaveBannerAnimation(float DeltaTime);

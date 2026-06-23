@@ -18,6 +18,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 
 	CreateWaveBannerTextFallback();
 	CreateStaminaFallbacks();
+	CreateComboFallbacks();
 	CreateStatusEffectTextFallbacks();
 	BindToGameState();
 	BindToCharacter();
@@ -195,6 +196,51 @@ void UCh03_GameHUDWidget::HandleAnnouncementChanged(
 	OnAnnouncementUpdated(NewAnnouncement, bIsVisible);
 }
 
+void UCh03_GameHUDWidget::HandleComboChanged(
+	const int32 ComboCount,
+	const float ComboTimeRemaining,
+	const float ScoreMultiplier,
+	const bool bIsActive)
+{
+	const bool bShouldShowCombo = bIsActive && ComboCount >= 2;
+
+	if (ComboText)
+	{
+		ComboText->SetVisibility(
+			bShouldShowCombo
+				? ESlateVisibility::HitTestInvisible
+				: ESlateVisibility::Collapsed);
+
+		if (bShouldShowCombo)
+		{
+			ComboText->SetText(
+				FText::FromString(
+					FString::Printf(
+						TEXT("우다다 x%d  %.2fx  %.1fs"),
+						ComboCount,
+						ScoreMultiplier,
+						FMath::Max(0.0f, ComboTimeRemaining))));
+		}
+		else
+		{
+			ComboText->SetText(FText::GetEmpty());
+		}
+	}
+
+	OnComboUpdated(
+		ComboCount,
+		ComboTimeRemaining,
+		ScoreMultiplier,
+		bShouldShowCombo);
+}
+
+void UCh03_GameHUDWidget::HandleComboRewardTriggered(
+	const int32 ComboCount,
+	const FText RewardText)
+{
+	OnComboRewardUpdated(ComboCount, RewardText);
+}
+
 void UCh03_GameHUDWidget::HandleStatusEffectChanged(
 	const ECheonbokStatusEffect EffectType,
 	const bool bIsActive,
@@ -246,6 +292,14 @@ void UCh03_GameHUDWidget::BindToGameState()
 		this,
 		&UCh03_GameHUDWidget::HandleAnnouncementChanged);
 
+	BoundGameState->OnComboChanged.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleComboChanged);
+
+	BoundGameState->OnComboRewardTriggered.AddUniqueDynamic(
+		this,
+		&UCh03_GameHUDWidget::HandleComboRewardTriggered);
+
 	HandleScoreChanged(BoundGameState->GetScore());
 	HandleWaveChanged(
 		BoundGameState->GetCurrentWave(),
@@ -254,6 +308,12 @@ void UCh03_GameHUDWidget::BindToGameState()
 		BoundGameState->GetRemainingTime());
 	HandleAnnouncementChanged(
 		BoundGameState->GetAnnouncementText());
+	HandleComboChanged(
+		BoundGameState->GetComboCount(),
+		BoundGameState->GetComboTimeRemaining(),
+		BoundGameState->GetCurrentComboScoreMultiplier(),
+		BoundGameState->GetComboCount() > 0
+			&& BoundGameState->GetComboTimeRemaining() > 0.0f);
 }
 
 void UCh03_GameHUDWidget::UnbindFromGameState()
@@ -275,6 +335,14 @@ void UCh03_GameHUDWidget::UnbindFromGameState()
 		BoundGameState->OnAnnouncementChanged.RemoveDynamic(
 			this,
 			&UCh03_GameHUDWidget::HandleAnnouncementChanged);
+
+		BoundGameState->OnComboChanged.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleComboChanged);
+
+		BoundGameState->OnComboRewardTriggered.RemoveDynamic(
+			this,
+			&UCh03_GameHUDWidget::HandleComboRewardTriggered);
 	}
 
 	BoundGameState = nullptr;
@@ -489,6 +557,52 @@ void UCh03_GameHUDWidget::CreateStaminaFallbacks()
 		{
 			RootPanel->AddChild(StaminaText);
 		}
+	}
+}
+
+void UCh03_GameHUDWidget::CreateComboFallbacks()
+{
+	if (!WidgetTree || ComboText)
+	{
+		return;
+	}
+
+	UPanelWidget* RootPanel =
+		Cast<UPanelWidget>(WidgetTree->RootWidget);
+	if (!RootPanel)
+	{
+		return;
+	}
+
+	ComboText = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(),
+		TEXT("ComboText_NativeFallback"));
+
+	ComboText->SetVisibility(ESlateVisibility::Collapsed);
+	ComboText->SetJustification(ETextJustify::Left);
+	ComboText->SetColorAndOpacity(
+		FSlateColor(FLinearColor(1.0f, 0.86f, 0.16f, 1.0f)));
+	ComboText->SetShadowOffset(FVector2D(1.5f, 1.5f));
+	ComboText->SetShadowColorAndOpacity(
+		FLinearColor(0.0f, 0.0f, 0.0f, 0.85f));
+
+	FSlateFontInfo ComboFont = ComboText->GetFont();
+	ComboFont.Size = 26;
+	ComboText->SetFont(ComboFont);
+
+	if (UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(RootPanel))
+	{
+		UCanvasPanelSlot* CanvasSlot =
+			RootCanvas->AddChildToCanvas(ComboText);
+		CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+		CanvasSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+		CanvasSlot->SetPosition(FVector2D(32.0f, 98.0f));
+		CanvasSlot->SetSize(FVector2D(360.0f, 40.0f));
+		CanvasSlot->SetZOrder(20);
+	}
+	else
+	{
+		RootPanel->AddChild(ComboText);
 	}
 }
 

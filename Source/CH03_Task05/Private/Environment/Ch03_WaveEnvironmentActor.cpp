@@ -3,6 +3,7 @@
 #include "Character/Ch03_CheonbokCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Core/Ch03_GameStateBase.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
@@ -150,6 +151,12 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 	if (!CheonbokCharacter || CheonbokCharacter->IsDead())
 	{
 		return;
+	}
+
+	if (ACh03_GameStateBase* CheonbokGameState =
+		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
+	{
+		CheonbokGameState->BreakCombo();
 	}
 
 	if (DamageAmount > 0.0f)

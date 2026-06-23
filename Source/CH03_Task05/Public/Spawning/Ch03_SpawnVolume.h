@@ -52,6 +52,11 @@ public:
 	ACh03_BaseItem* SpawnOneItem();
 
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
+	ACh03_BaseItem* SpawnItemOfClass(
+		TSubclassOf<ACh03_BaseItem> ItemClass,
+		bool bAllowExceedMaxAliveItems = true);
+
+	UFUNCTION(BlueprintCallable, Category = "Spawn")
 	void ClearSpawnedItems();
 
 protected:

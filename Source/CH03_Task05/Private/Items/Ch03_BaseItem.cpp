@@ -62,6 +62,11 @@ void ACh03_BaseItem::Tick(float DeltaTime)
 		return;
 	}
 
+	UpdateItemMovement(DeltaTime);
+}
+
+void ACh03_BaseItem::UpdateItemMovement(const float DeltaTime)
+{
 	AddActorLocalRotation(
 		FRotator(0.0f, RotationSpeed * DeltaTime, 0.0f));
 

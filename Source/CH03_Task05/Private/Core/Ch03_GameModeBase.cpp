@@ -67,12 +67,19 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		TEXT("/Game/Blueprints/Items/BP_Item_Slowing"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ReverseControlClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_ReverseControl"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> GoldenChuruClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_GoldenChuru"));
 	static ConstructorHelpers::FClassFinder<UCh03_GameResultWidget> ResultWidgetClass(
 		TEXT("/Game/UI/WBP_GameResult"));
 
 	if (ResultWidgetClass.Succeeded())
 	{
 		GameResultWidgetClass = ResultWidgetClass.Class;
+	}
+
+	if (GoldenChuruClass.Succeeded())
+	{
+		GoldenComboItemClass = GoldenChuruClass.Class;
 	}
 
 	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 60.0f);
@@ -100,6 +107,13 @@ void ACh03_GameModeBase::BeginPlay()
 
 	CachedGameState = GetGameState<ACh03_GameStateBase>();
 	CachedGameInstance = GetGameInstance<UCh03_GameInstance>();
+
+	if (CachedGameState)
+	{
+		CachedGameState->OnGoldenItemRequested.AddUniqueDynamic(
+			this,
+			&ACh03_GameModeBase::HandleGoldenItemRequested);
+	}
 
 	if (CachedGameInstance)
 	{
@@ -134,6 +148,13 @@ void ACh03_GameModeBase::EndPlay(
 		BoundCharacter->OnCharacterDeath.RemoveDynamic(
 			this,
 			&ACh03_GameModeBase::HandleCharacterDeath);
+	}
+
+	if (CachedGameState)
+	{
+		CachedGameState->OnGoldenItemRequested.RemoveDynamic(
+			this,
+			&ACh03_GameModeBase::HandleGoldenItemRequested);
 	}
 
 	BoundCharacter = nullptr;
@@ -198,6 +219,7 @@ void ACh03_GameModeBase::StartWaveLoop()
 		CachedGameInstance
 			? CachedGameInstance->GetCommittedScore()
 			: 0);
+	CachedGameState->BreakCombo();
 	CachedGameState->SetWave(0, WaveConfigs.Num());
 	CachedGameState->SetRemainingTime(0);
 	ShowAnnouncement(
@@ -480,6 +502,7 @@ void ACh03_GameModeBase::EndCurrentWave()
 
 	if (CachedGameState)
 	{
+		CachedGameState->BreakCombo();
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -512,6 +535,7 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 
 	if (CachedGameState)
 	{
+		CachedGameState->BreakCombo();
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -524,6 +548,67 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 	UE_LOG(LogTemp, Error, TEXT("Game Over: Cheonbok is dead."));
 	OnGameOver();
 	ScheduleResultScreen(false);
+}
+
+void ACh03_GameModeBase::HandleGoldenItemRequested(
+	const int32 ComboCount)
+{
+	if (CurrentPhase != ECh03_GamePhase::Playing || !GoldenComboItemClass)
+	{
+		return;
+	}
+
+	if (SpawnVolumes.IsEmpty())
+	{
+		CacheSpawnVolumes();
+	}
+
+	TArray<ACh03_SpawnVolume*> ValidSpawnVolumes;
+	for (ACh03_SpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (IsValid(SpawnVolume))
+		{
+			ValidSpawnVolumes.Add(SpawnVolume);
+		}
+	}
+
+	if (ValidSpawnVolumes.IsEmpty())
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Golden combo item requested, but no spawn volume is available."));
+		return;
+	}
+
+	ACh03_SpawnVolume* SelectedSpawnVolume =
+		ValidSpawnVolumes[FMath::RandRange(0, ValidSpawnVolumes.Num() - 1)];
+	ACh03_BaseItem* SpawnedGoldenItem =
+		SelectedSpawnVolume->SpawnItemOfClass(GoldenComboItemClass, true);
+
+	if (!IsValid(SpawnedGoldenItem))
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Failed to spawn golden combo item. Combo=%d"),
+			ComboCount);
+		return;
+	}
+
+	ShowAnnouncement(
+		NSLOCTEXT(
+			"CheonbokCombo",
+			"GoldenWingSnackAppeared",
+			"Golden wing snack appeared!"),
+		1.6f);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Golden combo item spawned. Combo=%d, Item=%s"),
+		ComboCount,
+		*GetNameSafe(SpawnedGoldenItem));
 }
 
 void ACh03_GameModeBase::CompleteLevel()
@@ -540,6 +625,7 @@ void ACh03_GameModeBase::CompleteLevel()
 
 	if (CachedGameState)
 	{
+		CachedGameState->BreakCombo();
 		CachedGameState->SetRemainingTime(0);
 	}
 

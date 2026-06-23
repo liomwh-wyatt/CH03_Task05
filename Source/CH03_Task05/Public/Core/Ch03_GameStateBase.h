@@ -10,6 +10,22 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 	FOnCheonbokScoreChanged,
 	int32, NewScore);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
+	FOnCheonbokComboChanged,
+	int32, ComboCount,
+	float, ComboTimeRemaining,
+	float, ScoreMultiplier,
+	bool, bIsActive);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnCheonbokComboRewardTriggered,
+	int32, ComboCount,
+	FText, RewardText);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnCheonbokGoldenItemRequested,
+	int32, ComboCount);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnCheonbokWaveChanged,
 	int32, CurrentWave,
@@ -31,11 +47,16 @@ class CH03_TASK05_API ACh03_GameStateBase : public AGameStateBase
 public:
 	ACh03_GameStateBase();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Score")
 	int32 GetScore() const { return CurrentScore; }
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
 	void AddScore(int32 Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	int32 AddComboScore(int32 BaseAmount, AActor* ScoringActor);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
 	void ResetScore();
@@ -67,8 +88,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Game Flow")
 	void ClearAnnouncementText();
 
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	void BreakCombo();
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	int32 GetComboCount() const { return CurrentComboCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	float GetComboTimeRemaining() const { return ComboTimeRemaining; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	float GetComboWindowSeconds() const { return ComboWindowSeconds; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	float GetCurrentComboScoreMultiplier() const
+	{
+		return CurrentComboScoreMultiplier;
+	}
+
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokScoreChanged OnScoreChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	FOnCheonbokComboChanged OnComboChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	FOnCheonbokComboRewardTriggered OnComboRewardTriggered;
+
+	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	FOnCheonbokGoldenItemRequested OnGoldenItemRequested;
 
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokWaveChanged OnWaveChanged;
@@ -83,6 +131,23 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Score")
 	int32 CurrentScore = 0;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
+		meta = (ClampMin = "0.1", Units = "s"))
+	float ComboWindowSeconds = 3.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
+		meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float Combo12GoldenItemChance = 0.35f;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	int32 CurrentComboCount = 0;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	float ComboTimeRemaining = 0.0f;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	float CurrentComboScoreMultiplier = 1.0f;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
 	int32 CurrentWave = 0;
 
@@ -94,4 +159,13 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Game Flow")
 	FText AnnouncementText;
+
+private:
+	float GetScoreMultiplierForCombo(int32 ComboCount) const;
+	void ProcessComboRewards(int32 ComboCount, AActor* ScoringActor);
+	void ResetComboState(bool bShouldBroadcast);
+	void BroadcastComboChanged();
+
+	bool bNextScoreItemDouble = false;
+	TSet<int32> RewardedComboThresholds;
 };

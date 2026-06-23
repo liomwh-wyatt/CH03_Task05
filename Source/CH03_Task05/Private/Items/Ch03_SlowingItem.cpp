@@ -4,6 +4,7 @@
 
 #include "Character/Ch03_CheonbokCharacter.h"
 #include "Components/StaticMeshComponent.h"
+#include "Core/Ch03_GameStateBase.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -40,6 +41,12 @@ void ACh03_SlowingItem::ActivateItem_Implementation(
 		CheonbokCharacter->ApplySlow(
 			SlowDuration,
 			SpeedMultiplier);
+	}
+
+	if (ACh03_GameStateBase* CheonbokGameState =
+		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
+	{
+		CheonbokGameState->BreakCombo();
 	}
 
 	Super::ActivateItem_Implementation(Activator);

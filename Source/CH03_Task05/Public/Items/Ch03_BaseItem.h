@@ -24,6 +24,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void UpdateItemMovement(float DeltaTime);
 
 	virtual void OnItemOverlap_Implementation(AActor* OverlapActor) override;
 	virtual void OnItemEndOverlap_Implementation(AActor* OverlapActor) override;
@@ -51,6 +52,8 @@ protected:
 
 	bool CanBeActivatedBy(const AActor* Activator) const;
 	bool IsConsumed() const { return bIsConsumed; }
+	const FVector& GetInitialLocation() const { return InitialLocation; }
+	float GetRunningTime() const { return RunningTime; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Components")
 	TObjectPtr<USceneComponent> SceneRoot;

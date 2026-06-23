@@ -99,6 +99,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
 	FName NextLevelName = NAME_None;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	TSubclassOf<ACh03_BaseItem> GoldenComboItemClass;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Game Flow")
 	void OnWaveStarted(int32 CurrentWave, int32 MaxWave);
 
@@ -135,6 +138,9 @@ private:
 
 	UFUNCTION()
 	void HandleCharacterDeath();
+
+	UFUNCTION()
+	void HandleGoldenItemRequested(int32 ComboCount);
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACh03_SpawnVolume>> SpawnVolumes;

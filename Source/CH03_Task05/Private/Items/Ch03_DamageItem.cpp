@@ -1,6 +1,7 @@
 #include "Items/Ch03_DamageItem.h"
 
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Core/Ch03_GameStateBase.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -33,6 +34,12 @@ void ACh03_DamageItem::ActivateItem_Implementation(AActor* Activator)
 		CheonbokCharacter->GetController(),
 		this,
 		DamageTypeClass);
+
+	if (ACh03_GameStateBase* CheonbokGameState =
+		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
+	{
+		CheonbokGameState->BreakCombo();
+	}
 
 	UE_LOG(
 		LogTemp,

@@ -28,6 +28,6 @@ void ACh03_ScoreItem::ActivateItem_Implementation(AActor* Activator)
 		return;
 	}
 
-	CheonbokGameState->AddScore(ScoreValue);
+	CheonbokGameState->AddComboScore(ScoreValue, Activator);
 	Super::ActivateItem_Implementation(Activator);
 }
