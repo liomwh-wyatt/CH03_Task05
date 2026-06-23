@@ -95,6 +95,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Status Effect")
 	void ApplyMovementLock(float Duration = 1.0f);
 
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Movement")
+	void ApplyKnockback(
+		FVector Direction,
+		float HorizontalStrength,
+		float VerticalStrength = 0.0f);
+
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Shield")
 	void ApplyDamageShield(int32 StackAmount = 1);
 

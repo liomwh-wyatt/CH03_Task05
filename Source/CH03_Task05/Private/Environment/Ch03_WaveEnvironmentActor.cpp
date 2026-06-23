@@ -162,12 +162,71 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 			nullptr);
 	}
 
+	if (CheonbokCharacter->IsDead())
+	{
+		return;
+	}
+
 	if (bApplySlowOnOverlap)
 	{
 		CheonbokCharacter->ApplySlow(
 			SlowDuration,
 			SlowMultiplier);
 	}
+
+	if (bApplyKnockbackOnOverlap
+		&& (KnockbackStrength > 0.0f || KnockbackUpwardStrength > 0.0f))
+	{
+		const float CurrentTime =
+			GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+		const bool bCanApplyKnockback =
+			KnockbackCooldown <= 0.0f
+			|| CurrentTime - LastKnockbackTime >= KnockbackCooldown;
+
+		if (bCanApplyKnockback)
+		{
+			LastKnockbackTime = CurrentTime;
+			CheonbokCharacter->ApplyKnockback(
+				GetKnockbackDirection(CheonbokCharacter),
+				KnockbackStrength,
+				KnockbackUpwardStrength);
+		}
+	}
+}
+
+FVector ACh03_WaveEnvironmentActor::GetKnockbackDirection(
+	const ACh03_CheonbokCharacter* CheonbokCharacter) const
+{
+	if (!CheonbokCharacter)
+	{
+		return FVector::ZeroVector;
+	}
+
+	if (bUseMovementDirectionForKnockback && bMoveWhenActive)
+	{
+		FVector MovementDirectionVector =
+			MovementOffset.GetSafeNormal2D() * MovementDirection;
+		MovementDirectionVector.Z = 0.0f;
+
+		if (!MovementDirectionVector.IsNearlyZero())
+		{
+			return MovementDirectionVector;
+		}
+	}
+
+	FVector KnockbackDirection =
+		CheonbokCharacter->GetActorLocation() - GetActorLocation();
+	KnockbackDirection.Z = 0.0f;
+
+	if (KnockbackDirection.IsNearlyZero() && HazardVolume)
+	{
+		KnockbackDirection =
+			CheonbokCharacter->GetActorLocation()
+			- HazardVolume->GetComponentLocation();
+		KnockbackDirection.Z = 0.0f;
+	}
+
+	return KnockbackDirection.GetSafeNormal();
 }
 
 void ACh03_WaveEnvironmentActor::CacheInitialLocationIfNeeded()

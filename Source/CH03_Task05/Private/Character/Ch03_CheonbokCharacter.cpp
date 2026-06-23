@@ -520,6 +520,39 @@ void ACh03_CheonbokCharacter::ApplyMovementLock(float Duration)
 		NewRemainingTime);
 }
 
+void ACh03_CheonbokCharacter::ApplyKnockback(
+	FVector Direction,
+	const float HorizontalStrength,
+	const float VerticalStrength)
+{
+	if (bIsDead
+		|| (HorizontalStrength <= 0.0f && VerticalStrength <= 0.0f))
+	{
+		return;
+	}
+
+	Direction.Z = 0.0f;
+	FVector KnockbackDirection = Direction.GetSafeNormal();
+	if (KnockbackDirection.IsNearlyZero())
+	{
+		KnockbackDirection = -GetActorForwardVector().GetSafeNormal2D();
+	}
+
+	const FVector LaunchVelocity =
+		KnockbackDirection * FMath::Max(0.0f, HorizontalStrength)
+		+ FVector::UpVector * FMath::Max(0.0f, VerticalStrength);
+
+	bIsSprinting = false;
+	bIsAirMovementLocked = true;
+
+	LaunchCharacter(
+		LaunchVelocity,
+		true,
+		VerticalStrength > 0.0f);
+
+	RefreshMovementSpeed();
+}
+
 void ACh03_CheonbokCharacter::ApplyDamageShield(const int32 StackAmount)
 {
 	if (StackAmount <= 0 || bIsDead)

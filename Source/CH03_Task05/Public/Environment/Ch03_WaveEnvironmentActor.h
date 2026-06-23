@@ -6,6 +6,7 @@
 
 class UBoxComponent;
 class UStaticMeshComponent;
+class ACh03_CheonbokCharacter;
 
 UCLASS()
 class CH03_TASK05_API ACh03_WaveEnvironmentActor : public AActor
@@ -89,10 +90,32 @@ protected:
 		meta = (EditCondition = "bApplySlowOnOverlap", ClampMin = "0.1", ClampMax = "1.0"))
 	float SlowMultiplier = 0.65f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
+		meta = (EditCondition = "bAffectPlayerOnOverlap"))
+	bool bApplyKnockbackOnOverlap = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
+		meta = (EditCondition = "bApplyKnockbackOnOverlap", ClampMin = "0.0"))
+	float KnockbackStrength = 650.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
+		meta = (EditCondition = "bApplyKnockbackOnOverlap", ClampMin = "0.0"))
+	float KnockbackUpwardStrength = 120.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
+		meta = (EditCondition = "bApplyKnockbackOnOverlap"))
+	bool bUseMovementDirectionForKnockback = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
+		meta = (EditCondition = "bApplyKnockbackOnOverlap", ClampMin = "0.0", Units = "s"))
+	float KnockbackCooldown = 0.35f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment")
 	FText ActiveAnnouncementText;
 
 private:
+	FVector GetKnockbackDirection(
+		const ACh03_CheonbokCharacter* CheonbokCharacter) const;
 	void CacheInitialLocationIfNeeded();
 	void UpdateActiveMovement(float DeltaSeconds);
 	void ResetMovement();
@@ -104,6 +127,7 @@ private:
 	FVector InitialActorLocation = FVector::ZeroVector;
 	float MovementAlpha = 0.0f;
 	float MovementDirection = 1.0f;
+	float LastKnockbackTime = -BIG_NUMBER;
 	bool bHasCachedInitialLocation = false;
 
 protected:
