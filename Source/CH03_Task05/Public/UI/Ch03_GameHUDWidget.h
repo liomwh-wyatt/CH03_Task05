@@ -10,6 +10,7 @@
 #include "Ch03_GameHUDWidget.generated.h"
 
 class ACh03_GameStateBase;
+class UMaterialInstanceDynamic;
 class UImage;
 class UProgressBar;
 class UTextBlock;
@@ -168,6 +169,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DamageShieldStatusText;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
+		meta = (AllowPrivateAccess = "true"))
+	FName PortraitTextureParameterName = TEXT("PortraitTexture");
+
 private:
 	void BindToGameState();
 	void UnbindFromGameState();
@@ -201,6 +206,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ACh03_CheonbokCharacter> BoundCharacter;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> PortraitBrushMaterialInstance;
 
 	FTimerHandle CharacterBindRetryTimerHandle;
 	FTimerHandle StatusEffectRefreshTimerHandle;

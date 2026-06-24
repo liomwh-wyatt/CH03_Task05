@@ -13,6 +13,8 @@
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/PlayerController.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 
 void UCh03_GameHUDWidget::NativeConstruct()
 {
@@ -614,7 +616,32 @@ void UCh03_GameHUDWidget::RefreshPortraitImage()
 	if (CheonbokFaceImage && PortraitRenderTarget)
 	{
 		FSlateBrush PortraitBrush = CheonbokFaceImage->GetBrush();
-		PortraitBrush.SetResourceObject(PortraitRenderTarget);
+
+		UObject* BrushResource = PortraitBrush.GetResourceObject();
+		if (UMaterialInstanceDynamic* ExistingDynamicMaterial =
+			Cast<UMaterialInstanceDynamic>(BrushResource))
+		{
+			PortraitBrushMaterialInstance = ExistingDynamicMaterial;
+		}
+		else if (UMaterialInterface* PortraitMaterial =
+			Cast<UMaterialInterface>(BrushResource))
+		{
+			PortraitBrushMaterialInstance =
+				UMaterialInstanceDynamic::Create(PortraitMaterial, this);
+		}
+
+		if (PortraitBrushMaterialInstance)
+		{
+			PortraitBrushMaterialInstance->SetTextureParameterValue(
+				PortraitTextureParameterName,
+				PortraitRenderTarget);
+			PortraitBrush.SetResourceObject(PortraitBrushMaterialInstance);
+		}
+		else
+		{
+			PortraitBrush.SetResourceObject(PortraitRenderTarget);
+		}
+
 		PortraitBrush.ImageSize = FVector2D(
 			static_cast<float>(PortraitRenderTarget->SizeX),
 			static_cast<float>(PortraitRenderTarget->SizeY));
