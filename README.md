@@ -40,6 +40,9 @@
 - [x] 웨이브 배너 UI 애니메이션
 - [x] 천복이 머리 위 3D 체력바 WidgetComponent 수직 슬라이스
 - [x] Level Sequence 컷신 디렉터 기반 구조
+- [x] 우다다 콤보와 황금 날개 사료 보상 아이템
+- [x] 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
+- [ ] 최종 맵 아트와 SpawnVolume 배치 폴리싱
 - [ ] 최종 테스트 및 시연 영상
 
 ## 조작법
@@ -61,6 +64,7 @@
 - 웨이브 안내 배너의 Fade/Scale UI 애니메이션
 - 슬로우/조작 반전 디버프의 지속 시간, 중첩 수, HUD 표시
 - 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
+- 우다다 콤보 보상, 최고 콤보 결과 표시, 황금 날개 사료 확정 스폰
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 왕복 이동, 별도 안내 배너 구조
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
