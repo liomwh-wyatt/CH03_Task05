@@ -34,7 +34,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter",
 		meta = (EditCondition = "bUseFlutterMovement"))
-	FVector FlutterBoundsExtent = FVector(900.0f, 650.0f, 180.0f);
+	FVector FlutterBoundsExtent = FVector(900.0f, 650.0f, 70.0f);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter",
 		meta = (EditCondition = "bUseFlutterMovement", ClampMin = "0.0", Units = "cm/s"))
@@ -73,15 +73,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
 		meta = (EditCondition = "bKeepAboveGround", ClampMin = "0.0", Units = "cm"))
-	float GroundClearance = 95.0f;
+	float GroundClearance = 80.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
 		meta = (EditCondition = "bKeepAboveGround", ClampMin = "0.0", Units = "cm"))
-	float GroundTraceHeight = 400.0f;
+	float MaxGroundClearance = 135.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
+		meta = (EditCondition = "bKeepAboveGround", ClampMin = "0.0", Units = "cm"))
+	float GroundTraceHeight = 800.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Ground",
 		meta = (EditCondition = "bKeepAboveGround", ClampMin = "1.0", Units = "cm"))
-	float GroundTraceDepth = 1200.0f;
+	float GroundTraceDepth = 4000.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter|Obstacle")
 	bool bAvoidWorldObstacles = true;
@@ -111,5 +115,6 @@ private:
 
 	FVector CurrentFlutterTarget = FVector::ZeroVector;
 	FVector CurrentFlutterDirection = FVector::ForwardVector;
+	FVector FlutterOriginLocation = FVector::ZeroVector;
 	float FlutterTargetChangeTimer = 0.0f;
 };

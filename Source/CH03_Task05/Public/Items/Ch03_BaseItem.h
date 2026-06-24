@@ -8,6 +8,7 @@
 #include "Ch03_BaseItem.generated.h"
 
 class USceneComponent;
+class UNiagaraSystem;
 class USoundBase;
 class USphereComponent;
 class UStaticMeshComponent;
@@ -30,6 +31,8 @@ protected:
 	virtual void OnItemEndOverlap_Implementation(AActor* OverlapActor) override;
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 	virtual FName GetItemType_Implementation() const override;
+	virtual void PlaySpawnFeedback();
+	virtual void PlayPickupFeedback(AActor* Activator);
 
 	UFUNCTION()
 	void HandleBeginOverlap(
@@ -81,6 +84,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Feedback")
 	TObjectPtr<USoundBase> PickupSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Feedback")
+	TObjectPtr<UNiagaraSystem> SpawnEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Feedback")
+	TObjectPtr<UNiagaraSystem> PickupEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Feedback",
 		meta = (ClampMin = "0.0"))

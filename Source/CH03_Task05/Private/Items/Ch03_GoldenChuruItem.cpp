@@ -34,6 +34,7 @@ void ACh03_GoldenChuruItem::BeginPlay()
 	}
 
 	SetActorLocation(KeepLocationAboveGround(GetActorLocation()));
+	FlutterOriginLocation = GetActorLocation();
 
 	if (FlightTrailComponent)
 	{
@@ -195,7 +196,7 @@ void ACh03_GoldenChuruItem::SelectNewFlutterTarget()
 
 FVector ACh03_GoldenChuruItem::GetRandomFlutterLocation() const
 {
-	const FVector Origin = GetInitialLocation();
+	const FVector Origin = FlutterOriginLocation;
 	const FVector SafeExtent(
 		FMath::Max(0.0f, FlutterBoundsExtent.X),
 		FMath::Max(0.0f, FlutterBoundsExtent.Y),
@@ -211,7 +212,7 @@ FVector ACh03_GoldenChuruItem::GetRandomFlutterLocation() const
 FVector ACh03_GoldenChuruItem::ClampToFlutterBounds(
 	const FVector& Location) const
 {
-	const FVector Origin = GetInitialLocation();
+	const FVector Origin = FlutterOriginLocation;
 	const FVector SafeExtent(
 		FMath::Max(0.0f, FlutterBoundsExtent.X),
 		FMath::Max(0.0f, FlutterBoundsExtent.Y),
@@ -268,9 +269,16 @@ FVector ACh03_GoldenChuruItem::KeepLocationAboveGround(
 
 	FVector AdjustedLocation = Location;
 	const float MinimumZ = GroundHit.ImpactPoint.Z + GroundClearance;
+	const float MaximumZ = GroundHit.ImpactPoint.Z + FMath::Max(
+		GroundClearance,
+		MaxGroundClearance);
 	if (AdjustedLocation.Z < MinimumZ)
 	{
 		AdjustedLocation.Z = MinimumZ;
+	}
+	else if (AdjustedLocation.Z > MaximumZ)
+	{
+		AdjustedLocation.Z = MaximumZ;
 	}
 
 	return AdjustedLocation;

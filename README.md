@@ -60,6 +60,7 @@
 - `UUserWidget` C++ 부모 클래스를 통한 메인 메뉴, 결과 메뉴, 일시정지 메뉴 제어
 - 웨이브 안내 배너의 Fade/Scale UI 애니메이션
 - 슬로우/조작 반전 디버프의 지속 시간, 중첩 수, HUD 표시
+- 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 왕복 이동, 별도 안내 배너 구조
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조

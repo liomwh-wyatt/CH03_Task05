@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Sound/SoundBase.h"
 
 ACh03_BaseItem::ACh03_BaseItem()
@@ -43,6 +44,8 @@ void ACh03_BaseItem::BeginPlay()
 	CollisionComponent->OnComponentEndOverlap.AddDynamic(
 		this,
 		&ACh03_BaseItem::HandleEndOverlap);
+
+	PlaySpawnFeedback();
 }
 
 void ACh03_BaseItem::Tick(float DeltaTime)
@@ -172,6 +175,7 @@ void ACh03_BaseItem::ActivateItem_Implementation(AActor* Activator)
 			GetActorLocation());
 	}
 
+	PlayPickupFeedback(Activator);
 	OnCollected(Activator);
 
 	UE_LOG(
@@ -194,6 +198,36 @@ void ACh03_BaseItem::ActivateItem_Implementation(AActor* Activator)
 FName ACh03_BaseItem::GetItemType_Implementation() const
 {
 	return ItemType;
+}
+
+void ACh03_BaseItem::PlaySpawnFeedback()
+{
+	if (!SpawnEffect)
+	{
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		this,
+		SpawnEffect,
+		GetActorLocation(),
+		GetActorRotation());
+}
+
+void ACh03_BaseItem::PlayPickupFeedback(AActor* Activator)
+{
+	(void)Activator;
+
+	if (!PickupEffect)
+	{
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		this,
+		PickupEffect,
+		GetActorLocation(),
+		GetActorRotation());
 }
 
 void ACh03_BaseItem::HandleBeginOverlap(
