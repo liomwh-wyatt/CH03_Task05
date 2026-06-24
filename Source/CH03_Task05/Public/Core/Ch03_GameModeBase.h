@@ -153,6 +153,7 @@ private:
 	void ClearAnnouncement();
 	void ScheduleResultScreen(bool bWasVictory);
 	void ShowPendingResultScreen();
+	void SetPlayerHUDVisible(bool bIsVisible);
 	void LockPlayerInput();
 	FText GetCurrentLevelDisplayName() const;
 	void ClearWaveTimers();

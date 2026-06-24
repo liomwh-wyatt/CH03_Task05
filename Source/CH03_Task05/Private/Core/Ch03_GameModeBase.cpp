@@ -215,6 +215,7 @@ void ACh03_GameModeBase::StartWaveLoop()
 	CurrentWaveIndex = 0;
 	RemainingTime = 0;
 	SetGamePhase(ECh03_GamePhase::Waiting);
+	SetPlayerHUDVisible(true);
 
 	CachedGameState->SetScore(
 		CachedGameInstance
@@ -972,6 +973,8 @@ void ACh03_GameModeBase::ShowPendingResultScreen()
 		return;
 	}
 
+	SetPlayerHUDVisible(false);
+
 	const int32 FinalScore =
 		CachedGameState ? CachedGameState->GetScore() : 0;
 	const int32 BestComboCount =
@@ -1014,6 +1017,17 @@ void ACh03_GameModeBase::ShowPendingResultScreen()
 	PlayerController->SetInputMode(InputMode);
 	PlayerController->bShowMouseCursor = true;
 	UGameplayStatics::SetGamePaused(this, true);
+}
+
+void ACh03_GameModeBase::SetPlayerHUDVisible(
+	const bool bIsVisible)
+{
+	if (ACh03_CheonbokController* CheonbokController =
+		Cast<ACh03_CheonbokController>(
+			UGameplayStatics::GetPlayerController(this, 0)))
+	{
+		CheonbokController->SetGameHUDVisible(bIsVisible);
+	}
 }
 
 void ACh03_GameModeBase::LockPlayerInput()
