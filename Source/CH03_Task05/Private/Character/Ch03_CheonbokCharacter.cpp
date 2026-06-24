@@ -2,7 +2,10 @@
 
 #include "Camera/CameraComponent.h"
 #include "Core/Ch03_CheonbokController.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
@@ -43,6 +46,21 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		UCh03_WorldHealthWidget::StaticClass());
 	WorldHealthWidgetClass = UCh03_WorldHealthWidget::StaticClass();
 
+	PortraitCaptureComponent =
+		CreateDefaultSubobject<USceneCaptureComponent2D>(
+			TEXT("PortraitCaptureComponent"));
+	PortraitCaptureComponent->SetupAttachment(RootComponent);
+	PortraitCaptureComponent->SetRelativeLocation(
+		PortraitCaptureRelativeLocation);
+	PortraitCaptureComponent->SetRelativeRotation(
+		PortraitCaptureRelativeRotation);
+	PortraitCaptureComponent->FOVAngle = PortraitCaptureFOV;
+	PortraitCaptureComponent->bCaptureEveryFrame = bCapturePortraitEveryFrame;
+	PortraitCaptureComponent->bCaptureOnMovement = true;
+	PortraitCaptureComponent->CaptureSource = SCS_FinalColorLDR;
+	PortraitCaptureComponent->PrimitiveRenderMode =
+		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -67,10 +85,19 @@ void ACh03_CheonbokCharacter::BeginPlay()
 
 	CurrentHealth = MaxHealth;
 	CurrentStamina = MaxStamina;
+	ApplyPortraitCaptureSettings();
 	InitializeWorldHealthWidget();
 	RefreshMovementSpeed();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 	OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+}
+
+void ACh03_CheonbokCharacter::OnConstruction(
+	const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	ApplyPortraitCaptureSettings();
 }
 
 void ACh03_CheonbokCharacter::Tick(float DeltaTime)
@@ -676,6 +703,14 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 		-1.0f);
 }
 
+void ACh03_CheonbokCharacter::RefreshPortraitCapture() const
+{
+	if (PortraitCaptureComponent && PortraitRenderTarget)
+	{
+		PortraitCaptureComponent->CaptureScene();
+	}
+}
+
 bool ACh03_CheonbokCharacter::IsAirMovementLocked() const
 {
 	if (bIsAirMovementLocked)
@@ -901,6 +936,33 @@ void ACh03_CheonbokCharacter::UpdateWorldHealthWidget()
 			WorldHealthWidgetComponent->GetUserWidgetObject()))
 	{
 		WorldHealthWidget->SetHealthValues(CurrentHealth, MaxHealth);
+	}
+}
+
+void ACh03_CheonbokCharacter::ApplyPortraitCaptureSettings()
+{
+	if (!PortraitCaptureComponent)
+	{
+		return;
+	}
+
+	PortraitCaptureComponent->SetRelativeLocation(
+		PortraitCaptureRelativeLocation);
+	PortraitCaptureComponent->SetRelativeRotation(
+		PortraitCaptureRelativeRotation);
+	PortraitCaptureComponent->FOVAngle = PortraitCaptureFOV;
+	PortraitCaptureComponent->TextureTarget = PortraitRenderTarget;
+	PortraitCaptureComponent->bCaptureEveryFrame =
+		bCapturePortraitEveryFrame && PortraitRenderTarget != nullptr;
+	PortraitCaptureComponent->bCaptureOnMovement =
+		PortraitRenderTarget != nullptr;
+	PortraitCaptureComponent->PrimitiveRenderMode =
+		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+	PortraitCaptureComponent->ClearShowOnlyComponents();
+
+	if (USkeletalMeshComponent* MeshComponent = GetMesh())
+	{
+		PortraitCaptureComponent->ShowOnlyComponent(MeshComponent);
 	}
 }
 

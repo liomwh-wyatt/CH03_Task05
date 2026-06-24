@@ -6,10 +6,12 @@
 #include "Character/Ch03_CheonbokCharacter.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Core/Ch03_GameStateBase.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/PlayerController.h"
 
 void UCh03_GameHUDWidget::NativeConstruct()
@@ -564,6 +566,7 @@ void UCh03_GameHUDWidget::BindToCharacter()
 		BoundCharacter->GetStamina(),
 		BoundCharacter->GetMaxStamina());
 
+	RefreshPortraitImage();
 	RefreshStatusEffectTexts();
 
 	if (GetWorld())
@@ -601,6 +604,30 @@ void UCh03_GameHUDWidget::UnbindFromCharacter()
 	}
 
 	BoundCharacter = nullptr;
+}
+
+void UCh03_GameHUDWidget::RefreshPortraitImage()
+{
+	UTextureRenderTarget2D* PortraitRenderTarget =
+		BoundCharacter ? BoundCharacter->GetPortraitRenderTarget() : nullptr;
+
+	if (CheonbokFaceImage && PortraitRenderTarget)
+	{
+		FSlateBrush PortraitBrush = CheonbokFaceImage->GetBrush();
+		PortraitBrush.SetResourceObject(PortraitRenderTarget);
+		PortraitBrush.ImageSize = FVector2D(
+			static_cast<float>(PortraitRenderTarget->SizeX),
+			static_cast<float>(PortraitRenderTarget->SizeY));
+		CheonbokFaceImage->SetBrush(PortraitBrush);
+		CheonbokFaceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	if (BoundCharacter)
+	{
+		BoundCharacter->RefreshPortraitCapture();
+	}
+
+	OnPortraitRenderTargetUpdated(PortraitRenderTarget);
 }
 
 void UCh03_GameHUDWidget::CreateWaveBannerTextFallback()

@@ -10,8 +10,10 @@
 #include "Ch03_GameHUDWidget.generated.h"
 
 class ACh03_GameStateBase;
+class UImage;
 class UProgressBar;
 class UTextBlock;
+class UTextureRenderTarget2D;
 
 UCLASS()
 class CH03_TASK05_API UCh03_GameHUDWidget : public UUserWidget
@@ -115,6 +117,9 @@ protected:
 		int32 StackCount,
 		float RemainingTime);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	void OnPortraitRenderTargetUpdated(UTextureRenderTarget2D* RenderTarget);
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ScoreText;
 
@@ -129,6 +134,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> StaminaBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UImage> CheonbokFaceImage;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> WaveText;
@@ -180,6 +188,7 @@ private:
 	void InitializeTransientTextWidgets();
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
+	void RefreshPortraitImage();
 	void UpdateStatusEffectText(
 		UTextBlock* TargetText,
 		const FText& Label,

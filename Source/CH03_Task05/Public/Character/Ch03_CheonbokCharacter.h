@@ -6,8 +6,10 @@
 #include "Ch03_CheonbokCharacter.generated.h"
 
 class UCameraComponent;
+class USceneCaptureComponent2D;
 class USpringArmComponent;
 class UCh03_WorldHealthWidget;
+class UTextureRenderTarget2D;
 class UWidgetComponent;
 struct FInputActionValue;
 
@@ -48,6 +50,7 @@ public:
 	ACh03_CheonbokCharacter();
 
 	virtual void Tick(float DeltaTime) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PawnClientRestart() override;
 	virtual void Landed(const FHitResult& Hit) override;
 	virtual float TakeDamage(
@@ -146,6 +149,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|State")
 	void ResetCharacterState();
 
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Portrait")
+	UTextureRenderTarget2D* GetPortraitRenderTarget() const
+	{
+		return PortraitRenderTarget;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Portrait")
+	void RefreshPortraitCapture() const;
+
 	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
 	FOnCheonbokHealthChanged OnHealthChanged;
 
@@ -182,6 +194,7 @@ protected:
 	void EndDamageInvincibility();
 	void InitializeWorldHealthWidget();
 	void UpdateWorldHealthWidget();
+	void ApplyPortraitCaptureSettings();
 
 	float ExtendEffectTimer(
 		FTimerHandle& TimerHandle,
@@ -198,6 +211,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	TObjectPtr<UWidgetComponent> WorldHealthWidgetComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	TObjectPtr<USceneCaptureComponent2D> PortraitCaptureComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	FVector WorldHealthWidgetRelativeLocation = FVector(0.0f, 0.0f, 86.0f);
 
@@ -206,6 +222,22 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	bool bShowWorldHealthWidget = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	TObjectPtr<UTextureRenderTarget2D> PortraitRenderTarget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	FVector PortraitCaptureRelativeLocation = FVector(130.0f, 0.0f, 62.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	FRotator PortraitCaptureRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait",
+		meta = (ClampMin = "5.0", ClampMax = "120.0"))
+	float PortraitCaptureFOV = 32.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	bool bCapturePortraitEveryFrame = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
 		meta = (ClampMin = "-89.0", ClampMax = "0.0"))
