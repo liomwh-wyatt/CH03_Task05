@@ -3,6 +3,8 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 
 ACh03_GoldenChuruItem::ACh03_GoldenChuruItem()
 {
@@ -14,6 +16,11 @@ ACh03_GoldenChuruItem::ACh03_GoldenChuruItem()
 	LifetimeAfterSpawn = 14.0f;
 	BlinkStartTime = 3.0f;
 	BlinkInterval = 0.1f;
+
+	FlightTrailComponent = CreateDefaultSubobject<UNiagaraComponent>(
+		TEXT("FlightTrailComponent"));
+	FlightTrailComponent->SetupAttachment(SceneRoot);
+	FlightTrailComponent->SetAutoActivate(false);
 }
 
 void ACh03_GoldenChuruItem::BeginPlay()
@@ -27,6 +34,20 @@ void ACh03_GoldenChuruItem::BeginPlay()
 	}
 
 	SetActorLocation(KeepLocationAboveGround(GetActorLocation()));
+
+	if (FlightTrailComponent)
+	{
+		if (FlightTrailEffect)
+		{
+			FlightTrailComponent->SetAsset(FlightTrailEffect);
+		}
+
+		if (bUseFlutterMovement && bAutoActivateFlightTrail)
+		{
+			FlightTrailComponent->Activate(true);
+		}
+	}
+
 	SelectNewFlutterTarget();
 }
 

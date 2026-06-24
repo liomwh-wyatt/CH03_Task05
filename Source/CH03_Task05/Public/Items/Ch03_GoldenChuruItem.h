@@ -5,6 +5,9 @@
 #include "Items/Ch03_ScoreItem.h"
 #include "Ch03_GoldenChuruItem.generated.h"
 
+class UNiagaraComponent;
+class UNiagaraSystem;
+
 UCLASS()
 class CH03_TASK05_API ACh03_GoldenChuruItem : public ACh03_ScoreItem
 {
@@ -19,6 +22,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter")
 	bool bUseFlutterMovement = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Components")
+	TObjectPtr<UNiagaraComponent> FlightTrailComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|VFX")
+	TObjectPtr<UNiagaraSystem> FlightTrailEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|VFX")
+	bool bAutoActivateFlightTrail = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Flutter",
 		meta = (EditCondition = "bUseFlutterMovement"))

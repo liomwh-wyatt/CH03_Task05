@@ -17,7 +17,8 @@ public class CH03_Task05 : ModuleRules
 			"EnhancedInput",
 			"UMG",
 			"LevelSequence",
-			"MovieScene"
+			"MovieScene",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
