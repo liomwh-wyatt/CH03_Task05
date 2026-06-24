@@ -80,12 +80,12 @@ void UCh03_GameResultWidget::InitializeResult(
 					NSLOCTEXT(
 						"CheonbokResult",
 						"LevelComplete",
-						"{0} Complete!"),
+						"{0} 클리어!"),
 					LevelDisplayName)
 				: NSLOCTEXT(
 					"CheonbokResult",
 					"GameOver",
-					"Game Over"));
+					"게임 오버"));
 	}
 
 	if (FinalScoreText)
@@ -95,7 +95,7 @@ void UCh03_GameResultWidget::InitializeResult(
 				NSLOCTEXT(
 					"CheonbokResult",
 					"FinalScore",
-					"Final Snack Score: {0}"),
+					"최종 간식 점수: {0}"),
 				FText::AsNumber(FMath::Max(0, FinalScore))));
 	}
 
@@ -106,7 +106,7 @@ void UCh03_GameResultWidget::InitializeResult(
 				NSLOCTEXT(
 					"CheonbokResult",
 					"HighScore",
-					"Best Snack Score: {0}"),
+					"최고 간식 점수: {0}"),
 				FText::AsNumber(HighestScore)));
 	}
 
@@ -116,7 +116,7 @@ void UCh03_GameResultWidget::InitializeResult(
 			NSLOCTEXT(
 				"CheonbokResult",
 				"NewHighScore",
-				"New Best!"));
+				"신기록!"));
 		NewHighScoreText->SetVisibility(
 			bIsNewHighScore
 				? ESlateVisibility::Visible
@@ -130,7 +130,7 @@ void UCh03_GameResultWidget::InitializeResult(
 				NSLOCTEXT(
 					"CheonbokResult",
 					"BestCombo",
-					"Best Udadada Combo: x{0}"),
+					"최고 우다다 콤보: x{0}"),
 				FText::AsNumber(FMath::Max(0, BestComboCount))));
 	}
 

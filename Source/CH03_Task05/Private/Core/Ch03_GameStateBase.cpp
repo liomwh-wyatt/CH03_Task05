@@ -12,6 +12,7 @@ ACh03_GameStateBase::ACh03_GameStateBase()
 	CurrentWave = 0;
 	MaxWave = 3;
 	RemainingTime = 0;
+	WaveDuration = 0;
 	AnnouncementText = FText::GetEmpty();
 }
 
@@ -185,6 +186,27 @@ void ACh03_GameStateBase::SetRemainingTime(
 		RemainingTime);
 }
 
+void ACh03_GameStateBase::SetWaveDuration(
+	const int32 NewWaveDuration)
+{
+	const int32 SanitizedWaveDuration = FMath::Max(
+		0,
+		NewWaveDuration);
+
+	if (WaveDuration == SanitizedWaveDuration)
+	{
+		return;
+	}
+
+	WaveDuration = SanitizedWaveDuration;
+
+	UE_LOG(
+		LogTemp,
+		Verbose,
+		TEXT("Cheonbok wave duration: %d"),
+		WaveDuration);
+}
+
 void ACh03_GameStateBase::SetAnnouncementText(
 	const FText& NewAnnouncement)
 {
@@ -280,7 +302,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 			NSLOCTEXT(
 				"CheonbokCombo",
 				"Combo3Reward",
-				"Udadada x3! Score +10%"));
+				"우다다 x3! 점수 +10%"));
 		return;
 	}
 
@@ -296,7 +318,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 			NSLOCTEXT(
 				"CheonbokCombo",
 				"Combo5Reward",
-				"Udadada x5! Score +25%, Stamina +5"));
+				"우다다 x5! 점수 +25%, 스태미나 +5"));
 		return;
 	}
 
@@ -312,7 +334,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 			NSLOCTEXT(
 				"CheonbokCombo",
 				"Combo8Reward",
-				"Udadada x8! Score +50%, Stamina +10"));
+				"우다다 x8! 점수 +50%, 스태미나 +10"));
 		return;
 	}
 
@@ -324,7 +346,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 			NSLOCTEXT(
 				"CheonbokCombo",
 				"Combo10Reward",
-				"Udadada x10! Next snack score x2"));
+				"우다다 x10! 다음 간식 점수 2배"));
 		return;
 	}
 
@@ -342,11 +364,11 @@ void ACh03_GameStateBase::ProcessComboRewards(
 				? NSLOCTEXT(
 					"CheonbokCombo",
 					"Combo12GoldenReward",
-					"Udadada x12! Golden wing snack appeared")
+					"우다다 x12! 황금 날개 사료 등장!")
 				: NSLOCTEXT(
 					"CheonbokCombo",
 					"Combo12Reward",
-					"Udadada x12! Golden wing snack chance"));
+					"우다다 x12! 황금 날개 사료 등장 기회"));
 		return;
 	}
 
@@ -358,7 +380,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 			NSLOCTEXT(
 				"CheonbokCombo",
 				"Combo15Reward",
-				"Udadada x15! Golden wing snack guaranteed"));
+				"우다다 x15! 황금 날개 사료 확정 등장!"));
 	}
 }
 

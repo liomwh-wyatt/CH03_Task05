@@ -124,7 +124,7 @@ void UCh03_MainMenuWidget::UpdateHighScoreText()
 			NSLOCTEXT(
 				"CheonbokMainMenu",
 				"HighScoreFormat",
-				"Best Snack Score: {0}"),
+				"최고 간식 점수: {0}"),
 			FText::AsNumber(HighestScore)));
 }
 

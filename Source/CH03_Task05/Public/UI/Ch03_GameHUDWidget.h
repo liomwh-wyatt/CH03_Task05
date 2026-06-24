@@ -137,6 +137,9 @@ protected:
 	TObjectPtr<UTextBlock> TimerText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> TimerBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> WaveBannerText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -171,6 +174,10 @@ private:
 	void ApplyWaveBannerAnimation(float Alpha, bool bIsOutro);
 	void FinishWaveBannerOutroAnimation();
 	void UpdateComboRewardFeedback(float DeltaTime);
+	void UpdateTimerBarPercent(int32 SafeRemainingTime);
+	void UpdateTimerBarDisplay();
+	void ResetTimerBar();
+	void InitializeTransientTextWidgets();
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
 	void UpdateStatusEffectText(
@@ -193,6 +200,11 @@ private:
 	bool bIsWaveBannerAnimationActive = false;
 	bool bIsWaveBannerOutroAnimation = false;
 	float ComboRewardRemainingTime = 0.0f;
+	float TimerBarDurationSeconds = 0.0f;
+	float TimerBarEndTimeSeconds = 0.0f;
+	int32 TimerBarMaxSeconds = 0;
+	int32 LastObservedTimerWave = INDEX_NONE;
+	bool bIsTimerBarCountingDown = false;
 
 	static constexpr float WaveBannerIntroDuration = 0.22f;
 	static constexpr float WaveBannerOutroDuration = 0.18f;

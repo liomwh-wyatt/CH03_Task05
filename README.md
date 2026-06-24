@@ -43,6 +43,7 @@
 - [x] 우다다 콤보와 황금 날개 사료 보상 아이템
 - [x] 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
 - [ ] 최종 맵 아트와 SpawnVolume 배치 폴리싱
+- [ ] 실시간 천복이 얼굴 초상화 RenderTarget 슬롯
 - [ ] 최종 테스트 및 시연 영상
 
 ## 조작법
@@ -66,6 +67,7 @@
 - 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
 - 우다다 콤보 보상, 최고 콤보 결과 표시, 황금 날개 사료 확정 스폰
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
+- TimerBar는 웨이브 종료 시각을 기준으로 매 프레임 연속 감소
 - `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 왕복 이동, 별도 안내 배너 구조
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
 
@@ -99,6 +101,7 @@ git lfs pull
 - `Source`, `Config`, `Content`, `.uproject`는 저장소에 포함합니다.
 - `Binaries`, `Intermediate`, `Saved`, `DerivedDataCache`는 저장소에 포함하지 않습니다.
 - `.uasset`, `.umap`, `.fbx`와 대용량 원본 에셋은 Git LFS로 관리합니다.
+- `Texture/`, `Content/Art/Generated2D/`, 루트 `Fonts/`, `Tools/`는 임시 제작·참고 폴더로 커밋하지 않습니다.
 - 리플렉션 타입이나 C++ 클래스 구조를 변경한 경우 Live Coding에만 의존하지 않고 에디터를 종료한 뒤 전체 빌드합니다.
 
 ## 기획 문서

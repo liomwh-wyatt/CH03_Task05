@@ -222,6 +222,7 @@ void ACh03_GameModeBase::StartWaveLoop()
 			: 0);
 	CachedGameState->ResetComboStats();
 	CachedGameState->SetWave(0, WaveConfigs.Num());
+	CachedGameState->SetWaveDuration(0);
 	CachedGameState->SetRemainingTime(0);
 	ShowAnnouncement(
 		NSLOCTEXT(
@@ -384,6 +385,7 @@ void ACh03_GameModeBase::StartCurrentWave()
 		CachedGameState->SetWave(
 			CurrentWaveIndex + 1,
 			WaveConfigs.Num());
+		CachedGameState->SetWaveDuration(RemainingTime);
 		CachedGameState->SetRemainingTime(RemainingTime);
 	}
 
@@ -505,6 +507,7 @@ void ACh03_GameModeBase::EndCurrentWave()
 	{
 		CachedGameState->BreakComboWithReason(
 			ECh03ComboBreakReason::GameFlow);
+		CachedGameState->SetWaveDuration(0);
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -539,6 +542,7 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 	{
 		CachedGameState->BreakComboWithReason(
 			ECh03ComboBreakReason::GameFlow);
+		CachedGameState->SetWaveDuration(0);
 		CachedGameState->SetRemainingTime(0);
 	}
 
@@ -730,6 +734,7 @@ void ACh03_GameModeBase::CompleteLevel()
 	{
 		CachedGameState->BreakComboWithReason(
 			ECh03ComboBreakReason::GameFlow);
+		CachedGameState->SetWaveDuration(0);
 		CachedGameState->SetRemainingTime(0);
 	}
 

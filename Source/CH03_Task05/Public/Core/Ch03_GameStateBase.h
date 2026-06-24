@@ -87,11 +87,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
 	int32 GetRemainingTime() const { return RemainingTime; }
 
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
+	int32 GetWaveDuration() const { return WaveDuration; }
+
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
 	void SetWave(int32 NewCurrentWave, int32 NewMaxWave);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
 	void SetRemainingTime(int32 NewRemainingTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
+	void SetWaveDuration(int32 NewWaveDuration);
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Game Flow")
 	FText GetAnnouncementText() const { return AnnouncementText; }
@@ -185,6 +191,9 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
 	int32 RemainingTime = 0;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
+	int32 WaveDuration = 0;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Game Flow")
 	FText AnnouncementText;

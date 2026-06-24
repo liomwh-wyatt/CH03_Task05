@@ -20,6 +20,7 @@ void UCh03_GameHUDWidget::NativeConstruct()
 	CreateStaminaFallbacks();
 	CreateComboFallbacks();
 	CreateStatusEffectTextFallbacks();
+	InitializeTransientTextWidgets();
 	BindToGameState();
 	BindToCharacter();
 }
@@ -48,6 +49,7 @@ void UCh03_GameHUDWidget::NativeTick(
 
 	UpdateWaveBannerAnimation(InDeltaTime);
 	UpdateComboRewardFeedback(InDeltaTime);
+	UpdateTimerBarDisplay();
 }
 
 void UCh03_GameHUDWidget::HandleScoreChanged(int32 NewScore)
@@ -59,7 +61,7 @@ void UCh03_GameHUDWidget::HandleScoreChanged(int32 NewScore)
 				NSLOCTEXT(
 					"CheonbokHUD",
 					"ScoreFormat",
-					"Snack Score: {0}"),
+					"🫓:{0}"),
 				FText::AsNumber(NewScore)));
 	}
 
@@ -126,6 +128,13 @@ void UCh03_GameHUDWidget::HandleWaveChanged(
 	const int32 CurrentWave,
 	const int32 MaxWave)
 {
+	if (LastObservedTimerWave != CurrentWave)
+	{
+		LastObservedTimerWave = CurrentWave;
+		TimerBarMaxSeconds = 0;
+		ResetTimerBar();
+	}
+
 	if (WaveText)
 	{
 		if (CurrentWave <= 0)
@@ -147,6 +156,11 @@ void UCh03_GameHUDWidget::HandleWaveChanged(
 					FText::AsNumber(CurrentWave),
 					FText::AsNumber(MaxWave)));
 		}
+	}
+
+	if (CurrentWave <= 0)
+	{
+		UpdateTimerBarPercent(0);
 	}
 
 	OnWaveUpdated(CurrentWave, MaxWave);
@@ -171,7 +185,111 @@ void UCh03_GameHUDWidget::HandleRemainingTimeChanged(
 					Seconds)));
 	}
 
+	UpdateTimerBarPercent(SafeRemainingTime);
 	OnRemainingTimeUpdated(SafeRemainingTime);
+}
+
+void UCh03_GameHUDWidget::UpdateTimerBarPercent(
+	const int32 SafeRemainingTime)
+{
+	if (!TimerBar)
+	{
+		return;
+	}
+
+	if (SafeRemainingTime > TimerBarMaxSeconds)
+	{
+		TimerBarMaxSeconds = SafeRemainingTime;
+	}
+
+	const int32 MaxSeconds =
+		BoundGameState && BoundGameState->GetWaveDuration() > 0
+			? BoundGameState->GetWaveDuration()
+			: TimerBarMaxSeconds;
+
+	const float TimerPercent = MaxSeconds > 0
+		? FMath::Clamp(
+			static_cast<float>(SafeRemainingTime)
+			/ static_cast<float>(MaxSeconds),
+			0.0f,
+			1.0f)
+		: 0.0f;
+
+	if (MaxSeconds <= 0 || SafeRemainingTime <= 0)
+	{
+		ResetTimerBar();
+		return;
+	}
+
+	TimerBarDurationSeconds = static_cast<float>(MaxSeconds);
+	TimerBarEndTimeSeconds =
+		(GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f)
+		+ static_cast<float>(SafeRemainingTime);
+	bIsTimerBarCountingDown = true;
+	TimerBar->SetPercent(TimerPercent);
+}
+
+void UCh03_GameHUDWidget::UpdateTimerBarDisplay()
+{
+	if (!TimerBar || !bIsTimerBarCountingDown)
+	{
+		return;
+	}
+
+	const float CurrentWorldTime =
+		GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+	const float RemainingSeconds = FMath::Max(
+		0.0f,
+		TimerBarEndTimeSeconds - CurrentWorldTime);
+	const float TimerPercent = TimerBarDurationSeconds > 0.0f
+		? FMath::Clamp(
+			RemainingSeconds / TimerBarDurationSeconds,
+			0.0f,
+			1.0f)
+		: 0.0f;
+
+	TimerBar->SetPercent(TimerPercent);
+
+	if (RemainingSeconds <= 0.0f)
+	{
+		bIsTimerBarCountingDown = false;
+	}
+}
+
+void UCh03_GameHUDWidget::ResetTimerBar()
+{
+	TimerBarDurationSeconds = 0.0f;
+	TimerBarEndTimeSeconds = 0.0f;
+	bIsTimerBarCountingDown = false;
+
+	if (TimerBar)
+	{
+		TimerBar->SetPercent(0.0f);
+	}
+}
+
+void UCh03_GameHUDWidget::InitializeTransientTextWidgets()
+{
+	auto ClearAndCollapseText =
+		[](UTextBlock* TargetText)
+		{
+			if (!TargetText)
+			{
+				return;
+			}
+
+			TargetText->SetText(FText::GetEmpty());
+			TargetText->SetVisibility(ESlateVisibility::Collapsed);
+			TargetText->SetRenderOpacity(1.0f);
+		};
+
+	ClearAndCollapseText(WaveBannerText);
+	ClearAndCollapseText(ComboText);
+	ClearAndCollapseText(ComboRewardText);
+	ClearAndCollapseText(SlowStatusText);
+	ClearAndCollapseText(ReverseControlStatusText);
+	ClearAndCollapseText(MovementLockStatusText);
+	ClearAndCollapseText(DamageShieldStatusText);
 }
 
 void UCh03_GameHUDWidget::HandleAnnouncementChanged(

@@ -198,6 +198,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	TObjectPtr<UWidgetComponent> WorldHealthWidgetComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
+	FVector WorldHealthWidgetRelativeLocation = FVector(0.0f, 0.0f, 86.0f);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|UI")
 	TSubclassOf<UCh03_WorldHealthWidget> WorldHealthWidgetClass;
 

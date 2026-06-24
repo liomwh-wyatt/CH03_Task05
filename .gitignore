@@ -44,6 +44,13 @@ Build/*
 SourceArt/**/*.png
 SourceArt/**/*.tga
 
+# Local scratch/reference assets
+/Texture/
+/Content/Art/Generated2D/
+/Fonts/
+/Tools/
+/CH03_Task05.png
+
 # Operating-system files
 .DS_Store
 Thumbs.db

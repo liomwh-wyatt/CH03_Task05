@@ -33,7 +33,7 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 			TEXT("WorldHealthWidgetComponent"));
 	WorldHealthWidgetComponent->SetupAttachment(RootComponent);
 	WorldHealthWidgetComponent->SetRelativeLocation(
-		FVector(0.0f, 0.0f, 120.0f));
+		WorldHealthWidgetRelativeLocation);
 	WorldHealthWidgetComponent->SetDrawSize(FVector2D(220.0f, 52.0f));
 	WorldHealthWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	WorldHealthWidgetComponent->SetCollisionEnabled(
@@ -877,6 +877,8 @@ void ACh03_CheonbokCharacter::InitializeWorldHealthWidget()
 		WorldHealthWidgetComponent->SetWidgetClass(WorldHealthWidgetClass);
 	}
 
+	WorldHealthWidgetComponent->SetRelativeLocation(
+		WorldHealthWidgetRelativeLocation);
 	WorldHealthWidgetComponent->SetVisibility(
 		bShowWorldHealthWidget && !bIsDead);
 	WorldHealthWidgetComponent->InitWidget();
