@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Feedback/Ch03_FeedbackCue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
@@ -320,8 +321,16 @@ void ACh03_CheonbokCharacter::AddHealth(float Amount)
 
 	if (!FMath::IsNearlyEqual(PreviousHealth, CurrentHealth))
 	{
+		const float RecoveredAmount = CurrentHealth - PreviousHealth;
+
 		UpdateWorldHealthWidget();
 		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			HealthRecoveredFeedback,
+			this);
+		OnHealthRecoveredFeedback(RecoveredAmount);
+
 		UE_LOG(
 			LogTemp,
 			Log,
@@ -346,8 +355,15 @@ void ACh03_CheonbokCharacter::AddStamina(float Amount)
 
 	if (!FMath::IsNearlyEqual(PreviousStamina, CurrentStamina))
 	{
+		const float RecoveredAmount = CurrentStamina - PreviousStamina;
+
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 		RefreshMovementSpeed();
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			StaminaRecoveredFeedback,
+			this);
+		OnStaminaRecoveredFeedback(RecoveredAmount);
 
 		UE_LOG(
 			LogTemp,
@@ -377,6 +393,21 @@ float ACh03_CheonbokCharacter::TakeDamage(
 			DamageShieldStackCount > 0,
 			DamageShieldStackCount,
 			-1.0f);
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			DamageBlockedFeedback,
+			this);
+		OnDamageBlockedFeedback(DamageAmount, DamageCauser);
+
+		if (DamageShieldStackCount <= 0)
+		{
+			UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+				this,
+				StatusEffectEndedFeedback,
+				this);
+			OnStatusEffectEndedFeedback(
+				ECheonbokStatusEffect::DamageShield);
+		}
 
 		UE_LOG(
 			LogTemp,
@@ -416,6 +447,12 @@ float ACh03_CheonbokCharacter::TakeDamage(
 		AppliedDamage,
 		CurrentHealth,
 		MaxHealth);
+
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		DamageTakenFeedback,
+		this);
+	OnDamageTakenFeedback(AppliedDamage, DamageCauser);
 
 	if (CurrentHealth <= 0.0f)
 	{
@@ -487,6 +524,14 @@ void ACh03_CheonbokCharacter::ApplySlow(
 		true,
 		SlowStackCount,
 		NewRemainingTime);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		SlowAppliedFeedback,
+		this);
+	OnStatusEffectAppliedFeedback(
+		ECheonbokStatusEffect::Slow,
+		SlowStackCount,
+		NewRemainingTime);
 }
 
 void ACh03_CheonbokCharacter::ApplyReverseControl(float Duration)
@@ -511,6 +556,14 @@ void ACh03_CheonbokCharacter::ApplyReverseControl(float Duration)
 	OnStatusEffectChanged.Broadcast(
 		ECheonbokStatusEffect::ReverseControl,
 		true,
+		ReverseControlStackCount,
+		NewRemainingTime);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		ReverseControlAppliedFeedback,
+		this);
+	OnStatusEffectAppliedFeedback(
+		ECheonbokStatusEffect::ReverseControl,
 		ReverseControlStackCount,
 		NewRemainingTime);
 }
@@ -543,6 +596,14 @@ void ACh03_CheonbokCharacter::ApplyMovementLock(float Duration)
 	OnStatusEffectChanged.Broadcast(
 		ECheonbokStatusEffect::MovementLock,
 		true,
+		MovementLockStackCount,
+		NewRemainingTime);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		MovementLockAppliedFeedback,
+		this);
+	OnStatusEffectAppliedFeedback(
+		ECheonbokStatusEffect::MovementLock,
 		MovementLockStackCount,
 		NewRemainingTime);
 }
@@ -595,6 +656,14 @@ void ACh03_CheonbokCharacter::ApplyDamageShield(const int32 StackAmount)
 	OnStatusEffectChanged.Broadcast(
 		ECheonbokStatusEffect::DamageShield,
 		DamageShieldStackCount > 0,
+		DamageShieldStackCount,
+		-1.0f);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		DamageShieldAppliedFeedback,
+		this);
+	OnStatusEffectAppliedFeedback(
+		ECheonbokStatusEffect::DamageShield,
 		DamageShieldStackCount,
 		-1.0f);
 
@@ -866,6 +935,11 @@ void ACh03_CheonbokCharacter::EndSlow()
 		false,
 		0,
 		0.0f);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		StatusEffectEndedFeedback,
+		this);
+	OnStatusEffectEndedFeedback(ECheonbokStatusEffect::Slow);
 }
 
 void ACh03_CheonbokCharacter::EndReverseControl()
@@ -879,6 +953,11 @@ void ACh03_CheonbokCharacter::EndReverseControl()
 		false,
 		0,
 		0.0f);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		StatusEffectEndedFeedback,
+		this);
+	OnStatusEffectEndedFeedback(ECheonbokStatusEffect::ReverseControl);
 }
 
 void ACh03_CheonbokCharacter::EndMovementLock()
@@ -893,6 +972,11 @@ void ACh03_CheonbokCharacter::EndMovementLock()
 		false,
 		0,
 		0.0f);
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		StatusEffectEndedFeedback,
+		this);
+	OnStatusEffectEndedFeedback(ECheonbokStatusEffect::MovementLock);
 }
 
 void ACh03_CheonbokCharacter::EndDamageInvincibility()

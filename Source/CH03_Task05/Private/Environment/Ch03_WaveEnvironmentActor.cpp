@@ -108,6 +108,10 @@ void ACh03_WaveEnvironmentActor::SetEnvironmentActive(
 
 	if (bIsEnvironmentActive)
 	{
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			ActivationFeedback,
+			this);
 		OnEnvironmentActivated(LastAppliedWave, LastAppliedMaxWave);
 	}
 	else
@@ -117,6 +121,10 @@ void ACh03_WaveEnvironmentActor::SetEnvironmentActive(
 			ResetMovement();
 		}
 
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			DeactivationFeedback,
+			this);
 		OnEnvironmentDeactivated(LastAppliedWave, LastAppliedMaxWave);
 	}
 }
@@ -160,15 +168,22 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 			ECh03ComboBreakReason::Hazard);
 	}
 
+	float AppliedDamage = 0.0f;
 	if (DamageAmount > 0.0f)
 	{
-		UGameplayStatics::ApplyDamage(
+		AppliedDamage = UGameplayStatics::ApplyDamage(
 			CheonbokCharacter,
 			DamageAmount,
 			nullptr,
 			this,
 			nullptr);
 	}
+
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		HazardHitFeedback,
+		CheonbokCharacter);
+	OnHazardHitFeedback(CheonbokCharacter, AppliedDamage);
 
 	if (CheonbokCharacter->IsDead())
 	{

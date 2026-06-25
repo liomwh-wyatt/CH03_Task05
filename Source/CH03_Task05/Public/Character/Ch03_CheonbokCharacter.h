@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/EngineTypes.h"
+#include "Feedback/Ch03_FeedbackCue.h"
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Ch03_CheonbokCharacter.generated.h"
@@ -190,6 +191,27 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnDamageTakenFeedback(float AppliedDamage, AActor* DamageCauser);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnDamageBlockedFeedback(float BlockedDamage, AActor* DamageCauser);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnHealthRecoveredFeedback(float RecoveredAmount);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnStaminaRecoveredFeedback(float RecoveredAmount);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnStatusEffectAppliedFeedback(
+		ECheonbokStatusEffect EffectType,
+		int32 StackCount,
+		float RemainingTime);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnStatusEffectEndedFeedback(ECheonbokStatusEffect EffectType);
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump(const FInputActionValue& Value);
@@ -324,6 +346,33 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Shield",
 		meta = (ClampMin = "1"))
 	int32 MaxDamageShieldStacks = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue DamageTakenFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue DamageBlockedFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue HealthRecoveredFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue StaminaRecoveredFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue SlowAppliedFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue ReverseControlAppliedFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue MovementLockAppliedFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue DamageShieldAppliedFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	FCh03FeedbackCue StatusEffectEndedFeedback;
 
 private:
 	bool bIsDead = false;

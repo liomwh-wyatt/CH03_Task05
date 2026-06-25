@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Feedback/Ch03_FeedbackCue.h"
 #include "GameFramework/Actor.h"
 #include "Ch03_WaveEnvironmentActor.generated.h"
 
@@ -57,6 +58,11 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Wave Environment")
 	void OnEnvironmentDeactivated(int32 CurrentWave, int32 MaxWave);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Wave Environment|Feedback")
+	void OnHazardHitFeedback(
+		ACh03_CheonbokCharacter* CheonbokCharacter,
+		float AppliedDamage);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment")
 	TObjectPtr<USceneComponent> SceneRoot;
@@ -119,6 +125,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment")
 	FText ActiveAnnouncementText;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		Category = "Cheonbok|Wave Environment|Feedback")
+	FCh03FeedbackCue ActivationFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		Category = "Cheonbok|Wave Environment|Feedback")
+	FCh03FeedbackCue DeactivationFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		Category = "Cheonbok|Wave Environment|Feedback")
+	FCh03FeedbackCue HazardHitFeedback;
 
 private:
 	FVector GetKnockbackDirection(
