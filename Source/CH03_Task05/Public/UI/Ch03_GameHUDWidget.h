@@ -16,6 +16,7 @@ class UImage;
 class UProgressBar;
 class UTextBlock;
 class UTextureRenderTarget2D;
+struct FSlateBrush;
 
 UCLASS()
 class CH03_TASK05_API UCh03_GameHUDWidget : public UUserWidget
@@ -199,6 +200,8 @@ private:
 	void CreateStatusEffectTextFallbacks();
 	void RefreshStatusEffectTexts();
 	void RefreshPortraitImage();
+	UMaterialInstanceDynamic* ResolvePortraitBrushMaterial(
+		const FSlateBrush& SourceBrush);
 	void UpdateStatusEffectText(
 		UTextBlock* TargetText,
 		const FText& Label,

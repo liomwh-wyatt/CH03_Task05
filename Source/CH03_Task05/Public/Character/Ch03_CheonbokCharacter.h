@@ -196,6 +196,8 @@ protected:
 	void InitializeWorldHealthWidget();
 	void UpdateWorldHealthWidget();
 	void ApplyPortraitCaptureSettings();
+	void ApplyPortraitCaptureShowFlags();
+	void ConfigurePortraitShowOnlyComponents();
 
 	float ExtendEffectTimer(
 		FTimerHandle& TimerHandle,

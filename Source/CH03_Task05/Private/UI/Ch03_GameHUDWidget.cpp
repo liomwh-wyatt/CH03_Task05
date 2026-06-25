@@ -617,30 +617,13 @@ void UCh03_GameHUDWidget::RefreshPortraitImage()
 	{
 		FSlateBrush PortraitBrush = CheonbokFaceImage->GetBrush();
 
-		UObject* BrushResource = PortraitBrush.GetResourceObject();
-		if (PortraitBrushMaterial)
+		if (UMaterialInstanceDynamic* ResolvedMaterial =
+			ResolvePortraitBrushMaterial(PortraitBrush))
 		{
-			PortraitBrushMaterialInstance =
-				UMaterialInstanceDynamic::Create(PortraitBrushMaterial, this);
-		}
-		else if (UMaterialInstanceDynamic* ExistingDynamicMaterial =
-			Cast<UMaterialInstanceDynamic>(BrushResource))
-		{
-			PortraitBrushMaterialInstance = ExistingDynamicMaterial;
-		}
-		else if (UMaterialInterface* PortraitMaterial =
-			Cast<UMaterialInterface>(BrushResource))
-		{
-			PortraitBrushMaterialInstance =
-				UMaterialInstanceDynamic::Create(PortraitMaterial, this);
-		}
-
-		if (PortraitBrushMaterialInstance)
-		{
-			PortraitBrushMaterialInstance->SetTextureParameterValue(
+			ResolvedMaterial->SetTextureParameterValue(
 				PortraitTextureParameterName,
 				PortraitRenderTarget);
-			PortraitBrush.SetResourceObject(PortraitBrushMaterialInstance);
+			PortraitBrush.SetResourceObject(ResolvedMaterial);
 		}
 		else
 		{
@@ -660,6 +643,39 @@ void UCh03_GameHUDWidget::RefreshPortraitImage()
 	}
 
 	OnPortraitRenderTargetUpdated(PortraitRenderTarget);
+}
+
+UMaterialInstanceDynamic* UCh03_GameHUDWidget::ResolvePortraitBrushMaterial(
+	const FSlateBrush& SourceBrush)
+{
+	if (PortraitBrushMaterial)
+	{
+		if (!PortraitBrushMaterialInstance)
+		{
+			PortraitBrushMaterialInstance =
+				UMaterialInstanceDynamic::Create(PortraitBrushMaterial, this);
+		}
+
+		return PortraitBrushMaterialInstance;
+	}
+
+	UObject* BrushResource = SourceBrush.GetResourceObject();
+	if (UMaterialInstanceDynamic* ExistingDynamicMaterial =
+		Cast<UMaterialInstanceDynamic>(BrushResource))
+	{
+		PortraitBrushMaterialInstance = ExistingDynamicMaterial;
+		return PortraitBrushMaterialInstance;
+	}
+
+	if (UMaterialInterface* PortraitMaterial =
+		Cast<UMaterialInterface>(BrushResource))
+	{
+		PortraitBrushMaterialInstance =
+			UMaterialInstanceDynamic::Create(PortraitMaterial, this);
+		return PortraitBrushMaterialInstance;
+	}
+
+	return nullptr;
 }
 
 void UCh03_GameHUDWidget::CreateWaveBannerTextFallback()

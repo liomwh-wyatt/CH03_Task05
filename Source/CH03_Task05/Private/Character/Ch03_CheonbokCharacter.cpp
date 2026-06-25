@@ -960,23 +960,39 @@ void ACh03_CheonbokCharacter::ApplyPortraitCaptureSettings()
 	PortraitCaptureComponent->PrimitiveRenderMode =
 		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 
-	if (bUseUnlitPortraitCapture)
+	ApplyPortraitCaptureShowFlags();
+	ConfigurePortraitShowOnlyComponents();
+}
+
+void ACh03_CheonbokCharacter::ApplyPortraitCaptureShowFlags()
+{
+	if (!PortraitCaptureComponent || !bUseUnlitPortraitCapture)
 	{
-		PortraitCaptureComponent->ShowFlags.DisableFeaturesForUnlit(false);
-		PortraitCaptureComponent->ShowFlags.SetAmbientOcclusion(false);
-		PortraitCaptureComponent->ShowFlags.SetAtmosphere(false);
-		PortraitCaptureComponent->ShowFlags.SetCloud(false);
-		PortraitCaptureComponent->ShowFlags.SetContactShadows(false);
-		PortraitCaptureComponent->ShowFlags.SetDirectionalLights(false);
-		PortraitCaptureComponent->ShowFlags.SetDynamicShadows(false);
-		PortraitCaptureComponent->ShowFlags.SetFog(false);
-		PortraitCaptureComponent->ShowFlags.SetLightShafts(false);
-		PortraitCaptureComponent->ShowFlags.SetLighting(false);
-		PortraitCaptureComponent->ShowFlags.SetPointLights(false);
-		PortraitCaptureComponent->ShowFlags.SetPostProcessing(false);
-		PortraitCaptureComponent->ShowFlags.SetSkyLighting(false);
-		PortraitCaptureComponent->ShowFlags.SetSpotLights(false);
-		PortraitCaptureComponent->ShowFlags.SetVolumetricFog(false);
+		return;
+	}
+
+	PortraitCaptureComponent->ShowFlags.DisableFeaturesForUnlit(false);
+	PortraitCaptureComponent->ShowFlags.SetAmbientOcclusion(false);
+	PortraitCaptureComponent->ShowFlags.SetAtmosphere(false);
+	PortraitCaptureComponent->ShowFlags.SetCloud(false);
+	PortraitCaptureComponent->ShowFlags.SetContactShadows(false);
+	PortraitCaptureComponent->ShowFlags.SetDirectionalLights(false);
+	PortraitCaptureComponent->ShowFlags.SetDynamicShadows(false);
+	PortraitCaptureComponent->ShowFlags.SetFog(false);
+	PortraitCaptureComponent->ShowFlags.SetLightShafts(false);
+	PortraitCaptureComponent->ShowFlags.SetLighting(false);
+	PortraitCaptureComponent->ShowFlags.SetPointLights(false);
+	PortraitCaptureComponent->ShowFlags.SetPostProcessing(false);
+	PortraitCaptureComponent->ShowFlags.SetSkyLighting(false);
+	PortraitCaptureComponent->ShowFlags.SetSpotLights(false);
+	PortraitCaptureComponent->ShowFlags.SetVolumetricFog(false);
+}
+
+void ACh03_CheonbokCharacter::ConfigurePortraitShowOnlyComponents()
+{
+	if (!PortraitCaptureComponent)
+	{
+		return;
 	}
 
 	PortraitCaptureComponent->ClearShowOnlyComponents();
