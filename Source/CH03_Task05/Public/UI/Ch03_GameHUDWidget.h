@@ -11,6 +11,7 @@
 
 class ACh03_GameStateBase;
 class UMaterialInstanceDynamic;
+class UMaterialInterface;
 class UImage;
 class UProgressBar;
 class UTextBlock;
@@ -172,6 +173,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
 		meta = (AllowPrivateAccess = "true"))
 	FName PortraitTextureParameterName = TEXT("PortraitTexture");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
+		meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMaterialInterface> PortraitBrushMaterial;
 
 private:
 	void BindToGameState();

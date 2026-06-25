@@ -618,7 +618,12 @@ void UCh03_GameHUDWidget::RefreshPortraitImage()
 		FSlateBrush PortraitBrush = CheonbokFaceImage->GetBrush();
 
 		UObject* BrushResource = PortraitBrush.GetResourceObject();
-		if (UMaterialInstanceDynamic* ExistingDynamicMaterial =
+		if (PortraitBrushMaterial)
+		{
+			PortraitBrushMaterialInstance =
+				UMaterialInstanceDynamic::Create(PortraitBrushMaterial, this);
+		}
+		else if (UMaterialInstanceDynamic* ExistingDynamicMaterial =
 			Cast<UMaterialInstanceDynamic>(BrushResource))
 		{
 			PortraitBrushMaterialInstance = ExistingDynamicMaterial;

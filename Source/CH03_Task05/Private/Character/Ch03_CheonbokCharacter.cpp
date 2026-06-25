@@ -57,7 +57,7 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 	PortraitCaptureComponent->FOVAngle = PortraitCaptureFOV;
 	PortraitCaptureComponent->bCaptureEveryFrame = bCapturePortraitEveryFrame;
 	PortraitCaptureComponent->bCaptureOnMovement = true;
-	PortraitCaptureComponent->CaptureSource = SCS_FinalColorLDR;
+	PortraitCaptureComponent->CaptureSource = PortraitCaptureSource;
 	PortraitCaptureComponent->PrimitiveRenderMode =
 		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 
@@ -952,12 +952,33 @@ void ACh03_CheonbokCharacter::ApplyPortraitCaptureSettings()
 		PortraitCaptureRelativeRotation);
 	PortraitCaptureComponent->FOVAngle = PortraitCaptureFOV;
 	PortraitCaptureComponent->TextureTarget = PortraitRenderTarget;
+	PortraitCaptureComponent->CaptureSource = PortraitCaptureSource;
 	PortraitCaptureComponent->bCaptureEveryFrame =
 		bCapturePortraitEveryFrame && PortraitRenderTarget != nullptr;
 	PortraitCaptureComponent->bCaptureOnMovement =
 		PortraitRenderTarget != nullptr;
 	PortraitCaptureComponent->PrimitiveRenderMode =
 		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
+	if (bUseUnlitPortraitCapture)
+	{
+		PortraitCaptureComponent->ShowFlags.DisableFeaturesForUnlit(false);
+		PortraitCaptureComponent->ShowFlags.SetAmbientOcclusion(false);
+		PortraitCaptureComponent->ShowFlags.SetAtmosphere(false);
+		PortraitCaptureComponent->ShowFlags.SetCloud(false);
+		PortraitCaptureComponent->ShowFlags.SetContactShadows(false);
+		PortraitCaptureComponent->ShowFlags.SetDirectionalLights(false);
+		PortraitCaptureComponent->ShowFlags.SetDynamicShadows(false);
+		PortraitCaptureComponent->ShowFlags.SetFog(false);
+		PortraitCaptureComponent->ShowFlags.SetLightShafts(false);
+		PortraitCaptureComponent->ShowFlags.SetLighting(false);
+		PortraitCaptureComponent->ShowFlags.SetPointLights(false);
+		PortraitCaptureComponent->ShowFlags.SetPostProcessing(false);
+		PortraitCaptureComponent->ShowFlags.SetSkyLighting(false);
+		PortraitCaptureComponent->ShowFlags.SetSpotLights(false);
+		PortraitCaptureComponent->ShowFlags.SetVolumetricFog(false);
+	}
+
 	PortraitCaptureComponent->ClearShowOnlyComponents();
 
 	if (USkeletalMeshComponent* MeshComponent = GetMesh())

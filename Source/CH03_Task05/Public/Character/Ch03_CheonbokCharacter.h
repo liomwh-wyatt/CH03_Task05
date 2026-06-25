@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/EngineTypes.h"
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Ch03_CheonbokCharacter.generated.h"
@@ -235,6 +236,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait",
 		meta = (ClampMin = "5.0", ClampMax = "120.0"))
 	float PortraitCaptureFOV = 32.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	TEnumAsByte<ESceneCaptureSource> PortraitCaptureSource = SCS_BaseColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
+	bool bUseUnlitPortraitCapture = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
 	bool bCapturePortraitEveryFrame = true;
