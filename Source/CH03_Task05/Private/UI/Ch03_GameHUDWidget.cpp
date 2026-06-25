@@ -15,6 +15,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "UI/Ch03_StatusEffectPanelWidget.h"
 
 void UCh03_GameHUDWidget::NativeConstruct()
 {
@@ -1027,6 +1028,35 @@ void UCh03_GameHUDWidget::FinishWaveBannerOutroAnimation()
 
 void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()
 {
+	if (StatusEffectPanel)
+	{
+		UpdateStatusEffectText(
+			SlowStatusText,
+			NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+			false,
+			0,
+			0.0f);
+		UpdateStatusEffectText(
+			ReverseControlStatusText,
+			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+			false,
+			0,
+			0.0f);
+		UpdateStatusEffectText(
+			MovementLockStatusText,
+			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+			false,
+			0,
+			0.0f);
+		UpdateStatusEffectText(
+			DamageShieldStatusText,
+			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+			false,
+			0,
+			-1.0f);
+		return;
+	}
+
 	if (!WidgetTree
 		|| (SlowStatusText
 			&& ReverseControlStatusText
@@ -1111,26 +1141,30 @@ void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
 {
 	if (!BoundCharacter)
 	{
-		UpdateStatusEffectText(
+		UpdateStatusEffect(
 			SlowStatusText,
+			ECheonbokStatusEffect::Slow,
 			NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
 			false,
 			0,
 			0.0f);
-		UpdateStatusEffectText(
+		UpdateStatusEffect(
 			ReverseControlStatusText,
+			ECheonbokStatusEffect::ReverseControl,
 			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
 			false,
 			0,
 			0.0f);
-		UpdateStatusEffectText(
+		UpdateStatusEffect(
 			MovementLockStatusText,
+			ECheonbokStatusEffect::MovementLock,
 			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
 			false,
 			0,
 			0.0f);
-		UpdateStatusEffectText(
+		UpdateStatusEffect(
 			DamageShieldStatusText,
+			ECheonbokStatusEffect::DamageShield,
 			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
 			false,
 			0,
@@ -1138,33 +1172,63 @@ void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
 		return;
 	}
 
-	UpdateStatusEffectText(
+	UpdateStatusEffect(
 		SlowStatusText,
+		ECheonbokStatusEffect::Slow,
 		NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
 		BoundCharacter->IsSlowActive(),
 		BoundCharacter->GetSlowStackCount(),
 		BoundCharacter->GetSlowRemainingTime());
 
-	UpdateStatusEffectText(
+	UpdateStatusEffect(
 		ReverseControlStatusText,
+		ECheonbokStatusEffect::ReverseControl,
 		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
 		BoundCharacter->IsReverseControlActive(),
 		BoundCharacter->GetReverseControlStackCount(),
 		BoundCharacter->GetReverseControlRemainingTime());
 
-	UpdateStatusEffectText(
+	UpdateStatusEffect(
 		MovementLockStatusText,
+		ECheonbokStatusEffect::MovementLock,
 		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
 		BoundCharacter->IsMovementLockActive(),
 		BoundCharacter->GetMovementLockStackCount(),
 		BoundCharacter->GetMovementLockRemainingTime());
 
-	UpdateStatusEffectText(
+	UpdateStatusEffect(
 		DamageShieldStatusText,
+		ECheonbokStatusEffect::DamageShield,
 		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
 		BoundCharacter->IsDamageShieldActive(),
 		BoundCharacter->GetDamageShieldStackCount(),
 		-1.0f);
+}
+
+void UCh03_GameHUDWidget::UpdateStatusEffect(
+	UTextBlock* TargetText,
+	const ECheonbokStatusEffect EffectType,
+	const FText& Label,
+	const bool bIsActive,
+	const int32 StackCount,
+	const float RemainingTime)
+{
+	if (StatusEffectPanel)
+	{
+		StatusEffectPanel->UpdateStatusEffect(
+			EffectType,
+			Label,
+			bIsActive,
+			StackCount,
+			RemainingTime);
+	}
+
+	UpdateStatusEffectText(
+		TargetText,
+		Label,
+		!StatusEffectPanel && bIsActive,
+		StackCount,
+		RemainingTime);
 }
 
 void UCh03_GameHUDWidget::UpdateStatusEffectText(

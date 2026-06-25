@@ -12,6 +12,7 @@
 class ACh03_GameStateBase;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
+class UCh03_StatusEffectPanelWidget;
 class UImage;
 class UProgressBar;
 class UTextBlock;
@@ -171,6 +172,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DamageShieldStatusText;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	TObjectPtr<UCh03_StatusEffectPanelWidget> StatusEffectPanel;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
 		meta = (AllowPrivateAccess = "true"))
 	FName PortraitTextureParameterName = TEXT("PortraitTexture");
@@ -202,6 +206,13 @@ private:
 	void RefreshPortraitImage();
 	UMaterialInstanceDynamic* ResolvePortraitBrushMaterial(
 		const FSlateBrush& SourceBrush);
+	void UpdateStatusEffect(
+		UTextBlock* TargetText,
+		ECheonbokStatusEffect EffectType,
+		const FText& Label,
+		bool bIsActive,
+		int32 StackCount,
+		float RemainingTime);
 	void UpdateStatusEffectText(
 		UTextBlock* TargetText,
 		const FText& Label,
