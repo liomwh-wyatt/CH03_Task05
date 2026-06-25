@@ -21,7 +21,8 @@ public:
 		const FText& Label,
 		bool bIsActive,
 		int32 StackCount,
-		float RemainingTime);
+		float RemainingTime,
+		float MaxDuration);
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|HUD|Status Effect")
 	void ClearStatusEffects();

@@ -20,7 +20,8 @@ void UCh03_StatusEffectPanelWidget::UpdateStatusEffect(
 	const FText& Label,
 	const bool bIsActive,
 	const int32 StackCount,
-	const float RemainingTime)
+	const float RemainingTime,
+	const float MaxDuration)
 {
 	if (UCh03_StatusEffectSlotWidget* TargetSlot = FindSlot(EffectType))
 	{
@@ -29,7 +30,8 @@ void UCh03_StatusEffectPanelWidget::UpdateStatusEffect(
 			Label,
 			bIsActive,
 			StackCount,
-			RemainingTime);
+			RemainingTime,
+			MaxDuration);
 	}
 }
 
@@ -37,31 +39,35 @@ void UCh03_StatusEffectPanelWidget::ClearStatusEffects()
 {
 	UpdateStatusEffect(
 		ECheonbokStatusEffect::Slow,
-		NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+		NSLOCTEXT("CheonbokHUD", "SlowStatus", "느려짐"),
 		false,
 		0,
+		0.0f,
 		0.0f);
 
 	UpdateStatusEffect(
 		ECheonbokStatusEffect::ReverseControl,
-		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "조작 반전"),
 		false,
 		0,
+		0.0f,
 		0.0f);
 
 	UpdateStatusEffect(
 		ECheonbokStatusEffect::MovementLock,
-		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "묶임"),
 		false,
 		0,
+		0.0f,
 		0.0f);
 
 	UpdateStatusEffect(
 		ECheonbokStatusEffect::DamageShield,
-		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "방울 보호"),
 		false,
 		0,
-		-1.0f);
+		-1.0f,
+		0.0f);
 }
 
 void UCh03_StatusEffectPanelWidget::BuildNativeFallbackWidget()

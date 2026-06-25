@@ -4,7 +4,9 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/HorizontalBox.h"
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
+#include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
 void UCh03_StatusEffectSlotWidget::NativeConstruct()
@@ -20,13 +22,15 @@ void UCh03_StatusEffectSlotWidget::SetStatusEffect(
 	const FText& Label,
 	const bool bIsActive,
 	const int32 StackCount,
-	const float RemainingTime)
+	const float RemainingTime,
+	const float MaxDuration)
 {
 	CachedEffectType = EffectType;
 	CachedLabel = Label;
 	bCachedIsActive = bIsActive;
 	CachedStackCount = StackCount;
 	CachedRemainingTime = RemainingTime;
+	CachedMaxDuration = MaxDuration;
 
 	RefreshVisuals();
 
@@ -35,12 +39,19 @@ void UCh03_StatusEffectSlotWidget::SetStatusEffect(
 		CachedLabel,
 		bCachedIsActive,
 		CachedStackCount,
-		CachedRemainingTime);
+		CachedRemainingTime,
+		CachedMaxDuration,
+		GetRemainingTimePercent());
 }
 
 void UCh03_StatusEffectSlotWidget::BuildNativeFallbackWidget()
 {
-	if (!WidgetTree || (LabelText && StackText && RemainingTimeText))
+	if (!WidgetTree
+		|| (IconImage
+			&& LabelText
+			&& StackText
+			&& RemainingTimeText
+			&& RemainingTimeBar))
 	{
 		return;
 	}
@@ -73,6 +84,14 @@ void UCh03_StatusEffectSlotWidget::BuildNativeFallbackWidget()
 			return NewText;
 		};
 
+	if (!IconImage)
+	{
+		IconImage = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(),
+			TEXT("IconImage_NativeFallback"));
+		RootPanel->AddChild(IconImage);
+	}
+
 	if (!LabelText)
 	{
 		LabelText = CreateFallbackText(TEXT("LabelText_NativeFallback"));
@@ -88,6 +107,15 @@ void UCh03_StatusEffectSlotWidget::BuildNativeFallbackWidget()
 		RemainingTimeText =
 			CreateFallbackText(TEXT("RemainingTimeText_NativeFallback"));
 	}
+
+	if (!RemainingTimeBar)
+	{
+		RemainingTimeBar =
+			WidgetTree->ConstructWidget<UProgressBar>(
+				UProgressBar::StaticClass(),
+				TEXT("RemainingTimeBar_NativeFallback"));
+		RootPanel->AddChild(RemainingTimeBar);
+	}
 }
 
 void UCh03_StatusEffectSlotWidget::RefreshVisuals()
@@ -96,6 +124,21 @@ void UCh03_StatusEffectSlotWidget::RefreshVisuals()
 		bCachedIsActive || !bCollapseWhenInactive
 			? ESlateVisibility::HitTestInvisible
 			: ESlateVisibility::Collapsed);
+
+	const FLinearColor TintColor =
+		bCachedIsActive ? ActiveTint : InactiveTint;
+
+	if (IconImage)
+	{
+		IconImage->SetColorAndOpacity(TintColor);
+		IconImage->SetBrush(IconBrush);
+	}
+
+	if (RemainingTimeBar)
+	{
+		RemainingTimeBar->SetPercent(
+			bCachedIsActive ? GetRemainingTimePercent() : 0.0f);
+	}
 
 	if (!bCachedIsActive)
 	{
@@ -145,4 +188,22 @@ void UCh03_StatusEffectSlotWidget::RefreshVisuals()
 					FText::AsNumber(FMath::CeilToInt(CachedRemainingTime)))
 				: FText::GetEmpty());
 	}
+}
+
+float UCh03_StatusEffectSlotWidget::GetRemainingTimePercent() const
+{
+	if (CachedRemainingTime < 0.0f)
+	{
+		return bCachedIsActive ? 1.0f : 0.0f;
+	}
+
+	if (CachedMaxDuration <= KINDA_SMALL_NUMBER)
+	{
+		return bCachedIsActive ? 1.0f : 0.0f;
+	}
+
+	return FMath::Clamp(
+		CachedRemainingTime / CachedMaxDuration,
+		0.0f,
+		1.0f);
 }

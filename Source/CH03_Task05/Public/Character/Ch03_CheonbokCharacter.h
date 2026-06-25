@@ -142,10 +142,25 @@ public:
 	float GetSlowRemainingTime() const;
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	float GetMaximumSlowDuration() const { return MaximumSlowDuration; }
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	float GetReverseControlRemainingTime() const;
 
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	float GetMaximumReverseControlDuration() const
+	{
+		return MaximumReverseControlDuration;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
 	float GetMovementLockRemainingTime() const;
+
+	UFUNCTION(BlueprintPure, Category = "Cheonbok|Status Effect")
+	float GetMaximumMovementLockDuration() const
+	{
+		return MaximumMovementLockDuration;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|State")
 	void ResetCharacterState();

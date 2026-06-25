@@ -1032,25 +1032,25 @@ void UCh03_GameHUDWidget::CreateStatusEffectTextFallbacks()
 	{
 		UpdateStatusEffectText(
 			SlowStatusText,
-			NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+			NSLOCTEXT("CheonbokHUD", "SlowStatus", "느려짐"),
 			false,
 			0,
 			0.0f);
 		UpdateStatusEffectText(
 			ReverseControlStatusText,
-			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "조작 반전"),
 			false,
 			0,
 			0.0f);
 		UpdateStatusEffectText(
 			MovementLockStatusText,
-			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "묶임"),
 			false,
 			0,
 			0.0f);
 		UpdateStatusEffectText(
 			DamageShieldStatusText,
-			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "방울 보호"),
 			false,
 			0,
 			-1.0f);
@@ -1144,65 +1144,73 @@ void UCh03_GameHUDWidget::RefreshStatusEffectTexts()
 		UpdateStatusEffect(
 			SlowStatusText,
 			ECheonbokStatusEffect::Slow,
-			NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+			NSLOCTEXT("CheonbokHUD", "SlowStatus", "느려짐"),
 			false,
 			0,
+			0.0f,
 			0.0f);
 		UpdateStatusEffect(
 			ReverseControlStatusText,
 			ECheonbokStatusEffect::ReverseControl,
-			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+			NSLOCTEXT("CheonbokHUD", "ReverseStatus", "조작 반전"),
 			false,
 			0,
+			0.0f,
 			0.0f);
 		UpdateStatusEffect(
 			MovementLockStatusText,
 			ECheonbokStatusEffect::MovementLock,
-			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+			NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "묶임"),
 			false,
 			0,
+			0.0f,
 			0.0f);
 		UpdateStatusEffect(
 			DamageShieldStatusText,
 			ECheonbokStatusEffect::DamageShield,
-			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+			NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "방울 보호"),
 			false,
 			0,
-			-1.0f);
+			-1.0f,
+			0.0f);
 		return;
 	}
 
 	UpdateStatusEffect(
 		SlowStatusText,
 		ECheonbokStatusEffect::Slow,
-		NSLOCTEXT("CheonbokHUD", "SlowStatus", "Slow"),
+		NSLOCTEXT("CheonbokHUD", "SlowStatus", "느려짐"),
 		BoundCharacter->IsSlowActive(),
 		BoundCharacter->GetSlowStackCount(),
-		BoundCharacter->GetSlowRemainingTime());
+		BoundCharacter->GetSlowRemainingTime(),
+		BoundCharacter->GetMaximumSlowDuration());
 
 	UpdateStatusEffect(
 		ReverseControlStatusText,
 		ECheonbokStatusEffect::ReverseControl,
-		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "Reverse"),
+		NSLOCTEXT("CheonbokHUD", "ReverseStatus", "조작 반전"),
 		BoundCharacter->IsReverseControlActive(),
 		BoundCharacter->GetReverseControlStackCount(),
-		BoundCharacter->GetReverseControlRemainingTime());
+		BoundCharacter->GetReverseControlRemainingTime(),
+		BoundCharacter->GetMaximumReverseControlDuration());
 
 	UpdateStatusEffect(
 		MovementLockStatusText,
 		ECheonbokStatusEffect::MovementLock,
-		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "Rooted"),
+		NSLOCTEXT("CheonbokHUD", "MovementLockStatus", "묶임"),
 		BoundCharacter->IsMovementLockActive(),
 		BoundCharacter->GetMovementLockStackCount(),
-		BoundCharacter->GetMovementLockRemainingTime());
+		BoundCharacter->GetMovementLockRemainingTime(),
+		BoundCharacter->GetMaximumMovementLockDuration());
 
 	UpdateStatusEffect(
 		DamageShieldStatusText,
 		ECheonbokStatusEffect::DamageShield,
-		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "Shield"),
+		NSLOCTEXT("CheonbokHUD", "DamageShieldStatus", "방울 보호"),
 		BoundCharacter->IsDamageShieldActive(),
 		BoundCharacter->GetDamageShieldStackCount(),
-		-1.0f);
+		-1.0f,
+		0.0f);
 }
 
 void UCh03_GameHUDWidget::UpdateStatusEffect(
@@ -1211,7 +1219,8 @@ void UCh03_GameHUDWidget::UpdateStatusEffect(
 	const FText& Label,
 	const bool bIsActive,
 	const int32 StackCount,
-	const float RemainingTime)
+	const float RemainingTime,
+	const float MaxDuration)
 {
 	if (StatusEffectPanel)
 	{
@@ -1220,7 +1229,8 @@ void UCh03_GameHUDWidget::UpdateStatusEffect(
 			Label,
 			bIsActive,
 			StackCount,
-			RemainingTime);
+			RemainingTime,
+			MaxDuration);
 	}
 
 	UpdateStatusEffectText(

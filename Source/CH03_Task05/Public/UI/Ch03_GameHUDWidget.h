@@ -212,7 +212,8 @@ private:
 		const FText& Label,
 		bool bIsActive,
 		int32 StackCount,
-		float RemainingTime);
+		float RemainingTime,
+		float MaxDuration);
 	void UpdateStatusEffectText(
 		UTextBlock* TargetText,
 		const FText& Label,
