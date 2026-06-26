@@ -168,6 +168,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|State")
 	void ResetCharacterState();
 
+	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Feedback")
+	bool PlayScorePickupFeedback(
+		AActor* SourceItem,
+		int32 BaseScore,
+		int32 FinalScore);
+
 	UFUNCTION(BlueprintPure, Category = "Cheonbok|Portrait")
 	UTextureRenderTarget2D* GetPortraitRenderTarget() const
 	{
@@ -204,6 +210,12 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
 	void OnStaminaRecoveredFeedback(float RecoveredAmount);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
+	void OnScorePickupFeedback(
+		AActor* SourceItem,
+		int32 BaseScore,
+		int32 FinalScore);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Feedback")
 	void OnStatusEffectAppliedFeedback(
@@ -416,6 +428,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Shield",
 		meta = (ClampMin = "1"))
 	int32 MaxDamageShieldStacks = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "천복이가 점수를 주는 사료 아이템을 획득했을 때 재생되는 공통 피드백입니다. 작은 사료, 큰 사료처럼 점수량이 달라도 같은 이펙트를 공유할 수 있습니다."))
+	FCh03FeedbackCue ScorePickupFeedback;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
 		meta = (ToolTip = "천복이가 피해를 실제로 받았을 때 재생되는 피드백입니다. 무적 시간 중이거나 실드로 막힌 피해에는 사용하지 않습니다."))

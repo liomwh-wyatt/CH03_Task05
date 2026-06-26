@@ -28,6 +28,6 @@ protected:
 	int32 ScoreValue = 50;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Score|Feedback",
-		meta = (ToolTip = "점수를 주는 사료 아이템을 획득했을 때 재생되는 공통 피드백입니다. 작은 사료, 큰 사료처럼 점수량이 달라도 같은 이펙트를 공유할 수 있습니다."))
+		meta = (ToolTip = "점수 아이템 자체의 획득 피드백입니다. 천복 캐릭터의 Score Pickup Feedback이 설정되어 있으면 캐릭터 쪽 피드백을 우선 사용하고, 이 값은 fallback으로 사용됩니다."))
 	FCh03FeedbackCue ScorePickupFeedback;
 };

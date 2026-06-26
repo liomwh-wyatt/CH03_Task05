@@ -809,6 +809,31 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 		-1.0f);
 }
 
+bool ACh03_CheonbokCharacter::PlayScorePickupFeedback(
+	AActor* SourceItem,
+	const int32 BaseScore,
+	const int32 FinalScore)
+{
+	if (bIsDead)
+	{
+		return false;
+	}
+
+	const bool bHasConfiguredFeedback =
+		ScorePickupFeedback.Sound || ScorePickupFeedback.Effect;
+
+	if (bHasConfiguredFeedback)
+	{
+		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+			this,
+			ScorePickupFeedback,
+			this);
+	}
+
+	OnScorePickupFeedback(SourceItem, BaseScore, FinalScore);
+	return bHasConfiguredFeedback;
+}
+
 void ACh03_CheonbokCharacter::RefreshPortraitCapture() const
 {
 	if (PortraitCaptureComponent && PortraitRenderTarget)
