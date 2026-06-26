@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "NiagaraComponent.h"
 #include "UI/Ch03_WorldHealthWidget.h"
 #include "Components/WidgetComponent.h"
 
@@ -62,6 +63,16 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 	PortraitCaptureComponent->PrimitiveRenderMode =
 		ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 
+	MovementTrailComponent =
+		CreateDefaultSubobject<UNiagaraComponent>(
+			TEXT("MovementTrailComponent"));
+	MovementTrailComponent->SetupAttachment(RootComponent);
+	MovementTrailComponent->SetAutoActivate(false);
+	MovementTrailComponent->SetRelativeLocation(
+		MovementTrailRelativeLocation);
+	MovementTrailComponent->SetRelativeRotation(
+		MovementTrailRelativeRotation);
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -87,6 +98,7 @@ void ACh03_CheonbokCharacter::BeginPlay()
 	CurrentHealth = MaxHealth;
 	CurrentStamina = MaxStamina;
 	ApplyPortraitCaptureSettings();
+	ApplyMovementTrailSettings();
 	InitializeWorldHealthWidget();
 	RefreshMovementSpeed();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
@@ -99,6 +111,7 @@ void ACh03_CheonbokCharacter::OnConstruction(
 	Super::OnConstruction(Transform);
 
 	ApplyPortraitCaptureSettings();
+	ApplyMovementTrailSettings();
 }
 
 void ACh03_CheonbokCharacter::Tick(float DeltaTime)
@@ -107,6 +120,7 @@ void ACh03_CheonbokCharacter::Tick(float DeltaTime)
 
 	UpdateStamina(DeltaTime);
 	RefreshMovementSpeed();
+	UpdateMovementTrail();
 }
 
 void ACh03_CheonbokCharacter::PawnClientRestart()
@@ -1085,6 +1099,72 @@ void ACh03_CheonbokCharacter::ConfigurePortraitShowOnlyComponents()
 	{
 		PortraitCaptureComponent->ShowOnlyComponent(MeshComponent);
 	}
+}
+
+void ACh03_CheonbokCharacter::ApplyMovementTrailSettings()
+{
+	if (!MovementTrailComponent)
+	{
+		return;
+	}
+
+	MovementTrailComponent->SetAsset(MovementTrailEffect);
+	MovementTrailComponent->SetRelativeLocation(
+		MovementTrailRelativeLocation);
+	MovementTrailComponent->SetRelativeRotation(
+		MovementTrailRelativeRotation);
+	MovementTrailComponent->SetAutoActivate(false);
+
+	if (!ShouldPlayMovementTrail())
+	{
+		MovementTrailComponent->Deactivate();
+	}
+}
+
+void ACh03_CheonbokCharacter::UpdateMovementTrail()
+{
+	if (!MovementTrailComponent)
+	{
+		return;
+	}
+
+	if (ShouldPlayMovementTrail())
+	{
+		if (!MovementTrailComponent->IsActive())
+		{
+			MovementTrailComponent->Activate(true);
+		}
+		return;
+	}
+
+	if (MovementTrailComponent->IsActive())
+	{
+		MovementTrailComponent->Deactivate();
+	}
+}
+
+bool ACh03_CheonbokCharacter::ShouldPlayMovementTrail() const
+{
+	const UCharacterMovementComponent* MovementComponent =
+		GetCharacterMovement();
+
+	if (!bEnableMovementTrail
+		|| bIsDead
+		|| bIsMovementLocked
+		|| !MovementTrailEffect
+		|| !MovementComponent
+		|| !MovementComponent->IsMovingOnGround())
+	{
+		return false;
+	}
+
+	if (bMovementTrailRequiresSprint && !bIsSprinting)
+	{
+		return false;
+	}
+
+	return MovementComponent->Velocity.Size2D()
+		>= MovementTrailActivationSpeed;
 }
 
 float ACh03_CheonbokCharacter::ExtendEffectTimer(

@@ -1,6 +1,7 @@
 #include "Items/Ch03_ScoreItem.h"
 
 #include "Core/Ch03_GameStateBase.h"
+#include "Feedback/Ch03_FeedbackCue.h"
 
 ACh03_ScoreItem::ACh03_ScoreItem()
 {
@@ -28,6 +29,14 @@ void ACh03_ScoreItem::ActivateItem_Implementation(AActor* Activator)
 		return;
 	}
 
-	CheonbokGameState->AddComboScore(ScoreValue, Activator);
+	const int32 FinalScore =
+		CheonbokGameState->AddComboScore(ScoreValue, Activator);
+
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		ScorePickupFeedback,
+		Activator);
+	OnScoreCollectedFeedback(Activator, ScoreValue, FinalScore);
+
 	Super::ActivateItem_Implementation(Activator);
 }

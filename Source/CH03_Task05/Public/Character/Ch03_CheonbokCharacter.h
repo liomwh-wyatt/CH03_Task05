@@ -8,6 +8,8 @@
 #include "Ch03_CheonbokCharacter.generated.h"
 
 class UCameraComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 class USceneCaptureComponent2D;
 class USpringArmComponent;
 class UCh03_WorldHealthWidget;
@@ -235,6 +237,9 @@ protected:
 	void ApplyPortraitCaptureSettings();
 	void ApplyPortraitCaptureShowFlags();
 	void ConfigurePortraitShowOnlyComponents();
+	void ApplyMovementTrailSettings();
+	void UpdateMovementTrail();
+	bool ShouldPlayMovementTrail() const;
 
 	float ExtendEffectTimer(
 		FTimerHandle& TimerHandle,
@@ -253,6 +258,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI|Portrait")
 	TObjectPtr<USceneCaptureComponent2D> PortraitCaptureComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	TObjectPtr<UNiagaraComponent> MovementTrailComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	FVector WorldHealthWidgetRelativeLocation = FVector(0.0f, 0.0f, 86.0f);
@@ -288,6 +296,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
 		meta = (ClampMin = "-89.0", ClampMax = "0.0"))
 	float InitialCameraPitch = -50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	TObjectPtr<UNiagaraSystem> MovementTrailEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	bool bEnableMovementTrail = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	bool bMovementTrailRequiresSprint = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	FVector MovementTrailRelativeLocation = FVector(-35.0f, 0.0f, -82.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	FRotator MovementTrailRelativeRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX",
+		meta = (ClampMin = "0.0", Units = "cm/s"))
+	float MovementTrailActivationSpeed = 240.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Input",
 		meta = (ClampMin = "0.01"))
