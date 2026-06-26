@@ -227,6 +227,8 @@ protected:
 	bool IsMovingOnGround() const;
 	void UpdateStamina(float DeltaTime);
 	void RefreshMovementSpeed();
+	void ApplyMovementTuningSettings();
+	void ApplyCameraSettings();
 	void ClampHorizontalVelocityToMaxSpeed();
 	void EndSlow();
 	void EndReverseControl();
@@ -297,6 +299,28 @@ protected:
 		meta = (ClampMin = "-89.0", ClampMax = "0.0"))
 	float InitialCameraPitch = -50.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
+		meta = (ClampMin = "100.0", Units = "cm"))
+	float CameraArmLength = 800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
+		meta = (ClampMin = "30.0", ClampMax = "120.0", Units = "deg"))
+	float CameraFieldOfView = 80.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera")
+	bool bUseCameraLag = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
+		meta = (ClampMin = "0.0", EditCondition = "bUseCameraLag"))
+	float CameraLagSpeed = 12.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera")
+	bool bUseCameraRotationLag = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Camera",
+		meta = (ClampMin = "0.0", EditCondition = "bUseCameraRotationLag"))
+	float CameraRotationLagSpeed = 12.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
 	TObjectPtr<UNiagaraSystem> MovementTrailEffect;
 
@@ -323,6 +347,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Movement",
 		meta = (ClampMin = "0.0"))
 	float NormalSpeed = 500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Movement",
+		meta = (ClampMin = "0.0", Units = "cm/s^2"))
+	float GroundAcceleration = 900.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Movement",
+		meta = (ClampMin = "0.0", Units = "cm/s^2"))
+	float GroundBrakingDeceleration = 1800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Movement",
+		meta = (ClampMin = "0.0"))
+	float GroundFriction = 8.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Movement",
 		meta = (ClampMin = "1.0"))

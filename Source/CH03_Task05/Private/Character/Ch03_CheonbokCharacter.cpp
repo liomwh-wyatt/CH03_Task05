@@ -21,10 +21,12 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(
 		TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);
-	SpringArmComponent->TargetArmLength = 800.0f;
+	SpringArmComponent->TargetArmLength = CameraArmLength;
 	SpringArmComponent->bUsePawnControlRotation = true;
-	SpringArmComponent->bEnableCameraLag = true;
-	SpringArmComponent->CameraLagSpeed = 8.0f;
+	SpringArmComponent->bEnableCameraLag = bUseCameraLag;
+	SpringArmComponent->CameraLagSpeed = CameraLagSpeed;
+	SpringArmComponent->bEnableCameraRotationLag = bUseCameraRotationLag;
+	SpringArmComponent->CameraRotationLagSpeed = CameraRotationLagSpeed;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(
 		TEXT("CameraComponent"));
@@ -32,6 +34,7 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		SpringArmComponent,
 		USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+	CameraComponent->SetFieldOfView(CameraFieldOfView);
 
 	WorldHealthWidgetComponent =
 		CreateDefaultSubobject<UWidgetComponent>(
@@ -85,6 +88,10 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		MovementComponent->AirControl = 0.0f;
 		MovementComponent->FallingLateralFriction = 0.0f;
 		MovementComponent->BrakingDecelerationFalling = 0.0f;
+		MovementComponent->MaxAcceleration = GroundAcceleration;
+		MovementComponent->BrakingDecelerationWalking =
+			GroundBrakingDeceleration;
+		MovementComponent->GroundFriction = GroundFriction;
 		MovementComponent->MaxWalkSpeed = NormalSpeed;
 	}
 
@@ -97,6 +104,8 @@ void ACh03_CheonbokCharacter::BeginPlay()
 
 	CurrentHealth = MaxHealth;
 	CurrentStamina = MaxStamina;
+	ApplyCameraSettings();
+	ApplyMovementTuningSettings();
 	ApplyPortraitCaptureSettings();
 	ApplyMovementTrailSettings();
 	InitializeWorldHealthWidget();
@@ -110,6 +119,8 @@ void ACh03_CheonbokCharacter::OnConstruction(
 {
 	Super::OnConstruction(Transform);
 
+	ApplyCameraSettings();
+	ApplyMovementTuningSettings();
 	ApplyPortraitCaptureSettings();
 	ApplyMovementTrailSettings();
 }
@@ -774,6 +785,7 @@ void ACh03_CheonbokCharacter::ResetCharacterState()
 		MovementComponent->SetMovementMode(MOVE_Walking);
 	}
 
+	ApplyMovementTuningSettings();
 	RefreshMovementSpeed();
 	InitializeWorldHealthWidget();
 	UpdateWorldHealthWidget();
@@ -913,6 +925,45 @@ void ACh03_CheonbokCharacter::RefreshMovementSpeed()
 	bIsSprinting = SprintMultiplier > 1.0f;
 	MovementComponent->MaxWalkSpeed =
 		NormalSpeed * SprintMultiplier * StatusMultiplier;
+}
+
+void ACh03_CheonbokCharacter::ApplyMovementTuningSettings()
+{
+	UCharacterMovementComponent* MovementComponent =
+		GetCharacterMovement();
+	if (!MovementComponent)
+	{
+		return;
+	}
+
+	MovementComponent->MaxAcceleration =
+		FMath::Max(0.0f, GroundAcceleration);
+	MovementComponent->BrakingDecelerationWalking =
+		FMath::Max(0.0f, GroundBrakingDeceleration);
+	MovementComponent->GroundFriction =
+		FMath::Max(0.0f, GroundFriction);
+}
+
+void ACh03_CheonbokCharacter::ApplyCameraSettings()
+{
+	if (SpringArmComponent)
+	{
+		SpringArmComponent->TargetArmLength =
+			FMath::Max(100.0f, CameraArmLength);
+		SpringArmComponent->bEnableCameraLag = bUseCameraLag;
+		SpringArmComponent->CameraLagSpeed =
+			FMath::Max(0.0f, CameraLagSpeed);
+		SpringArmComponent->bEnableCameraRotationLag =
+			bUseCameraRotationLag;
+		SpringArmComponent->CameraRotationLagSpeed =
+			FMath::Max(0.0f, CameraRotationLagSpeed);
+	}
+
+	if (CameraComponent)
+	{
+		CameraComponent->SetFieldOfView(
+			FMath::Clamp(CameraFieldOfView, 30.0f, 120.0f));
+	}
 }
 
 void ACh03_CheonbokCharacter::ClampHorizontalVelocityToMaxSpeed()
