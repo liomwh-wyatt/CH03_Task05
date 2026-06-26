@@ -10,10 +10,11 @@ class UStaticMeshComponent;
 class ACh03_CheonbokCharacter;
 
 UENUM(BlueprintType)
-enum class ECh03WaveEnvironmentMovementMode : uint8
+enum class ECh03WaveEnvironmentPathEndBehavior : uint8
 {
-	PingPong UMETA(DisplayName = "Ping Pong"),
-	RandomRoam UMETA(DisplayName = "Random Roam")
+	Reverse UMETA(DisplayName = "Reverse At Ends"),
+	Loop UMETA(DisplayName = "Loop To First Point"),
+	Stop UMETA(DisplayName = "Stop At End")
 };
 
 UCLASS()
@@ -143,10 +144,13 @@ private:
 		const ACh03_CheonbokCharacter* CheonbokCharacter) const;
 	void CacheInitialLocationIfNeeded();
 	void UpdateActiveMovement(float DeltaSeconds);
-	void UpdatePingPongMovement(float DeltaSeconds);
-	void UpdateRandomRoamMovement(float DeltaSeconds);
-	void SelectNewRoamTarget();
-	FVector GetRandomRoamLocation() const;
+	void UpdatePathMovement(float DeltaSeconds);
+	void AdvancePathTarget();
+	int32 GetPathPointCount() const;
+	FVector GetPathPointWorldLocation(int32 PointIndex) const;
+	bool HasValidPathPointActors() const;
+	int32 GetValidPathPointActorCount() const;
+	FVector GetValidPathPointActorLocation(int32 ValidPathPointIndex) const;
 	void ResetMovement();
 
 	int32 LastAppliedWave = 0;
@@ -154,49 +158,50 @@ private:
 	bool bIsEnvironmentActive = false;
 
 	FVector InitialActorLocation = FVector::ZeroVector;
-	float MovementAlpha = 0.0f;
-	float MovementDirection = 1.0f;
 	float LastKnockbackTime = -BIG_NUMBER;
 	FVector CurrentMovementDirection = FVector::ZeroVector;
-	FVector RoamTargetLocation = FVector::ZeroVector;
-	float CurrentRoamWaitTime = 0.0f;
+	int32 CurrentPathPointIndex = 0;
+	int32 PathDirection = 1;
 	bool bHasCachedInitialLocation = false;
-	bool bHasRoamTarget = false;
+	bool bHasReachedPathEnd = false;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement")
 	bool bMoveWhenActive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
-		meta = (EditCondition = "bMoveWhenActive"))
-	ECh03WaveEnvironmentMovementMode MovementMode =
-		ECh03WaveEnvironmentMovementMode::PingPong;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
-		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "cm/s"))
+		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "cm/s",
+			ToolTip = "Speed used while following the configured path."))
 	float MovementSpeed = 160.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "If true, the actor's placed location becomes the first path point."))
+	bool bUseInitialLocationAsFirstPathPoint = true;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "Optional level actors used as path points. If any valid actor is assigned here, Path Point Offsets are ignored."))
+	TArray<TObjectPtr<AActor>> PathPointActors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "Fallback path points relative to the actor's placed location. Used only when no valid Path Point Actors are assigned."))
+	TArray<FVector> PathPointOffsets = { FVector(400.0f, 0.0f, 0.0f) };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
+		meta = (EditCondition = "bMoveWhenActive", ClampMin = "1.0", Units = "cm",
+			ToolTip = "Distance at which the actor treats the current path point as reached."))
+	float PathPointAcceptanceRadius = 20.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "How the actor behaves after reaching the last path point."))
+	ECh03WaveEnvironmentPathEndBehavior PathEndBehavior =
+		ECh03WaveEnvironmentPathEndBehavior::Reverse;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
-		meta = (EditCondition = "bMoveWhenActive"))
-	FVector MovementOffset = FVector(400.0f, 0.0f, 0.0f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
-		meta = (EditCondition = "bMoveWhenActive"))
-	FVector RoamBoundsExtent = FVector(600.0f, 450.0f, 0.0f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
-		meta = (EditCondition = "bMoveWhenActive", ClampMin = "1.0"))
-	float RoamTargetAcceptanceRadius = 45.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
-		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "s"))
-	float RoamWaitTimeMin = 0.2f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Random Roam",
-		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "s"))
-	float RoamWaitTimeMax = 0.8f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
-		meta = (EditCondition = "bMoveWhenActive"))
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "If true, the actor returns to its placed location when it becomes inactive."))
 	bool bResetLocationWhenInactive = true;
 };

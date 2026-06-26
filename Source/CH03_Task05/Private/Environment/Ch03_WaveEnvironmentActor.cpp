@@ -227,20 +227,9 @@ FVector ACh03_WaveEnvironmentActor::GetKnockbackDirection(
 
 	if (bUseMovementDirectionForKnockback && bMoveWhenActive)
 	{
-		FVector MovementDirectionVector = CurrentMovementDirection;
-
-		if (!MovementDirectionVector.IsNearlyZero())
+		if (!CurrentMovementDirection.IsNearlyZero())
 		{
-			return MovementDirectionVector;
-		}
-
-		MovementDirectionVector =
-			MovementOffset.GetSafeNormal2D() * MovementDirection;
-		MovementDirectionVector.Z = 0.0f;
-
-		if (!MovementDirectionVector.IsNearlyZero())
-		{
-			return MovementDirectionVector;
+			return CurrentMovementDirection;
 		}
 	}
 
@@ -273,134 +262,194 @@ void ACh03_WaveEnvironmentActor::CacheInitialLocationIfNeeded()
 void ACh03_WaveEnvironmentActor::UpdateActiveMovement(
 	const float DeltaSeconds)
 {
-	if (MovementMode == ECh03WaveEnvironmentMovementMode::RandomRoam)
-	{
-		UpdateRandomRoamMovement(DeltaSeconds);
-		return;
-	}
-
-	UpdatePingPongMovement(DeltaSeconds);
+	UpdatePathMovement(DeltaSeconds);
 }
 
-void ACh03_WaveEnvironmentActor::UpdatePingPongMovement(
+void ACh03_WaveEnvironmentActor::UpdatePathMovement(
 	const float DeltaSeconds)
 {
 	CacheInitialLocationIfNeeded();
 
-	const float TravelDistance = MovementOffset.Size();
-	if (TravelDistance <= KINDA_SMALL_NUMBER || MovementSpeed <= 0.0f)
-	{
-		return;
-	}
-
-	MovementAlpha +=
-		(MovementSpeed / TravelDistance)
-		* DeltaSeconds
-		* MovementDirection;
-
-	if (MovementAlpha >= 1.0f)
-	{
-		MovementAlpha = 1.0f;
-		MovementDirection = -1.0f;
-	}
-	else if (MovementAlpha <= 0.0f)
-	{
-		MovementAlpha = 0.0f;
-		MovementDirection = 1.0f;
-	}
-
-	const FVector TargetLocation =
-		InitialActorLocation + MovementOffset;
-	const FVector NewLocation =
-		FMath::Lerp(InitialActorLocation, TargetLocation, MovementAlpha);
-
-	CurrentMovementDirection =
-		(NewLocation - GetActorLocation()).GetSafeNormal2D();
-	SetActorLocation(NewLocation);
-}
-
-void ACh03_WaveEnvironmentActor::UpdateRandomRoamMovement(
-	const float DeltaSeconds)
-{
-	CacheInitialLocationIfNeeded();
-
-	if (MovementSpeed <= 0.0f
-		|| (RoamBoundsExtent.X <= 0.0f && RoamBoundsExtent.Y <= 0.0f))
+	const int32 PathPointCount = GetPathPointCount();
+	if (PathPointCount <= 1 || MovementSpeed <= 0.0f || bHasReachedPathEnd)
 	{
 		CurrentMovementDirection = FVector::ZeroVector;
 		return;
 	}
 
-	if (CurrentRoamWaitTime > 0.0f)
-	{
-		CurrentRoamWaitTime =
-			FMath::Max(0.0f, CurrentRoamWaitTime - DeltaSeconds);
-		CurrentMovementDirection = FVector::ZeroVector;
-		return;
-	}
-
-	if (!bHasRoamTarget)
-	{
-		SelectNewRoamTarget();
-	}
+	CurrentPathPointIndex =
+		FMath::Clamp(CurrentPathPointIndex, 0, PathPointCount - 1);
 
 	const FVector CurrentLocation = GetActorLocation();
-	FVector ToTarget = RoamTargetLocation - CurrentLocation;
-	ToTarget.Z = 0.0f;
+	const FVector TargetLocation =
+		GetPathPointWorldLocation(CurrentPathPointIndex);
+	const FVector ToTarget = TargetLocation - CurrentLocation;
+	const float DistanceToTarget = ToTarget.Size();
 
-	const float DistanceToTarget = ToTarget.Size2D();
-	if (DistanceToTarget <= RoamTargetAcceptanceRadius)
+	if (DistanceToTarget <= PathPointAcceptanceRadius)
 	{
-		SetActorLocation(RoamTargetLocation);
-		bHasRoamTarget = false;
+		SetActorLocation(TargetLocation);
 		CurrentMovementDirection = FVector::ZeroVector;
-		CurrentRoamWaitTime =
-			FMath::FRandRange(
-				FMath::Min(RoamWaitTimeMin, RoamWaitTimeMax),
-				FMath::Max(RoamWaitTimeMin, RoamWaitTimeMax));
+		AdvancePathTarget();
 		return;
 	}
 
-	const FVector MoveDirection = ToTarget.GetSafeNormal2D();
+	const FVector MoveDirection = ToTarget.GetSafeNormal();
 	const float MoveDistance =
 		FMath::Min(MovementSpeed * DeltaSeconds, DistanceToTarget);
 
-	FVector NewLocation = CurrentLocation + MoveDirection * MoveDistance;
-	NewLocation.Z = InitialActorLocation.Z;
+	if (MoveDistance >= DistanceToTarget - KINDA_SMALL_NUMBER)
+	{
+		SetActorLocation(TargetLocation);
+		CurrentMovementDirection = MoveDirection.GetSafeNormal2D();
+		AdvancePathTarget();
+		return;
+	}
 
-	CurrentMovementDirection = MoveDirection;
+	const FVector NewLocation =
+		CurrentLocation + MoveDirection * MoveDistance;
+
+	CurrentMovementDirection = MoveDirection.GetSafeNormal2D();
 	SetActorLocation(NewLocation);
 }
 
-void ACh03_WaveEnvironmentActor::SelectNewRoamTarget()
+void ACh03_WaveEnvironmentActor::AdvancePathTarget()
 {
-	RoamTargetLocation = GetRandomRoamLocation();
-	bHasRoamTarget = true;
+	const int32 PathPointCount = GetPathPointCount();
+
+	if (PathPointCount <= 1)
+	{
+		bHasReachedPathEnd = true;
+		CurrentMovementDirection = FVector::ZeroVector;
+		return;
+	}
+
+	const int32 NextPathPointIndex =
+		CurrentPathPointIndex + PathDirection;
+
+	if (NextPathPointIndex >= 0 && NextPathPointIndex < PathPointCount)
+	{
+		CurrentPathPointIndex = NextPathPointIndex;
+		return;
+	}
+
+	if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Reverse)
+	{
+		PathDirection *= -1;
+		CurrentPathPointIndex =
+			FMath::Clamp(
+				CurrentPathPointIndex + PathDirection,
+				0,
+				PathPointCount - 1);
+		return;
+	}
+
+	if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Loop)
+	{
+		PathDirection = 1;
+		CurrentPathPointIndex = 0;
+		return;
+	}
+
+	bHasReachedPathEnd = true;
+	CurrentMovementDirection = FVector::ZeroVector;
 }
 
-FVector ACh03_WaveEnvironmentActor::GetRandomRoamLocation() const
+int32 ACh03_WaveEnvironmentActor::GetPathPointCount() const
 {
-	const FVector SafeExtent(
-		FMath::Max(0.0f, RoamBoundsExtent.X),
-		FMath::Max(0.0f, RoamBoundsExtent.Y),
-		0.0f);
+	const int32 ConfiguredPathPointCount =
+		HasValidPathPointActors()
+			? GetValidPathPointActorCount()
+			: PathPointOffsets.Num();
 
-	return InitialActorLocation
-		+ FVector(
-			FMath::FRandRange(-SafeExtent.X, SafeExtent.X),
-			FMath::FRandRange(-SafeExtent.Y, SafeExtent.Y),
-			0.0f);
+	return ConfiguredPathPointCount
+		+ (bUseInitialLocationAsFirstPathPoint ? 1 : 0);
+}
+
+FVector ACh03_WaveEnvironmentActor::GetPathPointWorldLocation(
+	const int32 PointIndex) const
+{
+	if (bUseInitialLocationAsFirstPathPoint && PointIndex == 0)
+	{
+		return InitialActorLocation;
+	}
+
+	const int32 ConfiguredPointIndex =
+		PointIndex - (bUseInitialLocationAsFirstPathPoint ? 1 : 0);
+
+	if (ConfiguredPointIndex < 0)
+	{
+		return InitialActorLocation;
+	}
+
+	if (HasValidPathPointActors())
+	{
+		return GetValidPathPointActorLocation(ConfiguredPointIndex);
+	}
+
+	return PathPointOffsets.IsValidIndex(ConfiguredPointIndex)
+		? InitialActorLocation + PathPointOffsets[ConfiguredPointIndex]
+		: InitialActorLocation;
+}
+
+bool ACh03_WaveEnvironmentActor::HasValidPathPointActors() const
+{
+	for (const TObjectPtr<AActor>& PathPointActor : PathPointActors)
+	{
+		if (IsValid(PathPointActor))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int32 ACh03_WaveEnvironmentActor::GetValidPathPointActorCount() const
+{
+	int32 ValidPathPointActorCount = 0;
+
+	for (const TObjectPtr<AActor>& PathPointActor : PathPointActors)
+	{
+		if (IsValid(PathPointActor))
+		{
+			++ValidPathPointActorCount;
+		}
+	}
+
+	return ValidPathPointActorCount;
+}
+
+FVector ACh03_WaveEnvironmentActor::GetValidPathPointActorLocation(
+	const int32 ValidPathPointIndex) const
+{
+	int32 CurrentValidIndex = 0;
+
+	for (const TObjectPtr<AActor>& PathPointActor : PathPointActors)
+	{
+		if (!IsValid(PathPointActor))
+		{
+			continue;
+		}
+
+		if (CurrentValidIndex == ValidPathPointIndex)
+		{
+			return PathPointActor->GetActorLocation();
+		}
+
+		++CurrentValidIndex;
+	}
+
+	return InitialActorLocation;
 }
 
 void ACh03_WaveEnvironmentActor::ResetMovement()
 {
 	CacheInitialLocationIfNeeded();
 
-	MovementAlpha = 0.0f;
-	MovementDirection = 1.0f;
 	CurrentMovementDirection = FVector::ZeroVector;
-	RoamTargetLocation = InitialActorLocation;
-	CurrentRoamWaitTime = 0.0f;
-	bHasRoamTarget = false;
+	CurrentPathPointIndex = 0;
+	PathDirection = 1;
+	bHasReachedPathEnd = false;
 	SetActorLocation(InitialActorLocation);
 }
