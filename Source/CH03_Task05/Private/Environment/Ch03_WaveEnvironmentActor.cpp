@@ -256,6 +256,7 @@ void ACh03_WaveEnvironmentActor::CacheInitialLocationIfNeeded()
 	}
 
 	InitialActorLocation = GetActorLocation();
+	InitialActorRotation = GetActorRotation();
 	bHasCachedInitialLocation = true;
 }
 
@@ -270,89 +271,97 @@ void ACh03_WaveEnvironmentActor::UpdatePathMovement(
 {
 	CacheInitialLocationIfNeeded();
 
-	const int32 PathPointCount = GetPathPointCount();
-	if (PathPointCount <= 1 || MovementSpeed <= 0.0f || bHasReachedPathEnd)
+	const float PathTotalLength = GetPathTotalLength();
+	if (PathTotalLength <= KINDA_SMALL_NUMBER
+		|| MovementSpeed <= 0.0f
+		|| bHasReachedPathEnd)
 	{
 		CurrentMovementDirection = FVector::ZeroVector;
 		return;
 	}
 
-	CurrentPathPointIndex =
-		FMath::Clamp(CurrentPathPointIndex, 0, PathPointCount - 1);
+	const FVector PreviousLocation = GetActorLocation();
+	float NextTravelDistance =
+		PathTravelDistance
+		+ MovementSpeed * DeltaSeconds * PathTravelDirection;
 
-	const FVector CurrentLocation = GetActorLocation();
-	const FVector TargetLocation =
-		GetPathPointWorldLocation(CurrentPathPointIndex);
-	const FVector ToTarget = TargetLocation - CurrentLocation;
-	const float DistanceToTarget = ToTarget.Size();
-
-	if (DistanceToTarget <= PathPointAcceptanceRadius)
+	int32 SafetyCounter = 0;
+	while ((NextTravelDistance < 0.0f || NextTravelDistance > PathTotalLength)
+		&& SafetyCounter < 8)
 	{
-		SetActorLocation(TargetLocation);
-		CurrentMovementDirection = FVector::ZeroVector;
-		AdvancePathTarget();
-		return;
+		++SafetyCounter;
+
+		if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Reverse)
+		{
+			if (NextTravelDistance > PathTotalLength)
+			{
+				NextTravelDistance =
+					PathTotalLength - (NextTravelDistance - PathTotalLength);
+				PathTravelDirection = -1.0f;
+			}
+			else
+			{
+				NextTravelDistance = -NextTravelDistance;
+				PathTravelDirection = 1.0f;
+			}
+			continue;
+		}
+
+		if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Loop)
+		{
+			NextTravelDistance =
+				FMath::Fmod(NextTravelDistance, PathTotalLength);
+			if (NextTravelDistance < 0.0f)
+			{
+				NextTravelDistance += PathTotalLength;
+			}
+			PathTravelDirection = 1.0f;
+			break;
+		}
+
+		NextTravelDistance =
+			FMath::Clamp(NextTravelDistance, 0.0f, PathTotalLength);
+		bHasReachedPathEnd = true;
+		break;
 	}
 
-	const FVector MoveDirection = ToTarget.GetSafeNormal();
-	const float MoveDistance =
-		FMath::Min(MovementSpeed * DeltaSeconds, DistanceToTarget);
-
-	if (MoveDistance >= DistanceToTarget - KINDA_SMALL_NUMBER)
-	{
-		SetActorLocation(TargetLocation);
-		CurrentMovementDirection = MoveDirection.GetSafeNormal2D();
-		AdvancePathTarget();
-		return;
-	}
+	PathTravelDistance =
+		FMath::Clamp(NextTravelDistance, 0.0f, PathTotalLength);
 
 	const FVector NewLocation =
-		CurrentLocation + MoveDirection * MoveDistance;
-
-	CurrentMovementDirection = MoveDirection.GetSafeNormal2D();
+		GetPathLocationAtDistance(PathTravelDistance);
+	const FVector MovementDelta = NewLocation - PreviousLocation;
+	CurrentMovementDirection = MovementDelta.GetSafeNormal2D();
 	SetActorLocation(NewLocation);
+
+	UpdateFacingRotation(DeltaSeconds);
 }
 
-void ACh03_WaveEnvironmentActor::AdvancePathTarget()
+void ACh03_WaveEnvironmentActor::UpdateFacingRotation(
+	const float DeltaSeconds)
 {
-	const int32 PathPointCount = GetPathPointCount();
-
-	if (PathPointCount <= 1)
+	if (!bFaceMovementDirection || CurrentMovementDirection.IsNearlyZero())
 	{
-		bHasReachedPathEnd = true;
-		CurrentMovementDirection = FVector::ZeroVector;
 		return;
 	}
 
-	const int32 NextPathPointIndex =
-		CurrentPathPointIndex + PathDirection;
+	const float DesiredYaw = CurrentMovementDirection.Rotation().Yaw;
+	const FRotator DesiredRotation =
+		FRotator(0.0f, DesiredYaw, 0.0f) + FacingRotationOffset;
 
-	if (NextPathPointIndex >= 0 && NextPathPointIndex < PathPointCount)
+	if (FacingRotationInterpSpeed <= 0.0f)
 	{
-		CurrentPathPointIndex = NextPathPointIndex;
+		SetActorRotation(DesiredRotation);
 		return;
 	}
 
-	if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Reverse)
-	{
-		PathDirection *= -1;
-		CurrentPathPointIndex =
-			FMath::Clamp(
-				CurrentPathPointIndex + PathDirection,
-				0,
-				PathPointCount - 1);
-		return;
-	}
-
-	if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Loop)
-	{
-		PathDirection = 1;
-		CurrentPathPointIndex = 0;
-		return;
-	}
-
-	bHasReachedPathEnd = true;
-	CurrentMovementDirection = FVector::ZeroVector;
+	const FRotator NewRotation =
+		FMath::RInterpTo(
+			GetActorRotation(),
+			DesiredRotation,
+			DeltaSeconds,
+			FacingRotationInterpSpeed);
+	SetActorRotation(NewRotation);
 }
 
 int32 ACh03_WaveEnvironmentActor::GetPathPointCount() const
@@ -364,6 +373,48 @@ int32 ACh03_WaveEnvironmentActor::GetPathPointCount() const
 
 	return ConfiguredPathPointCount
 		+ (bUseInitialLocationAsFirstPathPoint ? 1 : 0);
+}
+
+int32 ACh03_WaveEnvironmentActor::GetPathSegmentCount() const
+{
+	const int32 PathPointCount = GetPathPointCount();
+	if (PathPointCount <= 1)
+	{
+		return 0;
+	}
+
+	if (PathEndBehavior == ECh03WaveEnvironmentPathEndBehavior::Loop)
+	{
+		return PathPointCount;
+	}
+
+	return PathPointCount - 1;
+}
+
+float ACh03_WaveEnvironmentActor::GetPathTotalLength() const
+{
+	float TotalLength = 0.0f;
+	const int32 PathSegmentCount = GetPathSegmentCount();
+
+	for (int32 SegmentIndex = 0;
+		SegmentIndex < PathSegmentCount;
+		++SegmentIndex)
+	{
+		TotalLength += GetPathSegmentLength(SegmentIndex);
+	}
+
+	return TotalLength;
+}
+
+float ACh03_WaveEnvironmentActor::GetPathSegmentLength(
+	const int32 SegmentIndex) const
+{
+	const FVector SegmentStartLocation =
+		GetPathSegmentStartLocation(SegmentIndex);
+	const FVector SegmentEndLocation =
+		GetPathSegmentEndLocation(SegmentIndex);
+
+	return FVector::Distance(SegmentStartLocation, SegmentEndLocation);
 }
 
 FVector ACh03_WaveEnvironmentActor::GetPathPointWorldLocation(
@@ -390,6 +441,73 @@ FVector ACh03_WaveEnvironmentActor::GetPathPointWorldLocation(
 	return PathPointOffsets.IsValidIndex(ConfiguredPointIndex)
 		? InitialActorLocation + PathPointOffsets[ConfiguredPointIndex]
 		: InitialActorLocation;
+}
+
+FVector ACh03_WaveEnvironmentActor::GetPathSegmentStartLocation(
+	const int32 SegmentIndex) const
+{
+	return GetPathPointWorldLocation(SegmentIndex);
+}
+
+FVector ACh03_WaveEnvironmentActor::GetPathSegmentEndLocation(
+	const int32 SegmentIndex) const
+{
+	const int32 PathPointCount = GetPathPointCount();
+	if (PathPointCount <= 0)
+	{
+		return InitialActorLocation;
+	}
+
+	const int32 EndPointIndex =
+		(SegmentIndex + 1) % PathPointCount;
+	return GetPathPointWorldLocation(EndPointIndex);
+}
+
+FVector ACh03_WaveEnvironmentActor::GetPathLocationAtDistance(
+	const float DistanceAlongPath) const
+{
+	const int32 PathSegmentCount = GetPathSegmentCount();
+	if (PathSegmentCount <= 0)
+	{
+		return InitialActorLocation;
+	}
+
+	float RemainingDistance =
+		FMath::Max(0.0f, DistanceAlongPath);
+	FVector LastSegmentEndLocation = InitialActorLocation;
+
+	for (int32 SegmentIndex = 0;
+		SegmentIndex < PathSegmentCount;
+		++SegmentIndex)
+	{
+		const FVector SegmentStartLocation =
+			GetPathSegmentStartLocation(SegmentIndex);
+		const FVector SegmentEndLocation =
+			GetPathSegmentEndLocation(SegmentIndex);
+		const float SegmentLength =
+			FVector::Distance(SegmentStartLocation, SegmentEndLocation);
+
+		LastSegmentEndLocation = SegmentEndLocation;
+
+		if (SegmentLength <= KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
+
+		if (RemainingDistance <= SegmentLength)
+		{
+			const float SegmentAlpha =
+				RemainingDistance / SegmentLength;
+			return FMath::Lerp(
+				SegmentStartLocation,
+				SegmentEndLocation,
+				SegmentAlpha);
+		}
+
+		RemainingDistance -= SegmentLength;
+	}
+
+	return LastSegmentEndLocation;
 }
 
 bool ACh03_WaveEnvironmentActor::HasValidPathPointActors() const
@@ -448,8 +566,8 @@ void ACh03_WaveEnvironmentActor::ResetMovement()
 	CacheInitialLocationIfNeeded();
 
 	CurrentMovementDirection = FVector::ZeroVector;
-	CurrentPathPointIndex = 0;
-	PathDirection = 1;
+	PathTravelDistance = 0.0f;
+	PathTravelDirection = 1.0f;
 	bHasReachedPathEnd = false;
-	SetActorLocation(InitialActorLocation);
+	SetActorLocationAndRotation(InitialActorLocation, InitialActorRotation);
 }

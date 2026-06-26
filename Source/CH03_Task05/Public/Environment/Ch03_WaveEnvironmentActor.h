@@ -145,9 +145,15 @@ private:
 	void CacheInitialLocationIfNeeded();
 	void UpdateActiveMovement(float DeltaSeconds);
 	void UpdatePathMovement(float DeltaSeconds);
-	void AdvancePathTarget();
+	void UpdateFacingRotation(float DeltaSeconds);
 	int32 GetPathPointCount() const;
+	int32 GetPathSegmentCount() const;
+	float GetPathTotalLength() const;
+	float GetPathSegmentLength(int32 SegmentIndex) const;
 	FVector GetPathPointWorldLocation(int32 PointIndex) const;
+	FVector GetPathSegmentStartLocation(int32 SegmentIndex) const;
+	FVector GetPathSegmentEndLocation(int32 SegmentIndex) const;
+	FVector GetPathLocationAtDistance(float DistanceAlongPath) const;
 	bool HasValidPathPointActors() const;
 	int32 GetValidPathPointActorCount() const;
 	FVector GetValidPathPointActorLocation(int32 ValidPathPointIndex) const;
@@ -158,10 +164,11 @@ private:
 	bool bIsEnvironmentActive = false;
 
 	FVector InitialActorLocation = FVector::ZeroVector;
+	FRotator InitialActorRotation = FRotator::ZeroRotator;
 	float LastKnockbackTime = -BIG_NUMBER;
 	FVector CurrentMovementDirection = FVector::ZeroVector;
-	int32 CurrentPathPointIndex = 0;
-	int32 PathDirection = 1;
+	float PathTravelDistance = 0.0f;
+	float PathTravelDirection = 1.0f;
 	bool bHasCachedInitialLocation = false;
 	bool bHasReachedPathEnd = false;
 
@@ -190,15 +197,25 @@ protected:
 	TArray<FVector> PathPointOffsets = { FVector(400.0f, 0.0f, 0.0f) };
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
-		meta = (EditCondition = "bMoveWhenActive", ClampMin = "1.0", Units = "cm",
-			ToolTip = "Distance at which the actor treats the current path point as reached."))
-	float PathPointAcceptanceRadius = 20.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
 		meta = (EditCondition = "bMoveWhenActive",
 			ToolTip = "How the actor behaves after reaching the last path point."))
 	ECh03WaveEnvironmentPathEndBehavior PathEndBehavior =
 		ECh03WaveEnvironmentPathEndBehavior::Reverse;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
+		meta = (EditCondition = "bMoveWhenActive",
+			ToolTip = "If true, the actor rotates toward its movement direction while following the path."))
+	bool bFaceMovementDirection = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
+		meta = (EditCondition = "bMoveWhenActive && bFaceMovementDirection", ClampMin = "0.0",
+			ToolTip = "Higher values rotate faster. 0 snaps directly to the movement direction."))
+	float FacingRotationInterpSpeed = 6.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
+		meta = (EditCondition = "bMoveWhenActive && bFaceMovementDirection",
+			ToolTip = "Use this when the mesh's visual front does not match Unreal's +X forward direction. Usually adjust Yaw only."))
+	FRotator FacingRotationOffset = FRotator::ZeroRotator;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive",
