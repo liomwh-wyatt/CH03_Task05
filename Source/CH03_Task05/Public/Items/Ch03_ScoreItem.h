@@ -28,6 +28,6 @@ protected:
 	int32 ScoreValue = 50;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Score|Feedback",
-		meta = (ToolTip = "점수 아이템 자체의 획득 피드백입니다. 천복 캐릭터의 Score Pickup Feedback이 설정되어 있으면 캐릭터 쪽 피드백을 우선 사용하고, 이 값은 fallback으로 사용됩니다."))
+		meta = (ToolTip = "아이템 자체의 획득 피드백입니다. 천복이의 점수 획득 피드백이 비어 있을 때 예비로 사용합니다."))
 	FCh03FeedbackCue ScorePickupFeedback;
 };

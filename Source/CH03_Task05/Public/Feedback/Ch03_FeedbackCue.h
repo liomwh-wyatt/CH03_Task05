@@ -20,7 +20,7 @@ struct CH03_TASK05_API FCh03FeedbackCue
 	TObjectPtr<USoundBase> Sound = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Feedback",
-		meta = (ToolTip = "피드백이 재생될 때 사용할 Niagara 이펙트입니다. 비워두면 이펙트를 재생하지 않습니다."))
+		meta = (ToolTip = "피드백이 재생될 때 사용할 나이아가라 이펙트입니다. 비워두면 이펙트를 재생하지 않습니다."))
 	TObjectPtr<UNiagaraSystem> Effect = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Feedback",

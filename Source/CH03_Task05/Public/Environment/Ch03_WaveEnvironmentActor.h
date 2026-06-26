@@ -12,9 +12,9 @@ class ACh03_CheonbokCharacter;
 UENUM(BlueprintType)
 enum class ECh03WaveEnvironmentPathEndBehavior : uint8
 {
-	Reverse UMETA(DisplayName = "Reverse At Ends"),
-	Loop UMETA(DisplayName = "Loop To First Point"),
-	Stop UMETA(DisplayName = "Stop At End")
+	Reverse UMETA(DisplayName = "끝에서 되돌아가기"),
+	Loop UMETA(DisplayName = "처음으로 이어서 이동"),
+	Stop UMETA(DisplayName = "끝에서 정지")
 };
 
 UCLASS()
@@ -79,7 +79,7 @@ protected:
 	int32 ActivateFromWave = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment",
-		meta = (ClampMin = "0", ToolTip = "0 means the actor stays available through the last wave."))
+		meta = (ClampMin = "0", ToolTip = "0이면 마지막 웨이브까지 유지합니다."))
 	int32 DeactivateAfterWave = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment")
@@ -178,47 +178,47 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive", ClampMin = "0.0", Units = "cm/s",
-			ToolTip = "Speed used while following the configured path."))
+			ToolTip = "경로를 따라 이동하는 속도입니다."))
 	float MovementSpeed = 160.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "If true, the actor's placed location becomes the first path point."))
+			ToolTip = "켜면 배치된 위치를 첫 번째 경로 지점으로 사용합니다."))
 	bool bUseInitialLocationAsFirstPathPoint = true;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "Optional level actors used as path points. If any valid actor is assigned here, Path Point Offsets are ignored."))
+			ToolTip = "레벨에 배치한 액터를 경로 지점으로 사용합니다. 하나라도 지정하면 상대 좌표 목록은 사용하지 않습니다."))
 	TArray<TObjectPtr<AActor>> PathPointActors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "Fallback path points relative to the actor's placed location. Used only when no valid Path Point Actors are assigned."))
+			ToolTip = "배치 위치 기준 상대 좌표로 경로를 지정합니다. 경로 액터가 없을 때만 사용합니다."))
 	TArray<FVector> PathPointOffsets = { FVector(400.0f, 0.0f, 0.0f) };
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Path",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "How the actor behaves after reaching the last path point."))
+			ToolTip = "마지막 경로 지점에 도착한 뒤의 처리 방식입니다."))
 	ECh03WaveEnvironmentPathEndBehavior PathEndBehavior =
 		ECh03WaveEnvironmentPathEndBehavior::Reverse;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "If true, the actor rotates toward its movement direction while following the path."))
+			ToolTip = "켜면 이동 방향을 바라보며 회전합니다."))
 	bool bFaceMovementDirection = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
 		meta = (EditCondition = "bMoveWhenActive && bFaceMovementDirection", ClampMin = "0.0",
-			ToolTip = "Higher values rotate faster. 0 snaps directly to the movement direction."))
+			ToolTip = "회전 보간 속도입니다. 값이 클수록 빠르게 돌고, 0이면 즉시 회전합니다."))
 	float FacingRotationInterpSpeed = 6.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement|Facing",
 		meta = (EditCondition = "bMoveWhenActive && bFaceMovementDirection",
-			ToolTip = "Use this when the mesh's visual front does not match Unreal's +X forward direction. Usually adjust Yaw only."))
+			ToolTip = "모델의 앞 방향이 언리얼 기준 앞 방향(+X)과 다를 때 보정합니다. 보통 요 회전만 조정합니다."))
 	FRotator FacingRotationOffset = FRotator::ZeroRotator;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Movement",
 		meta = (EditCondition = "bMoveWhenActive",
-			ToolTip = "If true, the actor returns to its placed location when it becomes inactive."))
+			ToolTip = "켜면 비활성화될 때 배치 위치와 초기 회전으로 되돌립니다."))
 	bool bResetLocationWhenInactive = true;
 };

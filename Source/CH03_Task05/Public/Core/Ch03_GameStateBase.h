@@ -9,10 +9,10 @@
 UENUM(BlueprintType)
 enum class ECh03ComboBreakReason : uint8
 {
-	Manual		UMETA(DisplayName = "Manual"),
-	Timeout		UMETA(DisplayName = "Timeout"),
-	Hazard		UMETA(DisplayName = "Hazard"),
-	GameFlow	UMETA(DisplayName = "Game Flow")
+	Manual		UMETA(DisplayName = "수동"),
+	Timeout		UMETA(DisplayName = "시간 초과"),
+	Hazard		UMETA(DisplayName = "위험 요소"),
+	GameFlow	UMETA(DisplayName = "게임 진행")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(

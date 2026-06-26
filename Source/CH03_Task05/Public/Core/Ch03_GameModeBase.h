@@ -14,11 +14,11 @@ class UCh03_GameInstance;
 UENUM(BlueprintType)
 enum class ECh03_GamePhase : uint8
 {
-	Waiting		UMETA(DisplayName = "Waiting"),
-	Playing		UMETA(DisplayName = "Playing"),
-	WaveInterval	UMETA(DisplayName = "Wave Interval"),
-	GameOver	UMETA(DisplayName = "Game Over"),
-	LevelComplete	UMETA(DisplayName = "Level Complete")
+	Waiting		UMETA(DisplayName = "대기"),
+	Playing		UMETA(DisplayName = "진행 중"),
+	WaveInterval	UMETA(DisplayName = "웨이브 간격"),
+	GameOver	UMETA(DisplayName = "게임 오버"),
+	LevelComplete	UMETA(DisplayName = "레벨 클리어")
 };
 
 USTRUCT(BlueprintType)
