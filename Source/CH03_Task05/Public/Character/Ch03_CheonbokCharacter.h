@@ -242,6 +242,10 @@ protected:
 	void ApplyMovementTrailSettings();
 	void UpdateMovementTrail();
 	bool ShouldPlayMovementTrail() const;
+	void ApplyReverseControlFeedbackSettings();
+	void StartReverseControlFeedbackEffect();
+	void StopReverseControlFeedbackEffect();
+	void PlayFeedbackCueSoundOnly(const FCh03FeedbackCue& FeedbackCue);
 
 	float ExtendEffectTimer(
 		FTimerHandle& TimerHandle,
@@ -263,6 +267,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
 	TObjectPtr<UNiagaraComponent> MovementTrailComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cheonbok|VFX")
+	TObjectPtr<UNiagaraComponent> ReverseControlFeedbackComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|UI")
 	FVector WorldHealthWidgetRelativeLocation = FVector(0.0f, 0.0f, 86.0f);
@@ -410,31 +417,40 @@ protected:
 		meta = (ClampMin = "1"))
 	int32 MaxDamageShieldStacks = 1;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "천복이가 피해를 실제로 받았을 때 재생되는 피드백입니다. 무적 시간 중이거나 실드로 막힌 피해에는 사용하지 않습니다."))
 	FCh03FeedbackCue DamageTakenFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "피해 실드가 피해를 막았을 때 재생되는 피드백입니다. 실드 스택이 감소하는 순간에 사용합니다."))
 	FCh03FeedbackCue DamageBlockedFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "체력 회복 아이템 등으로 천복이의 체력이 증가했을 때 재생되는 피드백입니다."))
 	FCh03FeedbackCue HealthRecoveredFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "스태미나 회복 아이템 등으로 천복이의 스태미나가 증가했을 때 재생되는 피드백입니다."))
 	FCh03FeedbackCue StaminaRecoveredFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "슬로우 디버프가 적용될 때 재생되는 피드백입니다. 현재 구조에서는 적용 순간 1회 재생됩니다."))
 	FCh03FeedbackCue SlowAppliedFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "리버스 컨트롤 디버프용 피드백입니다. Sound는 적용 순간 1회 재생되고, Effect는 리버스 상태가 지속되는 동안 천복이에게 붙어 활성화됩니다."))
 	FCh03FeedbackCue ReverseControlAppliedFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "이동 잠금 디버프가 적용될 때 재생되는 피드백입니다. 현재 구조에서는 적용 순간 1회 재생됩니다."))
 	FCh03FeedbackCue MovementLockAppliedFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "피해 실드가 적용될 때 재생되는 피드백입니다. 실드 스택이 추가되는 순간에 사용합니다."))
 	FCh03FeedbackCue DamageShieldAppliedFeedback;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Feedback",
+		meta = (ToolTip = "슬로우, 리버스 컨트롤, 이동 잠금, 피해 실드 등 상태 효과가 끝났을 때 재생되는 공통 종료 피드백입니다."))
 	FCh03FeedbackCue StatusEffectEndedFeedback;
 
 private:

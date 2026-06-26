@@ -76,6 +76,16 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 	MovementTrailComponent->SetRelativeRotation(
 		MovementTrailRelativeRotation);
 
+	ReverseControlFeedbackComponent =
+		CreateDefaultSubobject<UNiagaraComponent>(
+			TEXT("ReverseControlFeedbackComponent"));
+	ReverseControlFeedbackComponent->SetupAttachment(RootComponent);
+	ReverseControlFeedbackComponent->SetAutoActivate(false);
+	ReverseControlFeedbackComponent->SetRelativeLocation(
+		ReverseControlAppliedFeedback.LocationOffset);
+	ReverseControlFeedbackComponent->SetRelativeRotation(
+		ReverseControlAppliedFeedback.RotationOffset);
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -108,6 +118,7 @@ void ACh03_CheonbokCharacter::BeginPlay()
 	ApplyMovementTuningSettings();
 	ApplyPortraitCaptureSettings();
 	ApplyMovementTrailSettings();
+	ApplyReverseControlFeedbackSettings();
 	InitializeWorldHealthWidget();
 	RefreshMovementSpeed();
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
@@ -123,6 +134,7 @@ void ACh03_CheonbokCharacter::OnConstruction(
 	ApplyMovementTuningSettings();
 	ApplyPortraitCaptureSettings();
 	ApplyMovementTrailSettings();
+	ApplyReverseControlFeedbackSettings();
 }
 
 void ACh03_CheonbokCharacter::Tick(float DeltaTime)
@@ -583,10 +595,8 @@ void ACh03_CheonbokCharacter::ApplyReverseControl(float Duration)
 		true,
 		ReverseControlStackCount,
 		NewRemainingTime);
-	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
-		this,
-		ReverseControlAppliedFeedback,
-		this);
+	PlayFeedbackCueSoundOnly(ReverseControlAppliedFeedback);
+	StartReverseControlFeedbackEffect();
 	OnStatusEffectAppliedFeedback(
 		ECheonbokStatusEffect::ReverseControl,
 		ReverseControlStackCount,
@@ -717,6 +727,7 @@ void ACh03_CheonbokCharacter::ClearAllStatusEffects()
 	else
 	{
 		GetWorldTimerManager().ClearTimer(ReverseControlTimerHandle);
+		StopReverseControlFeedbackEffect();
 	}
 
 	if (bIsMovementLocked)
@@ -1012,6 +1023,7 @@ void ACh03_CheonbokCharacter::EndReverseControl()
 	GetWorldTimerManager().ClearTimer(ReverseControlTimerHandle);
 	bIsControlReversed = false;
 	ReverseControlStackCount = 0;
+	StopReverseControlFeedbackEffect();
 
 	OnStatusEffectChanged.Broadcast(
 		ECheonbokStatusEffect::ReverseControl,
@@ -1216,6 +1228,68 @@ bool ACh03_CheonbokCharacter::ShouldPlayMovementTrail() const
 
 	return MovementComponent->Velocity.Size2D()
 		>= MovementTrailActivationSpeed;
+}
+
+void ACh03_CheonbokCharacter::ApplyReverseControlFeedbackSettings()
+{
+	if (!ReverseControlFeedbackComponent)
+	{
+		return;
+	}
+
+	ReverseControlFeedbackComponent->SetAsset(
+		ReverseControlAppliedFeedback.Effect);
+	ReverseControlFeedbackComponent->SetRelativeLocation(
+		ReverseControlAppliedFeedback.LocationOffset);
+	ReverseControlFeedbackComponent->SetRelativeRotation(
+		ReverseControlAppliedFeedback.RotationOffset);
+	ReverseControlFeedbackComponent->SetAutoActivate(false);
+
+	if (!bIsControlReversed)
+	{
+		ReverseControlFeedbackComponent->Deactivate();
+	}
+}
+
+void ACh03_CheonbokCharacter::StartReverseControlFeedbackEffect()
+{
+	if (!ReverseControlFeedbackComponent
+		|| !ReverseControlAppliedFeedback.Effect)
+	{
+		return;
+	}
+
+	ApplyReverseControlFeedbackSettings();
+
+	if (!ReverseControlFeedbackComponent->IsActive())
+	{
+		ReverseControlFeedbackComponent->Activate(true);
+	}
+}
+
+void ACh03_CheonbokCharacter::StopReverseControlFeedbackEffect()
+{
+	if (ReverseControlFeedbackComponent
+		&& ReverseControlFeedbackComponent->IsActive())
+	{
+		ReverseControlFeedbackComponent->Deactivate();
+	}
+}
+
+void ACh03_CheonbokCharacter::PlayFeedbackCueSoundOnly(
+	const FCh03FeedbackCue& FeedbackCue)
+{
+	if (!FeedbackCue.Sound)
+	{
+		return;
+	}
+
+	FCh03FeedbackCue SoundOnlyFeedbackCue = FeedbackCue;
+	SoundOnlyFeedbackCue.Effect = nullptr;
+	UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
+		this,
+		SoundOnlyFeedbackCue,
+		this);
 }
 
 float ACh03_CheonbokCharacter::ExtendEffectTimer(

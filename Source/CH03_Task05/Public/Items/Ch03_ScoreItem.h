@@ -27,6 +27,7 @@ protected:
 		meta = (ClampMin = "0"))
 	int32 ScoreValue = 50;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Score|Feedback")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Score|Feedback",
+		meta = (ToolTip = "점수를 주는 사료 아이템을 획득했을 때 재생되는 공통 피드백입니다. 작은 사료, 큰 사료처럼 점수량이 달라도 같은 이펙트를 공유할 수 있습니다."))
 	FCh03FeedbackCue ScorePickupFeedback;
 };
