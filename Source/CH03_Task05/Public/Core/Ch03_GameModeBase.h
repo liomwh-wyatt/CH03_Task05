@@ -10,6 +10,8 @@ class ACh03_WaveEnvironmentActor;
 class ACh03_GameStateBase;
 class UCh03_GameResultWidget;
 class UCh03_GameInstance;
+class UAudioComponent;
+class USoundBase;
 
 UENUM(BlueprintType)
 enum class ECh03_GamePhase : uint8
@@ -117,6 +119,38 @@ protected:
 		meta = (ClampMin = "0.0", Units = "cm"))
 	float GoldenComboFallbackHeight = 140.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> WaveStartSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> GameOverSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> LevelCompleteSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> GoldenItemAppearSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music")
+	TObjectPtr<USoundBase> CommonGameplayMusic;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music")
+	TObjectPtr<USoundBase> LivingRoomMusic;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music")
+	TObjectPtr<USoundBase> KitchenMusic;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music")
+	TObjectPtr<USoundBase> CheonbokLandMusic;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music",
+		meta = (ClampMin = "0.0"))
+	float MusicVolumeMultiplier = 0.34f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
+		meta = (ClampMin = "0.0"))
+	float UISoundVolumeMultiplier = 0.9f;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Game Flow")
 	void OnWaveStarted(int32 CurrentWave, int32 MaxWave);
 
@@ -161,6 +195,10 @@ private:
 	void SetGamePhase(ECh03_GamePhase NewPhase);
 	ACh03_BaseItem* TrySpawnGoldenComboItemFromVolumes();
 	ACh03_BaseItem* SpawnGoldenComboItemNearPlayer() const;
+	USoundBase* GetLevelMusic() const;
+	void StartLevelMusic();
+	void StopLevelMusic();
+	void PlayUISound(USoundBase* Sound) const;
 
 	UFUNCTION()
 	void HandleCharacterDeath();
@@ -185,6 +223,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCh03_GameResultWidget> ActiveResultWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAudioComponent> LevelMusicComponent;
 
 	ECh03_GamePhase CurrentPhase = ECh03_GamePhase::Waiting;
 	int32 CurrentWaveIndex = INDEX_NONE;

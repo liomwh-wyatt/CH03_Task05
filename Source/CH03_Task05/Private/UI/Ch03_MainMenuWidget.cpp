@@ -9,6 +9,27 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
+
+UCh03_MainMenuWidget::UCh03_MainMenuWidget(
+	const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FObjectFinder<USoundBase> HoverSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Hover.S_UI_Hover"));
+	if (HoverSoundFinder.Succeeded())
+	{
+		ButtonHoverSound = HoverSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ClickSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Click.S_UI_Click"));
+	if (ClickSoundFinder.Succeeded())
+	{
+		ButtonClickSound = ClickSoundFinder.Object;
+	}
+}
 
 void UCh03_MainMenuWidget::NativeConstruct()
 {
@@ -21,6 +42,9 @@ void UCh03_MainMenuWidget::NativeConstruct()
 		StartButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_MainMenuWidget::HandleStartClicked);
+		StartButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_MainMenuWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -28,6 +52,9 @@ void UCh03_MainMenuWidget::NativeConstruct()
 		QuitButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_MainMenuWidget::HandleQuitClicked);
+		QuitButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_MainMenuWidget::HandleButtonHovered);
 	}
 
 	UpdateHighScoreText();
@@ -52,6 +79,8 @@ void UCh03_MainMenuWidget::HandleStartClicked()
 	{
 		return;
 	}
+
+	PlayButtonClickSound();
 
 	UCh03_GameInstance* CheonbokGameInstance =
 		GetGameInstance<UCh03_GameInstance>();
@@ -96,6 +125,7 @@ void UCh03_MainMenuWidget::HandleStartClicked()
 
 void UCh03_MainMenuWidget::HandleQuitClicked()
 {
+	PlayButtonClickSound();
 	SetButtonsEnabled(false);
 
 	UKismetSystemLibrary::QuitGame(
@@ -135,6 +165,9 @@ void UCh03_MainMenuWidget::UnbindButtons()
 		StartButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_MainMenuWidget::HandleStartClicked);
+		StartButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_MainMenuWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -142,6 +175,9 @@ void UCh03_MainMenuWidget::UnbindButtons()
 		QuitButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_MainMenuWidget::HandleQuitClicked);
+		QuitButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_MainMenuWidget::HandleButtonHovered);
 	}
 }
 
@@ -157,5 +193,26 @@ void UCh03_MainMenuWidget::SetButtonsEnabled(
 	{
 		QuitButton->SetIsEnabled(bEnabled);
 	}
+}
+
+void UCh03_MainMenuWidget::HandleButtonHovered()
+{
+	PlayUISound(ButtonHoverSound);
+}
+
+void UCh03_MainMenuWidget::PlayUISound(USoundBase* Sound) const
+{
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			Sound,
+			UISoundVolumeMultiplier);
+	}
+}
+
+void UCh03_MainMenuWidget::PlayButtonClickSound() const
+{
+	PlayUISound(ButtonClickSound);
 }
 

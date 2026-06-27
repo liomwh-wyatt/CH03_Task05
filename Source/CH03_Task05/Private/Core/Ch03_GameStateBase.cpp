@@ -3,6 +3,9 @@
 #include "Core/Ch03_GameStateBase.h"
 
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACh03_GameStateBase::ACh03_GameStateBase()
 {
@@ -14,6 +17,20 @@ ACh03_GameStateBase::ACh03_GameStateBase()
 	RemainingTime = 0;
 	WaveDuration = 0;
 	AnnouncementText = FText::GetEmpty();
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ComboRewardSoundFinder(
+		TEXT("/Game/Audio/UI/S_ComboReward.S_ComboReward"));
+	if (ComboRewardSoundFinder.Succeeded())
+	{
+		ComboRewardSound = ComboRewardSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ComboBreakSoundFinder(
+		TEXT("/Game/Audio/UI/S_ComboBreak.S_ComboBreak"));
+	if (ComboBreakSoundFinder.Succeeded())
+	{
+		ComboBreakSound = ComboBreakSoundFinder.Object;
+	}
 }
 
 void ACh03_GameStateBase::Tick(const float DeltaSeconds)
@@ -287,6 +304,7 @@ void ACh03_GameStateBase::ProcessComboRewards(
 		{
 			RewardedComboThresholds.Add(ComboCount);
 			OnComboRewardTriggered.Broadcast(ComboCount, RewardText);
+			PlayUISound(ComboRewardSound);
 
 			UE_LOG(
 				LogTemp,
@@ -405,11 +423,20 @@ void ACh03_GameStateBase::ResetComboState(
 	if (bShouldBroadcastBreak && PreviousComboCount >= 2)
 	{
 		OnComboBroken.Broadcast(PreviousComboCount, BreakReason);
+		PlayUISound(ComboBreakSound);
 	}
 
 	if (bShouldBroadcast && bHadCombo)
 	{
 		BroadcastComboChanged();
+	}
+}
+
+void ACh03_GameStateBase::PlayUISound(USoundBase* Sound) const
+{
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(this, Sound);
 	}
 }
 

@@ -6,6 +6,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "Ch03_GameStateBase.generated.h"
 
+class USoundBase;
+
 UENUM(BlueprintType)
 enum class ECh03ComboBreakReason : uint8
 {
@@ -198,6 +200,12 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Game Flow")
 	FText AnnouncementText;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ComboRewardSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ComboBreakSound;
+
 private:
 	float GetScoreMultiplierForCombo(int32 ComboCount) const;
 	void ProcessComboRewards(int32 ComboCount, AActor* ScoringActor);
@@ -206,6 +214,7 @@ private:
 		ECh03ComboBreakReason BreakReason,
 		bool bShouldBroadcastBreak);
 	void BroadcastComboChanged();
+	void PlayUISound(USoundBase* Sound) const;
 
 	bool bNextScoreItemDouble = false;
 	TSet<int32> RewardedComboThresholds;

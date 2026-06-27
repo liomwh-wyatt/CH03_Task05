@@ -4,6 +4,8 @@
 #include "Core/Ch03_GameStateBase.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACh03_DamageItem::ACh03_DamageItem()
 {
@@ -12,6 +14,13 @@ ACh03_DamageItem::ACh03_DamageItem()
 	LifetimeAfterSpawn = 8.0f;
 	BlinkStartTime = 2.0f;
 	BlinkInterval = 0.13f;
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> PickupSoundFinder(
+		TEXT("/Game/Audio/SFX/Items/S_ToyBomb.S_ToyBomb"));
+	if (PickupSoundFinder.Succeeded())
+	{
+		PickupSound = PickupSoundFinder.Object;
+	}
 }
 
 void ACh03_DamageItem::ActivateItem_Implementation(AActor* Activator)

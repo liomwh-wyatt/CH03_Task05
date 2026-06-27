@@ -6,6 +6,7 @@
 #include "Core/Ch03_GameStateBase.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "UObject/ConstructorHelpers.h"
 
 ACh03_WaveEnvironmentActor::ACh03_WaveEnvironmentActor()
@@ -41,6 +42,22 @@ ACh03_WaveEnvironmentActor::ACh03_WaveEnvironmentActor()
 		"CheonbokEnvironment",
 		"DefaultEnvironmentAnnouncement",
 		"New hazard is active!");
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ActivationSoundFinder(
+		TEXT("/Game/Audio/SFX/Environment/S_RobotVacuum_Warning.S_RobotVacuum_Warning"));
+	if (ActivationSoundFinder.Succeeded())
+	{
+		ActivationFeedback.Sound = ActivationSoundFinder.Object;
+		ActivationFeedback.SoundVolumeMultiplier = 0.8f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> HazardHitSoundFinder(
+		TEXT("/Game/Audio/SFX/Environment/S_RobotVacuum_Hit.S_RobotVacuum_Hit"));
+	if (HazardHitSoundFinder.Succeeded())
+	{
+		HazardHitFeedback.Sound = HazardHitSoundFinder.Object;
+		HazardHitFeedback.SoundVolumeMultiplier = 0.9f;
+	}
 }
 
 void ACh03_WaveEnvironmentActor::BeginPlay()

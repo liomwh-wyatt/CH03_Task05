@@ -11,8 +11,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
 #include "NiagaraComponent.h"
+#include "Sound/SoundBase.h"
 #include "UI/Ch03_WorldHealthWidget.h"
 #include "Components/WidgetComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 {
@@ -85,6 +87,78 @@ ACh03_CheonbokCharacter::ACh03_CheonbokCharacter()
 		ReverseControlAppliedFeedback.LocationOffset);
 	ReverseControlFeedbackComponent->SetRelativeRotation(
 		ReverseControlAppliedFeedback.RotationOffset);
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> DamageTakenSound(
+		TEXT("/Game/Audio/SFX/Character/S_PlayerHit.S_PlayerHit"));
+	if (DamageTakenSound.Succeeded())
+	{
+		DamageTakenFeedback.Sound = DamageTakenSound.Object;
+		DamageTakenFeedback.SoundVolumeMultiplier = 0.9f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> DamageBlockedSound(
+		TEXT("/Game/Audio/SFX/Character/S_ShieldBlock.S_ShieldBlock"));
+	if (DamageBlockedSound.Succeeded())
+	{
+		DamageBlockedFeedback.Sound = DamageBlockedSound.Object;
+		DamageBlockedFeedback.SoundVolumeMultiplier = 0.9f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> HealthRecoveredSound(
+		TEXT("/Game/Audio/SFX/Character/S_Heal.S_Heal"));
+	if (HealthRecoveredSound.Succeeded())
+	{
+		HealthRecoveredFeedback.Sound = HealthRecoveredSound.Object;
+		HealthRecoveredFeedback.SoundVolumeMultiplier = 0.85f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> StaminaRecoveredSound(
+		TEXT("/Game/Audio/SFX/Character/S_StaminaRecover.S_StaminaRecover"));
+	if (StaminaRecoveredSound.Succeeded())
+	{
+		StaminaRecoveredFeedback.Sound = StaminaRecoveredSound.Object;
+		StaminaRecoveredFeedback.SoundVolumeMultiplier = 0.8f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> SlowAppliedSound(
+		TEXT("/Game/Audio/SFX/Character/S_Debuff_Slow.S_Debuff_Slow"));
+	if (SlowAppliedSound.Succeeded())
+	{
+		SlowAppliedFeedback.Sound = SlowAppliedSound.Object;
+		SlowAppliedFeedback.SoundVolumeMultiplier = 0.85f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ReverseAppliedSound(
+		TEXT("/Game/Audio/SFX/Character/S_Debuff_Reverse.S_Debuff_Reverse"));
+	if (ReverseAppliedSound.Succeeded())
+	{
+		ReverseControlAppliedFeedback.Sound = ReverseAppliedSound.Object;
+		ReverseControlAppliedFeedback.SoundVolumeMultiplier = 0.8f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> MovementLockSound(
+		TEXT("/Game/Audio/SFX/Character/S_Debuff_Lock.S_Debuff_Lock"));
+	if (MovementLockSound.Succeeded())
+	{
+		MovementLockAppliedFeedback.Sound = MovementLockSound.Object;
+		MovementLockAppliedFeedback.SoundVolumeMultiplier = 0.85f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ShieldAppliedSound(
+		TEXT("/Game/Audio/SFX/Character/S_ShieldApply.S_ShieldApply"));
+	if (ShieldAppliedSound.Succeeded())
+	{
+		DamageShieldAppliedFeedback.Sound = ShieldAppliedSound.Object;
+		DamageShieldAppliedFeedback.SoundVolumeMultiplier = 0.85f;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> StatusEndedSound(
+		TEXT("/Game/Audio/SFX/Character/S_Debuff_End.S_Debuff_End"));
+	if (StatusEndedSound.Succeeded())
+	{
+		StatusEffectEndedFeedback.Sound = StatusEndedSound.Object;
+		StatusEffectEndedFeedback.SoundVolumeMultiplier = 0.75f;
+	}
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;

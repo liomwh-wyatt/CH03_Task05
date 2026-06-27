@@ -8,6 +8,27 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
+
+UCh03_GameResultWidget::UCh03_GameResultWidget(
+	const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FObjectFinder<USoundBase> HoverSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Hover.S_UI_Hover"));
+	if (HoverSoundFinder.Succeeded())
+	{
+		ButtonHoverSound = HoverSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ClickSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Click.S_UI_Click"));
+	if (ClickSoundFinder.Succeeded())
+	{
+		ButtonClickSound = ClickSoundFinder.Object;
+	}
+}
 
 void UCh03_GameResultWidget::NativeConstruct()
 {
@@ -18,6 +39,9 @@ void UCh03_GameResultWidget::NativeConstruct()
 		RestartButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleRestartClicked);
+		RestartButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (ContinueButton)
@@ -25,6 +49,9 @@ void UCh03_GameResultWidget::NativeConstruct()
 		ContinueButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleContinueClicked);
+		ContinueButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -32,6 +59,9 @@ void UCh03_GameResultWidget::NativeConstruct()
 		QuitButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleQuitClicked);
+		QuitButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (MainMenuButton)
@@ -39,6 +69,9 @@ void UCh03_GameResultWidget::NativeConstruct()
 		MainMenuButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleMainMenuClicked);
+		MainMenuButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 }
 
@@ -167,6 +200,8 @@ UWidget* UCh03_GameResultWidget::GetInitialFocusWidget() const
 
 void UCh03_GameResultWidget::HandleRestartClicked()
 {
+	PlayButtonClickSound();
+
 	FName RestartLevelName = CurrentLevelName;
 
 	if (UCh03_GameInstance* CheonbokGameInstance =
@@ -196,6 +231,8 @@ void UCh03_GameResultWidget::HandleRestartClicked()
 
 void UCh03_GameResultWidget::HandleContinueClicked()
 {
+	PlayButtonClickSound();
+
 	if (NextLevelName.IsNone())
 	{
 		return;
@@ -217,6 +254,8 @@ void UCh03_GameResultWidget::HandleContinueClicked()
 
 void UCh03_GameResultWidget::HandleMainMenuClicked()
 {
+	PlayButtonClickSound();
+
 	if (MainMenuLevelName.IsNone())
 	{
 		return;
@@ -235,6 +274,8 @@ void UCh03_GameResultWidget::HandleMainMenuClicked()
 
 void UCh03_GameResultWidget::HandleQuitClicked()
 {
+	PlayButtonClickSound();
+
 	UKismetSystemLibrary::QuitGame(
 		this,
 		GetOwningPlayer(),
@@ -249,6 +290,9 @@ void UCh03_GameResultWidget::UnbindButtons()
 		RestartButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleRestartClicked);
+		RestartButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (ContinueButton)
@@ -256,6 +300,9 @@ void UCh03_GameResultWidget::UnbindButtons()
 		ContinueButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleContinueClicked);
+		ContinueButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -263,6 +310,9 @@ void UCh03_GameResultWidget::UnbindButtons()
 		QuitButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleQuitClicked);
+		QuitButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 
 	if (MainMenuButton)
@@ -270,6 +320,9 @@ void UCh03_GameResultWidget::UnbindButtons()
 		MainMenuButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_GameResultWidget::HandleMainMenuClicked);
+		MainMenuButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_GameResultWidget::HandleButtonHovered);
 	}
 }
 
@@ -284,4 +337,25 @@ void UCh03_GameResultWidget::ResumeGameBeforeTravel()
 		PlayerController->bShowMouseCursor = false;
 		PlayerController->SetInputMode(FInputModeGameOnly());
 	}
+}
+
+void UCh03_GameResultWidget::HandleButtonHovered()
+{
+	PlayUISound(ButtonHoverSound);
+}
+
+void UCh03_GameResultWidget::PlayUISound(USoundBase* Sound) const
+{
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			Sound,
+			UISoundVolumeMultiplier);
+	}
+}
+
+void UCh03_GameResultWidget::PlayButtonClickSound() const
+{
+	PlayUISound(ButtonClickSound);
 }

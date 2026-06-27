@@ -7,6 +7,7 @@
 #include "Ch03_GameResultWidget.generated.h"
 
 class UButton;
+class USoundBase;
 class UTextBlock;
 class UWidget;
 
@@ -16,6 +17,8 @@ class CH03_TASK05_API UCh03_GameResultWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UCh03_GameResultWidget(const FObjectInitializer& ObjectInitializer);
+
 	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Result")
 	void InitializeResult(
 		bool bWasVictory,
@@ -41,6 +44,9 @@ protected:
 
 	UFUNCTION()
 	void HandleQuitClicked();
+
+	UFUNCTION()
+	void HandleButtonHovered();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
 	void OnResultInitialized(
@@ -86,9 +92,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
 	FName MainMenuLevelName = TEXT("L_MainMenu");
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ButtonHoverSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ButtonClickSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
+		meta = (ClampMin = "0.0"))
+	float UISoundVolumeMultiplier = 0.9f;
+
 private:
 	void UnbindButtons();
 	void ResumeGameBeforeTravel();
+	void PlayUISound(USoundBase* Sound) const;
+	void PlayButtonClickSound() const;
 
 	FName CurrentLevelName = NAME_None;
 	FName NextLevelName = NAME_None;

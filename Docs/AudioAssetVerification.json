@@ -1,0 +1,259 @@
+{
+  "checked_count": 36,
+  "missing_count": 0,
+  "missing": [],
+  "items": [
+    {
+      "unreal_name": "S_UI_Hover",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_UI_Hover.S_UI_Hover"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_UI_Click",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_UI_Click.S_UI_Click"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_WaveStart",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_WaveStart.S_WaveStart"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Pickup_SmallFeed",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Items/S_Pickup_SmallFeed.S_Pickup_SmallFeed"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Pickup_LargeFeed",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Items/S_Pickup_LargeFeed.S_Pickup_LargeFeed"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Heal",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_Heal.S_Heal"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_StaminaRecover",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_StaminaRecover.S_StaminaRecover"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_PlayerHit",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_PlayerHit.S_PlayerHit"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_ToyBomb",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Items/S_ToyBomb.S_ToyBomb"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Debuff_Slow",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Slow.S_Debuff_Slow"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Debuff_Reverse",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Reverse.S_Debuff_Reverse"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_GameOver",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_GameOver.S_GameOver"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Debuff_End",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_End.S_Debuff_End"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_ShieldApply",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_ShieldApply.S_ShieldApply"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_ShieldBlock",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_ShieldBlock.S_ShieldBlock"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Debuff_Lock",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Lock.S_Debuff_Lock"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_ComboReward",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_ComboReward.S_ComboReward"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_ComboBreak",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_ComboBreak.S_ComboBreak"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_GoldenWingSnack_Appear",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Items/S_GoldenWingSnack_Appear.S_GoldenWingSnack_Appear"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_GoldenWingSnack_Pickup",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Items/S_GoldenWingSnack_Pickup.S_GoldenWingSnack_Pickup"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_RobotVacuum_Warning",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Environment/S_RobotVacuum_Warning.S_RobotVacuum_Warning"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_RobotVacuum_Hit",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Environment/S_RobotVacuum_Hit.S_RobotVacuum_Hit"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_HazardWarning",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Environment/S_HazardWarning.S_HazardWarning"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_GameClear",
+      "loaded_object_paths": [
+        "/Game/Audio/UI/S_GameClear.S_GameClear"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "BGM_MainMenu",
+      "loaded_object_paths": [
+        "/Game/Audio/BGM/BGM_MainMenu.BGM_MainMenu"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "BGM_Play_Common",
+      "loaded_object_paths": [
+        "/Game/Audio/BGM/BGM_Play_Common.BGM_Play_Common"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "BGM_LivingRoom",
+      "loaded_object_paths": [
+        "/Game/Audio/BGM/BGM_LivingRoom.BGM_LivingRoom"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "BGM_Kitchen",
+      "loaded_object_paths": [
+        "/Game/Audio/BGM/BGM_Kitchen.BGM_Kitchen"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "BGM_CheonbokLand",
+      "loaded_object_paths": [
+        "/Game/Audio/BGM/BGM_CheonbokLand.BGM_CheonbokLand"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_RoomTone_Night",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_RoomTone_Night.S_CS_RoomTone_Night"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_EarTwitch_Sparkle",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_EarTwitch_Sparkle.S_CS_EarTwitch_Sparkle"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_GoldenFish_Loop",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_GoldenFish_Loop.S_CS_GoldenFish_Loop"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_DreamTransition",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_DreamTransition.S_CS_DreamTransition"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_PawBulb_On",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_PawBulb_On.S_CS_PawBulb_On"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_Sign_LightUp",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_Sign_LightUp.S_CS_Sign_LightUp"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_CS_Cheonbok_SoftCollapse",
+      "loaded_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_Cheonbok_SoftCollapse.S_CS_Cheonbok_SoftCollapse"
+      ],
+      "loaded_count": 1
+    }
+  ]
+}

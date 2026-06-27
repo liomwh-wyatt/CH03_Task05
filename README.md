@@ -43,6 +43,9 @@
 - [x] 우다다 콤보와 황금 날개 사료 보상 아이템
 - [x] 아이템 공통 Spawn/Pickup Niagara 피드백 슬롯
 - [x] 점수 아이템 획득 및 천복이 달리기 Niagara 피드백 슬롯
+- [x] 점수 획득, 회복, 디버프, 폭탄 폭발, 스프린트 Niagara 수직 슬라이스
+- [x] 절차적 생성 사운드 36종 임포트 및 주요 게임 흐름·아이템·UI 연결
+- [x] 메인 메뉴와 플레이 레벨별 BGM 기본 연결
 - [ ] 최종 맵 아트와 SpawnVolume 배치 폴리싱
 - [ ] 실시간 천복이 얼굴 초상화 RenderTarget 슬롯
 - [ ] 최종 테스트 및 시연 영상
@@ -71,8 +74,10 @@
 - 우다다 콤보 보상, 최고 콤보 결과 표시, 황금 날개 사료 확정 스폰
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - TimerBar는 웨이브 종료 시각을 기준으로 매 프레임 연속 감소
-- `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 왕복 이동, 별도 안내 배너 구조
+- `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 지정 경로 이동, 진행 방향 회전 보간, 별도 안내 배너 구조
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
+- `Content/Audio` SoundWave와 C++ 기본값을 통한 아이템, 캐릭터, UI, 웨이브, BGM 사운드 연결
+- `BP_Item_GoldenFeed` 기반 황금 날개 사료 스폰 경로와 비행 Trail 연결
 
 ## 프로젝트 구조
 
@@ -80,6 +85,8 @@
 CH03_Task05/
 ├─ Config/                 Unreal 프로젝트 설정
 ├─ Content/                맵, 블루프린트, UI 및 게임 에셋
+├─ Docs/                   오디오 매니페스트와 검증 기록
+├─ SourceAudio/            절차적으로 생성한 원본 WAV
 ├─ Source/CH03_Task05/     C++ 소스 코드
 ├─ CH03_Task05.uproject
 ├─ .gitattributes          Git LFS 대상 파일

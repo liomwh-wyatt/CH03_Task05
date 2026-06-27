@@ -1,6 +1,7 @@
 #include "Core/Ch03_GameModeBase.h"
 
 #include "Character/Ch03_CheonbokCharacter.h"
+#include "Components/AudioComponent.h"
 #include "Components/Widget.h"
 #include "Core/Ch03_CheonbokController.h"
 #include "Core/Ch03_GameInstance.h"
@@ -10,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "Items/Ch03_BaseItem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "TimerManager.h"
 #include "UI/Ch03_GameResultWidget.h"
 #include "UObject/ConstructorHelpers.h"
@@ -68,8 +70,8 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		TEXT("/Game/Blueprints/Items/BP_Item_Slowing"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ReverseControlClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_ReverseControl"));
-	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> GoldenChuruClass(
-		TEXT("/Game/Blueprints/Items/BP_Item_GoldenChuru"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> GoldenFeedClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_GoldenFeed"));
 	static ConstructorHelpers::FClassFinder<UCh03_GameResultWidget> ResultWidgetClass(
 		TEXT("/Game/UI/WBP_GameResult"));
 
@@ -78,9 +80,65 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		GameResultWidgetClass = ResultWidgetClass.Class;
 	}
 
-	if (GoldenChuruClass.Succeeded())
+	if (GoldenFeedClass.Succeeded())
 	{
-		GoldenComboItemClass = GoldenChuruClass.Class;
+		GoldenComboItemClass = GoldenFeedClass.Class;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> WaveStartSoundFinder(
+		TEXT("/Game/Audio/UI/S_WaveStart.S_WaveStart"));
+	if (WaveStartSoundFinder.Succeeded())
+	{
+		WaveStartSound = WaveStartSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> GameOverSoundFinder(
+		TEXT("/Game/Audio/UI/S_GameOver.S_GameOver"));
+	if (GameOverSoundFinder.Succeeded())
+	{
+		GameOverSound = GameOverSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> LevelCompleteSoundFinder(
+		TEXT("/Game/Audio/UI/S_GameClear.S_GameClear"));
+	if (LevelCompleteSoundFinder.Succeeded())
+	{
+		LevelCompleteSound = LevelCompleteSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> GoldenAppearSoundFinder(
+		TEXT("/Game/Audio/SFX/Items/S_GoldenWingSnack_Appear.S_GoldenWingSnack_Appear"));
+	if (GoldenAppearSoundFinder.Succeeded())
+	{
+		GoldenItemAppearSound = GoldenAppearSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> CommonMusicFinder(
+		TEXT("/Game/Audio/BGM/BGM_Play_Common.BGM_Play_Common"));
+	if (CommonMusicFinder.Succeeded())
+	{
+		CommonGameplayMusic = CommonMusicFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> LivingRoomMusicFinder(
+		TEXT("/Game/Audio/BGM/BGM_LivingRoom.BGM_LivingRoom"));
+	if (LivingRoomMusicFinder.Succeeded())
+	{
+		LivingRoomMusic = LivingRoomMusicFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> KitchenMusicFinder(
+		TEXT("/Game/Audio/BGM/BGM_Kitchen.BGM_Kitchen"));
+	if (KitchenMusicFinder.Succeeded())
+	{
+		KitchenMusic = KitchenMusicFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> CheonbokLandMusicFinder(
+		TEXT("/Game/Audio/BGM/BGM_CheonbokLand.BGM_CheonbokLand"));
+	if (CheonbokLandMusicFinder.Succeeded())
+	{
+		CheonbokLandMusic = CheonbokLandMusicFinder.Object;
 	}
 
 	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 60.0f);
@@ -105,6 +163,8 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 void ACh03_GameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	StartLevelMusic();
 
 	CachedGameState = GetGameState<ACh03_GameStateBase>();
 	CachedGameInstance = GetGameInstance<UCh03_GameInstance>();
@@ -162,6 +222,7 @@ void ACh03_GameModeBase::EndPlay(
 	CachedGameState = nullptr;
 	CachedGameInstance = nullptr;
 	ActiveResultWidget = nullptr;
+	StopLevelMusic();
 	SpawnVolumes.Reset();
 	WaveEnvironmentActors.Reset();
 	bHasCachedWaveEnvironmentActors = false;
@@ -403,6 +464,7 @@ void ACh03_GameModeBase::StartCurrentWave()
 				"Wave {0} Start!"),
 			FText::AsNumber(CurrentWaveIndex + 1)),
 		WaveStartAnnouncementDuration);
+	PlayUISound(WaveStartSound);
 
 	if (!EnvironmentAnnouncement.IsEmpty())
 	{
@@ -552,6 +614,7 @@ void ACh03_GameModeBase::HandleCharacterDeath()
 			"CheonbokGameFlow",
 			"GameOver",
 			"Game Over"));
+	PlayUISound(GameOverSound);
 
 	UE_LOG(LogTemp, Error, TEXT("Game Over: Cheonbok is dead."));
 	OnGameOver();
@@ -596,6 +659,7 @@ void ACh03_GameModeBase::HandleGoldenItemRequested(
 			"GoldenWingSnackAppeared",
 			"Golden wing snack appeared!"),
 		1.6f);
+	PlayUISound(GoldenItemAppearSound);
 
 	UE_LOG(
 		LogTemp,
@@ -719,6 +783,73 @@ ACh03_BaseItem* ACh03_GameModeBase::SpawnGoldenComboItemNearPlayer() const
 		SpawnParameters);
 }
 
+USoundBase* ACh03_GameModeBase::GetLevelMusic() const
+{
+	const FString CurrentLevelName =
+		UGameplayStatics::GetCurrentLevelName(this, true);
+
+	if (CurrentLevelName == TEXT("L_LivingRoom") && LivingRoomMusic)
+	{
+		return LivingRoomMusic;
+	}
+
+	if (CurrentLevelName == TEXT("L_Kitchen") && KitchenMusic)
+	{
+		return KitchenMusic;
+	}
+
+	if (CurrentLevelName == TEXT("L_CheonbokLand") && CheonbokLandMusic)
+	{
+		return CheonbokLandMusic;
+	}
+
+	return CommonGameplayMusic;
+}
+
+void ACh03_GameModeBase::StartLevelMusic()
+{
+	if (LevelMusicComponent)
+	{
+		return;
+	}
+
+	USoundBase* Music = GetLevelMusic();
+	if (!Music)
+	{
+		return;
+	}
+
+	LevelMusicComponent = UGameplayStatics::SpawnSound2D(
+		this,
+		Music,
+		MusicVolumeMultiplier,
+		1.0f,
+		0.0f,
+		nullptr,
+		false,
+		false);
+}
+
+void ACh03_GameModeBase::StopLevelMusic()
+{
+	if (LevelMusicComponent)
+	{
+		LevelMusicComponent->Stop();
+		LevelMusicComponent = nullptr;
+	}
+}
+
+void ACh03_GameModeBase::PlayUISound(USoundBase* Sound) const
+{
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			Sound,
+			UISoundVolumeMultiplier);
+	}
+}
+
 void ACh03_GameModeBase::CompleteLevel()
 {
 	if (CurrentPhase == ECh03_GamePhase::LevelComplete)
@@ -749,6 +880,7 @@ void ACh03_GameModeBase::CompleteLevel()
 				"LevelComplete",
 				"{0} Complete!"),
 			LevelDisplayName));
+	PlayUISound(LevelCompleteSound);
 
 	const int32 FinalScore =
 		CachedGameState ? CachedGameState->GetScore() : 0;

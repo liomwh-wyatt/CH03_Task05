@@ -7,6 +7,7 @@
 #include "Ch03_MainMenuWidget.generated.h"
 
 class UButton;
+class USoundBase;
 class UTextBlock;
 class UWidget;
 
@@ -16,6 +17,8 @@ class CH03_TASK05_API UCh03_MainMenuWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UCh03_MainMenuWidget(const FObjectInitializer& ObjectInitializer);
+
 	UWidget* GetInitialFocusWidget() const;
 
 protected:
@@ -28,6 +31,9 @@ protected:
 	UFUNCTION()
 	void HandleQuitClicked();
 
+	UFUNCTION()
+	void HandleButtonHovered();
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> StartButton;
 
@@ -37,10 +43,22 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> HighScoreText;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ButtonHoverSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	TObjectPtr<USoundBase> ButtonClickSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
+		meta = (ClampMin = "0.0"))
+	float UISoundVolumeMultiplier = 0.9f;
+
 private:
 	void UpdateHighScoreText();
 	void UnbindButtons();
 	void SetButtonsEnabled(bool bEnabled);
+	void PlayUISound(USoundBase* Sound) const;
+	void PlayButtonClickSound() const;
 
 	bool bTravelRequested = false;
 };

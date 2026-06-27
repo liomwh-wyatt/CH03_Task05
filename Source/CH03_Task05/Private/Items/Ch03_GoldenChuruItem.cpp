@@ -5,6 +5,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACh03_GoldenChuruItem::ACh03_GoldenChuruItem()
 {
@@ -21,6 +23,13 @@ ACh03_GoldenChuruItem::ACh03_GoldenChuruItem()
 		TEXT("FlightTrailComponent"));
 	FlightTrailComponent->SetupAttachment(SceneRoot);
 	FlightTrailComponent->SetAutoActivate(false);
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> PickupSoundFinder(
+		TEXT("/Game/Audio/SFX/Items/S_GoldenWingSnack_Pickup.S_GoldenWingSnack_Pickup"));
+	if (PickupSoundFinder.Succeeded())
+	{
+		PickupSound = PickupSoundFinder.Object;
+	}
 }
 
 void ACh03_GoldenChuruItem::BeginPlay()

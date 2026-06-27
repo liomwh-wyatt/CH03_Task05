@@ -12,13 +12,30 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Core/Ch03_CheonbokController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
 
 UCh03_PauseMenuWidget::UCh03_PauseMenuWidget(
 	const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	SetIsFocusable(true);
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> HoverSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Hover.S_UI_Hover"));
+	if (HoverSoundFinder.Succeeded())
+	{
+		ButtonHoverSound = HoverSoundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> ClickSoundFinder(
+		TEXT("/Game/Audio/UI/S_UI_Click.S_UI_Click"));
+	if (ClickSoundFinder.Succeeded())
+	{
+		ButtonClickSound = ClickSoundFinder.Object;
+	}
 }
 
 TSharedRef<SWidget> UCh03_PauseMenuWidget::RebuildWidget()
@@ -54,6 +71,8 @@ UWidget* UCh03_PauseMenuWidget::GetInitialFocusWidget() const
 
 void UCh03_PauseMenuWidget::HandleResumeClicked()
 {
+	PlayButtonClickSound();
+
 	if (ACh03_CheonbokController* CheonbokController =
 		GetOwningPlayer<ACh03_CheonbokController>())
 	{
@@ -63,6 +82,8 @@ void UCh03_PauseMenuWidget::HandleResumeClicked()
 
 void UCh03_PauseMenuWidget::HandleMainMenuClicked()
 {
+	PlayButtonClickSound();
+
 	if (ACh03_CheonbokController* CheonbokController =
 		GetOwningPlayer<ACh03_CheonbokController>())
 	{
@@ -72,6 +93,8 @@ void UCh03_PauseMenuWidget::HandleMainMenuClicked()
 
 void UCh03_PauseMenuWidget::HandleQuitClicked()
 {
+	PlayButtonClickSound();
+
 	UKismetSystemLibrary::QuitGame(
 		this,
 		GetOwningPlayer(),
@@ -201,6 +224,9 @@ void UCh03_PauseMenuWidget::BindButtons()
 		ResumeButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleResumeClicked);
+		ResumeButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
 
 	if (MainMenuButton)
@@ -208,6 +234,9 @@ void UCh03_PauseMenuWidget::BindButtons()
 		MainMenuButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleMainMenuClicked);
+		MainMenuButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -215,6 +244,9 @@ void UCh03_PauseMenuWidget::BindButtons()
 		QuitButton->OnClicked.AddUniqueDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleQuitClicked);
+		QuitButton->OnHovered.AddUniqueDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
 }
 
@@ -225,6 +257,9 @@ void UCh03_PauseMenuWidget::UnbindButtons()
 		ResumeButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleResumeClicked);
+		ResumeButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
 
 	if (MainMenuButton)
@@ -232,6 +267,9 @@ void UCh03_PauseMenuWidget::UnbindButtons()
 		MainMenuButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleMainMenuClicked);
+		MainMenuButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
 
 	if (QuitButton)
@@ -239,5 +277,29 @@ void UCh03_PauseMenuWidget::UnbindButtons()
 		QuitButton->OnClicked.RemoveDynamic(
 			this,
 			&UCh03_PauseMenuWidget::HandleQuitClicked);
+		QuitButton->OnHovered.RemoveDynamic(
+			this,
+			&UCh03_PauseMenuWidget::HandleButtonHovered);
 	}
+}
+
+void UCh03_PauseMenuWidget::HandleButtonHovered()
+{
+	PlayUISound(ButtonHoverSound);
+}
+
+void UCh03_PauseMenuWidget::PlayUISound(USoundBase* Sound) const
+{
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			Sound,
+			UISoundVolumeMultiplier);
+	}
+}
+
+void UCh03_PauseMenuWidget::PlayButtonClickSound() const
+{
+	PlayUISound(ButtonClickSound);
 }

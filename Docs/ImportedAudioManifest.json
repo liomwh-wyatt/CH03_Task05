@@ -1,0 +1,292 @@
+{
+  "imported": [
+    {
+      "unreal_name": "S_UI_Hover",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_UI_Hover.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_UI_Hover.S_UI_Hover"
+      ]
+    },
+    {
+      "unreal_name": "S_UI_Click",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_UI_Click.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_UI_Click.S_UI_Click"
+      ]
+    },
+    {
+      "unreal_name": "S_WaveStart",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_WaveStart.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_WaveStart.S_WaveStart"
+      ]
+    },
+    {
+      "unreal_name": "S_Pickup_SmallFeed",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Pickup_SmallFeed.wav",
+      "destination_path": "/Game/Audio/SFX/Items",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Items/S_Pickup_SmallFeed.S_Pickup_SmallFeed"
+      ]
+    },
+    {
+      "unreal_name": "S_Pickup_LargeFeed",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Pickup_LargeFeed.wav",
+      "destination_path": "/Game/Audio/SFX/Items",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Items/S_Pickup_LargeFeed.S_Pickup_LargeFeed"
+      ]
+    },
+    {
+      "unreal_name": "S_Heal",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Heal.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_Heal.S_Heal"
+      ]
+    },
+    {
+      "unreal_name": "S_StaminaRecover",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_StaminaRecover.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_StaminaRecover.S_StaminaRecover"
+      ]
+    },
+    {
+      "unreal_name": "S_PlayerHit",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_PlayerHit.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_PlayerHit.S_PlayerHit"
+      ]
+    },
+    {
+      "unreal_name": "S_ToyBomb",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_ToyBomb.wav",
+      "destination_path": "/Game/Audio/SFX/Items",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Items/S_ToyBomb.S_ToyBomb"
+      ]
+    },
+    {
+      "unreal_name": "S_Debuff_Slow",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Debuff_Slow.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Slow.S_Debuff_Slow"
+      ]
+    },
+    {
+      "unreal_name": "S_Debuff_Reverse",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Debuff_Reverse.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Reverse.S_Debuff_Reverse"
+      ]
+    },
+    {
+      "unreal_name": "S_GameOver",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_GameOver.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_GameOver.S_GameOver"
+      ]
+    },
+    {
+      "unreal_name": "S_Debuff_End",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Debuff_End.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_End.S_Debuff_End"
+      ]
+    },
+    {
+      "unreal_name": "S_ShieldApply",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_ShieldApply.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_ShieldApply.S_ShieldApply"
+      ]
+    },
+    {
+      "unreal_name": "S_ShieldBlock",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_ShieldBlock.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_ShieldBlock.S_ShieldBlock"
+      ]
+    },
+    {
+      "unreal_name": "S_Debuff_Lock",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Debuff_Lock.wav",
+      "destination_path": "/Game/Audio/SFX/Character",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Character/S_Debuff_Lock.S_Debuff_Lock"
+      ]
+    },
+    {
+      "unreal_name": "S_ComboReward",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_ComboReward.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_ComboReward.S_ComboReward"
+      ]
+    },
+    {
+      "unreal_name": "S_ComboBreak",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_ComboBreak.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_ComboBreak.S_ComboBreak"
+      ]
+    },
+    {
+      "unreal_name": "S_GoldenWingSnack_Appear",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_GoldenWingSnack_Appear.wav",
+      "destination_path": "/Game/Audio/SFX/Items",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Items/S_GoldenWingSnack_Appear.S_GoldenWingSnack_Appear"
+      ]
+    },
+    {
+      "unreal_name": "S_GoldenWingSnack_Pickup",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_GoldenWingSnack_Pickup.wav",
+      "destination_path": "/Game/Audio/SFX/Items",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Items/S_GoldenWingSnack_Pickup.S_GoldenWingSnack_Pickup"
+      ]
+    },
+    {
+      "unreal_name": "S_RobotVacuum_Warning",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_RobotVacuum_Warning.wav",
+      "destination_path": "/Game/Audio/SFX/Environment",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Environment/S_RobotVacuum_Warning.S_RobotVacuum_Warning"
+      ]
+    },
+    {
+      "unreal_name": "S_RobotVacuum_Hit",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_RobotVacuum_Hit.wav",
+      "destination_path": "/Game/Audio/SFX/Environment",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Environment/S_RobotVacuum_Hit.S_RobotVacuum_Hit"
+      ]
+    },
+    {
+      "unreal_name": "S_HazardWarning",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_HazardWarning.wav",
+      "destination_path": "/Game/Audio/SFX/Environment",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Environment/S_HazardWarning.S_HazardWarning"
+      ]
+    },
+    {
+      "unreal_name": "S_GameClear",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_GameClear.wav",
+      "destination_path": "/Game/Audio/UI",
+      "imported_object_paths": [
+        "/Game/Audio/UI/S_GameClear.S_GameClear"
+      ]
+    },
+    {
+      "unreal_name": "BGM_MainMenu",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\BGM_MainMenu.wav",
+      "destination_path": "/Game/Audio/BGM",
+      "imported_object_paths": [
+        "/Game/Audio/BGM/BGM_MainMenu.BGM_MainMenu"
+      ]
+    },
+    {
+      "unreal_name": "BGM_Play_Common",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\BGM_Play_Common.wav",
+      "destination_path": "/Game/Audio/BGM",
+      "imported_object_paths": [
+        "/Game/Audio/BGM/BGM_Play_Common.BGM_Play_Common"
+      ]
+    },
+    {
+      "unreal_name": "BGM_LivingRoom",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\BGM_LivingRoom.wav",
+      "destination_path": "/Game/Audio/BGM",
+      "imported_object_paths": [
+        "/Game/Audio/BGM/BGM_LivingRoom.BGM_LivingRoom"
+      ]
+    },
+    {
+      "unreal_name": "BGM_Kitchen",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\BGM_Kitchen.wav",
+      "destination_path": "/Game/Audio/BGM",
+      "imported_object_paths": [
+        "/Game/Audio/BGM/BGM_Kitchen.BGM_Kitchen"
+      ]
+    },
+    {
+      "unreal_name": "BGM_CheonbokLand",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\BGM_CheonbokLand.wav",
+      "destination_path": "/Game/Audio/BGM",
+      "imported_object_paths": [
+        "/Game/Audio/BGM/BGM_CheonbokLand.BGM_CheonbokLand"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_RoomTone_Night",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_RoomTone_Night.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_RoomTone_Night.S_CS_RoomTone_Night"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_EarTwitch_Sparkle",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_EarTwitch_Sparkle.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_EarTwitch_Sparkle.S_CS_EarTwitch_Sparkle"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_GoldenFish_Loop",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_GoldenFish_Loop.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_GoldenFish_Loop.S_CS_GoldenFish_Loop"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_DreamTransition",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_DreamTransition.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_DreamTransition.S_CS_DreamTransition"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_PawBulb_On",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_PawBulb_On.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_PawBulb_On.S_CS_PawBulb_On"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_Sign_LightUp",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_Sign_LightUp.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_Sign_LightUp.S_CS_Sign_LightUp"
+      ]
+    },
+    {
+      "unreal_name": "S_CS_Cheonbok_SoftCollapse",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_CS_Cheonbok_SoftCollapse.wav",
+      "destination_path": "/Game/Audio/Cinematics",
+      "imported_object_paths": [
+        "/Game/Audio/Cinematics/S_CS_Cheonbok_SoftCollapse.S_CS_Cheonbok_SoftCollapse"
+      ]
+    }
+  ]
+}
