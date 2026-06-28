@@ -164,6 +164,7 @@ void ACh03_GameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ApplyCurrentLevelFlowPreset();
 	StartLevelMusic();
 
 	CachedGameState = GetGameState<ACh03_GameStateBase>();
@@ -363,6 +364,108 @@ void ACh03_GameModeBase::CacheWaveEnvironmentActors()
 		Log,
 		TEXT("GameMode found %d wave environment actor(s)."),
 		WaveEnvironmentActors.Num());
+
+	ApplyManagedEnvironmentRules();
+}
+
+void ACh03_GameModeBase::ApplyCurrentLevelFlowPreset()
+{
+	if (!bUseLevelFlowPresets || LevelFlowPresets.IsEmpty())
+	{
+		return;
+	}
+
+	const FName CurrentLevelName =
+		FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+
+	for (const FCh03_LevelFlowPreset& LevelFlowPreset : LevelFlowPresets)
+	{
+		if (LevelFlowPreset.LevelName != CurrentLevelName)
+		{
+			continue;
+		}
+
+		if (!LevelFlowPreset.WaveConfigs.IsEmpty())
+		{
+			WaveConfigs = LevelFlowPreset.WaveConfigs;
+		}
+
+		if (!LevelFlowPreset.NextLevelName.IsNone())
+		{
+			NextLevelName = LevelFlowPreset.NextLevelName;
+		}
+
+		WaveEnvironmentRules = LevelFlowPreset.EnvironmentRules;
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("Applied level flow preset. Level=%s, Waves=%d, EnvironmentRules=%d"),
+			*CurrentLevelName.ToString(),
+			WaveConfigs.Num(),
+			WaveEnvironmentRules.Num());
+		return;
+	}
+
+	UE_LOG(
+		LogTemp,
+		Verbose,
+		TEXT("No level flow preset found for %s. GameMode defaults are used."),
+		*CurrentLevelName.ToString());
+}
+
+void ACh03_GameModeBase::ApplyManagedEnvironmentRules()
+{
+	if (WaveEnvironmentRules.IsEmpty() || WaveEnvironmentActors.IsEmpty())
+	{
+		return;
+	}
+
+	int32 TotalAppliedRuleCount = 0;
+
+	for (const FCh03_WaveEnvironmentManagedRule& ManagedRule :
+		WaveEnvironmentRules)
+	{
+		if (ManagedRule.ActorTag.IsNone())
+		{
+			UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("Wave environment managed rule skipped: ActorTag is empty."));
+			continue;
+		}
+
+		int32 AppliedActorCount = 0;
+		for (ACh03_WaveEnvironmentActor* EnvironmentActor :
+			WaveEnvironmentActors)
+		{
+			if (!IsValid(EnvironmentActor)
+				|| !EnvironmentActor->MatchesManagedRuleTag(
+					ManagedRule.ActorTag))
+			{
+				continue;
+			}
+
+			EnvironmentActor->ApplyManagedRule(ManagedRule);
+			++AppliedActorCount;
+			++TotalAppliedRuleCount;
+		}
+
+		if (AppliedActorCount <= 0)
+		{
+			UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("Wave environment managed rule found no actor. ActorTag=%s"),
+				*ManagedRule.ActorTag.ToString());
+		}
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("Applied %d managed wave environment rule(s)."),
+		TotalAppliedRuleCount);
 }
 
 void ACh03_GameModeBase::BindCharacterEvents()

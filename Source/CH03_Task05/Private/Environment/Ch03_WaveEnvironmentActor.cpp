@@ -4,6 +4,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/Ch03_GameStateBase.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
@@ -17,8 +18,11 @@ ACh03_WaveEnvironmentActor::ACh03_WaveEnvironmentActor()
 	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
 	SetRootComponent(SceneRoot);
 
+	MovingRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MovingRoot"));
+	MovingRoot->SetupAttachment(SceneRoot);
+
 	HazardVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("HazardVolume"));
-	HazardVolume->SetupAttachment(SceneRoot);
+	HazardVolume->SetupAttachment(MovingRoot);
 	HazardVolume->SetBoxExtent(FVector(75.0f, 75.0f, 45.0f));
 	HazardVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HazardVolume->SetCollisionObjectType(ECC_WorldDynamic);
@@ -26,8 +30,14 @@ ACh03_WaveEnvironmentActor::ACh03_WaveEnvironmentActor()
 	HazardVolume->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	HazardVolume->SetGenerateOverlapEvents(true);
 
+	StationaryMesh = CreateDefaultSubobject<UStaticMeshComponent>(
+		TEXT("StationaryMesh"));
+	StationaryMesh->SetupAttachment(SceneRoot);
+	StationaryMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StationaryMesh->SetVisibility(true);
+
 	VisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualMesh"));
-	VisualMesh->SetupAttachment(SceneRoot);
+	VisualMesh->SetupAttachment(MovingRoot);
 	VisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	VisualMesh->SetRelativeScale3D(FVector(1.5f, 1.5f, 0.25f));
 
@@ -77,12 +87,30 @@ void ACh03_WaveEnvironmentActor::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!bIsEnvironmentActive || !bMoveWhenActive)
+	if (!bIsEnvironmentActive)
 	{
 		return;
 	}
 
-	UpdateActiveMovement(DeltaSeconds);
+	if (bMoveWhenActive)
+	{
+		UpdateActiveMovement(DeltaSeconds);
+	}
+
+	if (bRotateMovingPartWhenActive)
+	{
+		UpdateRotatingPart(DeltaSeconds);
+	}
+
+	if (bAffectPlayerOnOverlap)
+	{
+		ProcessHazardOverlaps();
+	}
+
+	if (bDrawMovementPathDebug)
+	{
+		DrawMovementPathDebug();
+	}
 }
 
 bool ACh03_WaveEnvironmentActor::ApplyWaveState(
@@ -110,13 +138,17 @@ void ACh03_WaveEnvironmentActor::SetEnvironmentActive(
 	SetActorHiddenInGame(!bShouldBeVisible);
 	SetActorEnableCollision(bIsEnvironmentActive);
 	VisualMesh->SetVisibility(bShouldBeVisible, true);
+	if (StationaryMesh)
+	{
+		StationaryMesh->SetVisibility(bShouldBeVisible, true);
+	}
 
 	HazardVolume->SetCollisionEnabled(
 		bIsEnvironmentActive
 			? ECollisionEnabled::QueryOnly
 			: ECollisionEnabled::NoCollision);
 
-	SetActorTickEnabled(bIsEnvironmentActive && bMoveWhenActive);
+	RefreshTickEnabled();
 
 	if (bWasActive == bIsEnvironmentActive)
 	{
@@ -125,6 +157,9 @@ void ACh03_WaveEnvironmentActor::SetEnvironmentActive(
 
 	if (bIsEnvironmentActive)
 	{
+		bPathWarningLogged = false;
+		LogPathConfigurationWarningIfNeeded();
+
 		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
 			this,
 			ActivationFeedback,
@@ -136,6 +171,11 @@ void ACh03_WaveEnvironmentActor::SetEnvironmentActive(
 		if (bResetLocationWhenInactive)
 		{
 			ResetMovement();
+		}
+
+		if (bResetRotatingPartWhenInactive)
+		{
+			ResetRotatingPart();
 		}
 
 		UCh03_FeedbackFunctionLibrary::PlayFeedbackCueAtActor(
@@ -158,6 +198,85 @@ bool ACh03_WaveEnvironmentActor::IsActiveForWave(
 		|| CurrentWave <= DeactivateAfterWave;
 }
 
+bool ACh03_WaveEnvironmentActor::MatchesManagedRuleTag(
+	const FName RuleTag) const
+{
+	return !RuleTag.IsNone() && ActorHasTag(RuleTag);
+}
+
+void ACh03_WaveEnvironmentActor::ApplyManagedRule(
+	const FCh03_WaveEnvironmentManagedRule& ManagedRule)
+{
+	ActivateFromWave = FMath::Max(1, ManagedRule.ActivateFromWave);
+	DeactivateAfterWave = FMath::Max(0, ManagedRule.DeactivateAfterWave);
+	bHideWhenInactive = ManagedRule.bHideWhenInactive;
+
+	if (!ManagedRule.ActiveAnnouncementText.IsEmpty())
+	{
+		ActiveAnnouncementText = ManagedRule.ActiveAnnouncementText;
+	}
+
+	if (ManagedRule.bOverrideHazard)
+	{
+		bAffectPlayerOnOverlap = ManagedRule.bAffectPlayerOnOverlap;
+		ContactEffectInterval =
+			FMath::Max(0.05f, ManagedRule.ContactEffectInterval);
+		DamageAmount = FMath::Max(0.0f, ManagedRule.DamageAmount);
+		bApplySlowOnOverlap = ManagedRule.bApplySlowOnOverlap;
+		SlowDuration = FMath::Max(0.1f, ManagedRule.SlowDuration);
+		SlowMultiplier =
+			FMath::Clamp(ManagedRule.SlowMultiplier, 0.1f, 1.0f);
+		bApplyKnockbackOnOverlap =
+			ManagedRule.bApplyKnockbackOnOverlap;
+		KnockbackStrength =
+			FMath::Max(0.0f, ManagedRule.KnockbackStrength);
+		KnockbackUpwardStrength =
+			FMath::Max(0.0f, ManagedRule.KnockbackUpwardStrength);
+		bUseMovementDirectionForKnockback =
+			ManagedRule.bUseMovementDirectionForKnockback;
+		KnockbackCooldown =
+			FMath::Max(0.0f, ManagedRule.KnockbackCooldown);
+	}
+
+	if (ManagedRule.bOverridePathMovement)
+	{
+		bMoveWhenActive = ManagedRule.bMoveWhenActive;
+		MovementSpeed = FMath::Max(0.0f, ManagedRule.MovementSpeed);
+		bUseInitialLocationAsFirstPathPoint =
+			ManagedRule.bUseInitialLocationAsFirstPathPoint;
+		PathPointOffsets = ManagedRule.PathPointOffsets;
+		PathPointActors.Reset();
+		PathEndBehavior = ManagedRule.PathEndBehavior;
+		bFaceMovementDirection = ManagedRule.bFaceMovementDirection;
+		FacingRotationInterpSpeed =
+			FMath::Max(0.0f, ManagedRule.FacingRotationInterpSpeed);
+		FacingRotationOffset = ManagedRule.FacingRotationOffset;
+		bPathWarningLogged = false;
+
+		if (!bIsEnvironmentActive)
+		{
+			ResetMovement();
+		}
+	}
+
+	if (ManagedRule.bOverrideRotatingPart)
+	{
+		bRotateMovingPartWhenActive =
+			ManagedRule.bRotateMovingPartWhenActive;
+		RotatingPartAxis = ManagedRule.RotatingPartAxis;
+		RotatingPartSpeed = ManagedRule.RotatingPartSpeed;
+		bResetRotatingPartWhenInactive =
+			ManagedRule.bResetRotatingPartWhenInactive;
+
+		if (!bIsEnvironmentActive && bResetRotatingPartWhenInactive)
+		{
+			ResetRotatingPart();
+		}
+	}
+
+	SetEnvironmentActive(IsActiveForWave(LastAppliedWave));
+}
+
 void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 	UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor,
@@ -177,6 +296,24 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 	{
 		return;
 	}
+
+	TryApplyHazardEffect(CheonbokCharacter);
+}
+
+void ACh03_WaveEnvironmentActor::TryApplyHazardEffect(
+	ACh03_CheonbokCharacter* CheonbokCharacter)
+{
+	if (!bIsEnvironmentActive
+		|| !bAffectPlayerOnOverlap
+		|| !CheonbokCharacter
+		|| CheonbokCharacter->IsDead()
+		|| !CanApplyContactEffect())
+	{
+		return;
+	}
+
+	LastHazardEffectTime =
+		GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
 	if (ACh03_GameStateBase* CheonbokGameState =
 		GetWorld() ? GetWorld()->GetGameState<ACh03_GameStateBase>() : nullptr)
@@ -234,6 +371,18 @@ void ACh03_WaveEnvironmentActor::HandleHazardBeginOverlap(
 	}
 }
 
+bool ACh03_WaveEnvironmentActor::CanApplyContactEffect() const
+{
+	if (ContactEffectInterval <= 0.0f)
+	{
+		return true;
+	}
+
+	const float CurrentTime =
+		GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+	return CurrentTime - LastHazardEffectTime >= ContactEffectInterval;
+}
+
 FVector ACh03_WaveEnvironmentActor::GetKnockbackDirection(
 	const ACh03_CheonbokCharacter* CheonbokCharacter) const
 {
@@ -267,14 +416,18 @@ FVector ACh03_WaveEnvironmentActor::GetKnockbackDirection(
 
 void ACh03_WaveEnvironmentActor::CacheInitialLocationIfNeeded()
 {
-	if (bHasCachedInitialLocation)
+	if (!bHasCachedInitialLocation)
 	{
-		return;
+		InitialActorLocation = GetActorLocation();
+		InitialActorRotation = GetActorRotation();
+		bHasCachedInitialLocation = true;
 	}
 
-	InitialActorLocation = GetActorLocation();
-	InitialActorRotation = GetActorRotation();
-	bHasCachedInitialLocation = true;
+	if (MovingRoot && !bHasCachedInitialMovingRootRotation)
+	{
+		InitialMovingRootRelativeRotation = MovingRoot->GetRelativeRotation();
+		bHasCachedInitialMovingRootRotation = true;
+	}
 }
 
 void ACh03_WaveEnvironmentActor::UpdateActiveMovement(
@@ -354,6 +507,50 @@ void ACh03_WaveEnvironmentActor::UpdatePathMovement(
 	UpdateFacingRotation(DeltaSeconds);
 }
 
+void ACh03_WaveEnvironmentActor::UpdateRotatingPart(
+	const float DeltaSeconds)
+{
+	if (!MovingRoot || FMath::IsNearlyZero(RotatingPartSpeed))
+	{
+		return;
+	}
+
+	const FVector RotationAxis = GetRotatingPartAxisVector();
+	if (RotationAxis.IsNearlyZero())
+	{
+		return;
+	}
+
+	const float DeltaRadians =
+		FMath::DegreesToRadians(RotatingPartSpeed * DeltaSeconds);
+	const FQuat DeltaRotation(RotationAxis, DeltaRadians);
+	MovingRoot->AddLocalRotation(
+		DeltaRotation,
+		false,
+		nullptr,
+		ETeleportType::None);
+}
+
+void ACh03_WaveEnvironmentActor::ProcessHazardOverlaps()
+{
+	if (!HazardVolume)
+	{
+		return;
+	}
+
+	TArray<AActor*> OverlappingActors;
+	HazardVolume->GetOverlappingActors(
+		OverlappingActors,
+		ACh03_CheonbokCharacter::StaticClass());
+
+	for (AActor* OverlappingActor : OverlappingActors)
+	{
+		ACh03_CheonbokCharacter* CheonbokCharacter =
+			Cast<ACh03_CheonbokCharacter>(OverlappingActor);
+		TryApplyHazardEffect(CheonbokCharacter);
+	}
+}
+
 void ACh03_WaveEnvironmentActor::UpdateFacingRotation(
 	const float DeltaSeconds)
 {
@@ -379,6 +576,86 @@ void ACh03_WaveEnvironmentActor::UpdateFacingRotation(
 			DeltaSeconds,
 			FacingRotationInterpSpeed);
 	SetActorRotation(NewRotation);
+}
+
+void ACh03_WaveEnvironmentActor::DrawMovementPathDebug() const
+{
+	if (!GetWorld() || !bMoveWhenActive)
+	{
+		return;
+	}
+
+	const int32 PathPointCount = GetPathPointCount();
+	const int32 PathSegmentCount = GetPathSegmentCount();
+	if (PathPointCount <= 0 || PathSegmentCount <= 0)
+	{
+		return;
+	}
+
+	const FVector DebugOffset(0.0f, 0.0f, MovementPathDebugHeightOffset);
+
+	for (int32 PointIndex = 0; PointIndex < PathPointCount; ++PointIndex)
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			GetPathPointWorldLocation(PointIndex) + DebugOffset,
+			18.0f,
+			8,
+			MovementPathDebugColor,
+			false,
+			0.0f,
+			0,
+			1.5f);
+	}
+
+	for (int32 SegmentIndex = 0; SegmentIndex < PathSegmentCount; ++SegmentIndex)
+	{
+		DrawDebugLine(
+			GetWorld(),
+			GetPathSegmentStartLocation(SegmentIndex) + DebugOffset,
+			GetPathSegmentEndLocation(SegmentIndex) + DebugOffset,
+			MovementPathDebugColor,
+			false,
+			0.0f,
+			0,
+			2.0f);
+	}
+}
+
+void ACh03_WaveEnvironmentActor::LogPathConfigurationWarningIfNeeded()
+{
+	if (bPathWarningLogged || !bMoveWhenActive)
+	{
+		return;
+	}
+
+	CacheInitialLocationIfNeeded();
+
+	if (GetPathSegmentCount() > 0 && GetPathTotalLength() > KINDA_SMALL_NUMBER)
+	{
+		return;
+	}
+
+	bPathWarningLogged = true;
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("%s: 이동식 방해물 경로가 유효하지 않습니다. PathPointActors 또는 PathPointOffsets를 확인하세요."),
+		*GetName());
+}
+
+FVector ACh03_WaveEnvironmentActor::GetRotatingPartAxisVector() const
+{
+	switch (RotatingPartAxis)
+	{
+	case ECh03WaveEnvironmentRotationAxis::X:
+		return FVector::ForwardVector;
+	case ECh03WaveEnvironmentRotationAxis::Y:
+		return FVector::RightVector;
+	case ECh03WaveEnvironmentRotationAxis::Z:
+	default:
+		return FVector::UpVector;
+	}
 }
 
 int32 ACh03_WaveEnvironmentActor::GetPathPointCount() const
@@ -587,4 +864,26 @@ void ACh03_WaveEnvironmentActor::ResetMovement()
 	PathTravelDirection = 1.0f;
 	bHasReachedPathEnd = false;
 	SetActorLocationAndRotation(InitialActorLocation, InitialActorRotation);
+}
+
+void ACh03_WaveEnvironmentActor::ResetRotatingPart()
+{
+	CacheInitialLocationIfNeeded();
+
+	if (!MovingRoot)
+	{
+		return;
+	}
+
+	MovingRoot->SetRelativeRotation(InitialMovingRootRelativeRotation);
+}
+
+void ACh03_WaveEnvironmentActor::RefreshTickEnabled()
+{
+	SetActorTickEnabled(
+		bIsEnvironmentActive
+		&& (bMoveWhenActive
+			|| bRotateMovingPartWhenActive
+			|| bAffectPlayerOnOverlap
+			|| (bMoveWhenActive && bDrawMovementPathDebug)));
 }

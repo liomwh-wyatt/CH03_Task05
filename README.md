@@ -36,6 +36,8 @@
 - [x] 일시정지 메뉴
 - [x] 슬로우 및 조작 반전 디버프 수직 슬라이스
 - [x] 웨이브별 환경 변화 Actor 연동 구조
+- [x] GameMode 레벨 플로우 프리셋 기반 웨이브·장애물 일괄 관리 구조
+- [x] 이동식/회전식 장애물 C++ 부모 기능
 - [ ] 웨이브별 장애물/비주얼 폴리싱
 - [x] 웨이브 배너 UI 애니메이션
 - [x] 천복이 머리 위 3D 체력바 WidgetComponent 수직 슬라이스
@@ -74,7 +76,9 @@
 - 우다다 콤보 보상, 최고 콤보 결과 표시, 황금 날개 사료 확정 스폰
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - TimerBar는 웨이브 종료 시각을 기준으로 매 프레임 연속 감소
-- `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 지정 경로 이동, 진행 방향 회전 보간, 별도 안내 배너 구조
+- `BP_Ch03_GameModeBase.LevelFlowPresets` 기반 레벨별 웨이브 구성과 장애물 규칙 일괄 관리
+- `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 지정 경로 이동, 진행 방향 회전 보간, 움직이는 부분 회전, 별도 안내 배너 구조
+- 회전 장애물은 `StationaryMesh`를 고정부로, `VisualMesh`와 `HazardVolume`을 `MovingRoot` 하위 회전부로 분리
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
 - `Content/Audio` SoundWave와 C++ 기본값을 통한 아이템, 캐릭터, UI, 웨이브, BGM 사운드 연결
 - `BP_Item_GoldenFeed` 기반 황금 날개 사료 스폰 경로와 비행 Trail 연결

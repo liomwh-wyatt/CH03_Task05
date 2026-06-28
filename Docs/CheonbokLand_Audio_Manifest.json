@@ -450,7 +450,7 @@
       "bit_depth": 16,
       "duration_seconds": 45.0,
       "loop": true,
-      "notes": "Warm music-box loop."
+      "notes": "Bright morning piano loop."
     },
     {
       "unreal_name": "BGM_Play_Common",
@@ -468,7 +468,7 @@
       "bit_depth": 16,
       "duration_seconds": 48.0,
       "loop": true,
-      "notes": "Toy arcade loop."
+      "notes": "Sunlit playful piano loop."
     },
     {
       "unreal_name": "BGM_LivingRoom",
@@ -486,7 +486,7 @@
       "bit_depth": 16,
       "duration_seconds": 45.0,
       "loop": true,
-      "notes": "Warm light room loop."
+      "notes": "Soft Debussy-inspired morning piano loop."
     },
     {
       "unreal_name": "BGM_Kitchen",
@@ -504,7 +504,7 @@
       "bit_depth": 16,
       "duration_seconds": 50.0,
       "loop": true,
-      "notes": "Slightly busier kitchen loop."
+      "notes": "Playful kitchen piano with light tension."
     },
     {
       "unreal_name": "BGM_CheonbokLand",
@@ -522,7 +522,7 @@
       "bit_depth": 16,
       "duration_seconds": 56.0,
       "loop": true,
-      "notes": "Festival-like dream loop."
+      "notes": "Dreamy upbeat theme-park piano loop."
     },
     {
       "unreal_name": "S_CS_RoomTone_Night",

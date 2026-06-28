@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Environment/Ch03_WaveEnvironmentActor.h"
 #include "GameFramework/GameModeBase.h"
 #include "Spawning/Ch03_SpawnVolume.h"
 #include "Ch03_GameModeBase.generated.h"
 
 class ACh03_CheonbokCharacter;
-class ACh03_WaveEnvironmentActor;
 class ACh03_GameStateBase;
 class UCh03_GameResultWidget;
 class UCh03_GameInstance;
@@ -48,6 +48,28 @@ struct FCh03_WaveConfig
 	TArray<FCh03_SpawnItemEntry> SpawnEntries;
 };
 
+USTRUCT(BlueprintType)
+struct FCh03_LevelFlowPreset
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Flow",
+		meta = (ToolTip = "적용할 레벨 이름입니다. 예: L_LivingRoom, L_Kitchen, L_CheonbokLand"))
+	FName LevelName = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Flow",
+		meta = (ToolTip = "이 레벨을 클리어한 뒤 이동할 다음 레벨입니다. 비워두면 기존 설정을 유지합니다."))
+	FName NextLevelName = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Flow",
+		meta = (ToolTip = "이 레벨에서 사용할 웨이브 구성입니다. 비워두면 게임모드의 기본 웨이브 구성을 유지합니다."))
+	TArray<FCh03_WaveConfig> WaveConfigs;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Flow",
+		meta = (ToolTip = "이 레벨에서 태그로 찾아 적용할 이동식/회전식 방해물 규칙입니다."))
+	TArray<FCh03_WaveEnvironmentManagedRule> EnvironmentRules;
+};
+
 UCLASS()
 class CH03_TASK05_API ACh03_GameModeBase : public AGameModeBase
 {
@@ -69,6 +91,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Level Flow",
+		meta = (ToolTip = "켜면 현재 레벨 이름과 같은 프리셋을 찾아 웨이브와 방해물 규칙을 한 번에 적용합니다."))
+	bool bUseLevelFlowPresets = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Level Flow",
+		meta = (ToolTip = "레벨별 웨이브 구성과 방해물 규칙을 모아 관리하는 목록입니다."))
+	TArray<FCh03_LevelFlowPreset> LevelFlowPresets;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
 	TArray<FCh03_WaveConfig> WaveConfigs;
 
@@ -82,6 +112,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
 	bool bAutoStartWaveLoop = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Wave Environment|Managed",
+		meta = (ToolTip = "레벨 프리셋을 쓰지 않을 때 적용할 방해물 일괄 관리 규칙입니다. Actor Tags가 같은 방해물에 적용됩니다."))
+	TArray<FCh03_WaveEnvironmentManagedRule> WaveEnvironmentRules;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Presentation",
 		meta = (ClampMin = "0.0", Units = "s"))
@@ -145,7 +179,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music",
 		meta = (ClampMin = "0.0"))
-	float MusicVolumeMultiplier = 0.34f;
+	float MusicVolumeMultiplier = 0.48f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
 		meta = (ClampMin = "0.0"))
@@ -169,8 +203,10 @@ protected:
 	void OnGoldenComboItemSpawnFailed(int32 ComboCount);
 
 private:
+	void ApplyCurrentLevelFlowPreset();
 	void CacheSpawnVolumes();
 	void CacheWaveEnvironmentActors();
+	void ApplyManagedEnvironmentRules();
 	void BindCharacterEvents();
 	void StartCurrentWave();
 	void TickWaveTimer();

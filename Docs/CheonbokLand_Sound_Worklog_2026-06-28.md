@@ -306,3 +306,131 @@ Result: Succeeded
 - BGM 볼륨이 HUD, 획득음, 위험 경고를 가리지 않는지 확인한다.
 - UI hover/click이 메뉴 이동 중 과하게 반복되지 않는지 확인한다.
 - 컷신 폴리는 Sequencer Audio Track에서 프레임 타이밍에 맞춰 배치한다.
+
+## 9. 추가 작업: BGM 재제작
+
+요청에 따라 기존 BGM이 주는 어두운 인상을 줄이고, 피아노 중심의 밝은 질감으로 5개 BGM을 다시 생성했다.
+
+| 에셋 | 재제작 방향 |
+|---|---|
+| `BGM_MainMenu` | 밝은 아침 피아노 루프 |
+| `BGM_Play_Common` | 플레이 공통용 경쾌한 햇살 느낌 피아노 |
+| `BGM_LivingRoom` | 드뷔시 `달빛`에서 연상되는 부드러운 화성과 롤링 코드를 아침 햇살 쪽으로 조정한 피아노 |
+| `BGM_Kitchen` | 기존보다 재미와 약한 긴장감을 넣은 주방용 피아노 |
+| `BGM_CheonbokLand` | 몽환적이면서 신나는 꿈속 테마파크용 피아노와 반짝임 |
+
+적용 내용:
+
+- `Tools/GenerateCheonbokAudio.py`의 BGM 생성 로직을 피아노 음색 합성, 롤링 코드, 짧은 딜레이 기반으로 교체했다.
+- `SourceAudio/Procedural/BGM_*.wav` 5개를 새로 생성했다.
+- `/Game/Audio/BGM`의 5개 `SoundWave`를 재임포트했다.
+- `Docs/CheonbokLand_Audio_Manifest.csv`, `Docs/CheonbokLand_Audio_Manifest.json`, `Docs/ImportedAudioManifest.json`, `Docs/AudioAssetVerification.json`을 갱신했다.
+
+검증:
+
+```text
+Tools/ValidateCheonbokAudio.py
+checked=36 errors=0
+
+Tools/ImportCheonbokAudioToUnreal.py
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+
+Tools/VerifyCheonbokAudioInUnreal.py
+checked_count=36
+missing_count=0
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+```
+
+## 10. 추가 작업: BGM별 기본 멜로디 분리
+
+요청에 따라 5개 BGM이 같은 곡의 변형처럼 들리지 않도록, 각 곡의 상성 멜로디 모티프를 분리했다. 피아노 중심 톤은 유지하되 첫 구간에서 다른 노래로 인지되도록 멜로디 진행, 리듬 밀도, 화성 보조음을 다르게 구성했다.
+
+| 에셋 | 새 기본 멜로디 방향 |
+|---|---|
+| `BGM_MainMenu` | 올라갔다 내려오는 안정적인 아침 인사형 8음 모티프 |
+| `BGM_Play_Common` | 같은 음 반복과 도약이 있는 경쾌한 플레이 모티프 |
+| `BGM_LivingRoom` | 느린 하행/상행이 섞인 부드러운 거실 모티프 |
+| `BGM_Kitchen` | 반음 진행과 짧은 쉼표가 있는 주방 장난감 같은 모티프 |
+| `BGM_CheonbokLand` | 3박 계열 상승 도약으로 꿈속 테마파크 느낌을 주는 모티프 |
+
+적용 내용:
+
+- `Tools/GenerateCheonbokAudio.py`에 `add_piano_melody` 헬퍼를 추가했다.
+- `BGM_MainMenu`, `BGM_Play_Common`, `BGM_LivingRoom`은 같은 피아노 코드 질감 위에 각각 다른 모티프를 받도록 수정했다.
+- `BGM_Kitchen`, `BGM_CheonbokLand`는 기존 패턴 위에 별도 멜로디 라인을 추가했다.
+- `SourceAudio/Procedural/BGM_*.wav` 5개를 다시 생성했다.
+- `/Game/Audio/BGM`의 5개 `SoundWave`를 재임포트했다.
+
+검증:
+
+```text
+Tools/ValidateCheonbokAudio.py
+checked=36 errors=0
+
+Tools/ImportCheonbokAudioToUnreal.py
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+
+Tools/VerifyCheonbokAudioInUnreal.py
+checked_count=36
+missing_count=0
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+```
+
+## 11. 추가 작업: BGM별 작곡 구조 재분리
+
+이전 버전은 멜로디 모티프는 달랐지만 피아노 질감, 반주 방식, 코드 운용이 비슷해 같은 곡의 변형처럼 들릴 가능성이 있었다. 그래서 5개 BGM을 공통 함수 변형에서 분리하고, 각 곡을 별도 작곡 함수로 다시 구성했다.
+
+| 에셋 | 새 구성 |
+|---|---|
+| `BGM_MainMenu` | 느린 4/4, 넓게 굴러가는 코드, 아침 인사형 긴 멜로디 |
+| `BGM_Play_Common` | 빠른 4/4, 짧은 베이스 펄스와 오프비트 코드, 게임 플레이용 반복 리프 |
+| `BGM_LivingRoom` | 느린 6박 계열, 넓은 롤링 코드, 하행 중심의 부드러운 선율 |
+| `BGM_Kitchen` | 빠른 스타카토, 반음 진행, 짧은 쉼표와 장난스러운 리듬 |
+| `BGM_CheonbokLand` | 3박 테마파크 왈츠, 움파파 반주, 상승 도약 테마와 반짝임 |
+
+코드 변경:
+
+- `add_main_menu_bgm`
+- `add_common_play_bgm`
+- `add_living_room_bgm`
+- `add_kitchen_character_bgm`
+- `add_cheonbokland_character_bgm`
+
+검증:
+
+```text
+Tools/ValidateCheonbokAudio.py
+checked=36 errors=0
+
+Tools/ImportCheonbokAudioToUnreal.py
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+
+Tools/VerifyCheonbokAudioInUnreal.py
+checked_count=36
+missing_count=0
+UnrealEditor-Cmd: Success - 0 error(s), 0 warning(s)
+```
+
+주의:
+
+- Commandlet 검증은 파일, 포맷, 에셋 로딩 기준이다. 실제로 밝고 편안하게 들리는지는 PIE 또는 에디터 미리듣기에서 확인해야 한다.
+
+## 12. 추가 작업: BGM 재생 볼륨 상향
+
+배경음이 작게 들린다는 피드백에 따라 WAV 파일의 음압과 SFX/UI 효과음 밸런스는 유지하고, BGM 재생 계수만 상향했다. 메뉴와 인게임 배경음 모두 같은 계수를 사용하도록 맞췄다.
+
+변경:
+
+- `ACh03_GameModeBase::MusicVolumeMultiplier`: `0.34` -> `0.48`
+- `ACh03_MainMenuGameMode::MusicVolumeMultiplier`: `0.34` -> `0.48`
+
+검증:
+
+```text
+Build.bat CH03_Task05Editor Win64 Development -Project=CH03_Task05.uproject -WaitMutex -NoHotReload
+Result: Succeeded
+```
+
+주의:
+
+- 실제 체감 볼륨은 플레이어의 OS/에디터 출력 장치, Unreal 에디터 볼륨, PIE 환경에 따라 다르게 들릴 수 있으므로 최종 판단은 에디터 플레이에서 다시 확인해야 한다.

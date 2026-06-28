@@ -30,7 +30,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio|Music",
 		meta = (ClampMin = "0.0"))
-	float MusicVolumeMultiplier = 0.34f;
+	float MusicVolumeMultiplier = 0.48f;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCh03_MainMenuWidget> ActiveMainMenuWidget;
