@@ -61,3 +61,17 @@ Desktop.ini
 *.tmp
 *.bak
 *~
+
+# Packaged builds stay local; submit them separately as archives/releases
+/Windows/
+
+# Local production records and raw source audio are not required to open/play the project
+/Docs/
+/SourceAudio/
+
+# Local test/placeholder assets kept on disk but excluded from the submitted source repo
+/Content/Maps/L_TestMap.umap
+/Content/Blueprints/Hazards/BP_Hazard_RobotVacuum_Test.uasset
+/Content/Art/BG/Main/M_BG_Main_Placeholder.uasset
+/Content/Art/BG/Kitchen/M_BG_Kitchen_Placeholder.uasset
+/Content/Art/BG/CheonbokLand/M_BG_CheonbokLand_Placeholder.uasset
