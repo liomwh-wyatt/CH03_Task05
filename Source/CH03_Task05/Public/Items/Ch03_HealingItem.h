@@ -15,7 +15,7 @@ public:
 protected:
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Healing",
-		meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|체력 회복",
+		meta = (DisplayName = "체력 회복량", ClampMin = "0.0"))
 	float HealingAmount = 20.0f;
 };

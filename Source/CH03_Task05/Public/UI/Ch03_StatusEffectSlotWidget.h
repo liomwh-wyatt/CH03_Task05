@@ -18,7 +18,7 @@ class CH03_TASK05_API UCh03_StatusEffectSlotWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|HUD|Status Effect")
+	UFUNCTION(BlueprintCallable, Category = "천복|게임 화면|상태 효과")
 	void SetStatusEffect(
 		ECheonbokStatusEffect EffectType,
 		const FText& Label,
@@ -30,7 +30,7 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD|Status Effect")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면|상태 효과")
 	void OnStatusEffectUpdated(
 		ECheonbokStatusEffect EffectType,
 		const FText& Label,
@@ -55,16 +55,16 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> RemainingTimeBar;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Status Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|상태 효과", meta = (DisplayName = "아이콘 브러시"))
 	FSlateBrush IconBrush;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Status Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|상태 효과", meta = (DisplayName = "활성 색상"))
 	FLinearColor ActiveTint = FLinearColor::White;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Status Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|상태 효과", meta = (DisplayName = "비활성 색상"))
 	FLinearColor InactiveTint = FLinearColor(1.0f, 1.0f, 1.0f, 0.35f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Status Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|상태 효과", meta = (DisplayName = "비활성 시 접기"))
 	bool bCollapseWhenInactive = true;
 
 private:

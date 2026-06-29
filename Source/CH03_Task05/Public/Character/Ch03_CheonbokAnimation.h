@@ -22,34 +22,34 @@ protected:
 	void CacheCharacterReferences();
 	void ResetAnimationState();
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|References")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|참조")
 	TObjectPtr<ACh03_CheonbokCharacter> CheonbokCharacter;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|References")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|참조")
 	TObjectPtr<UCharacterMovementComponent> CharacterMovement;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	FVector Velocity = FVector::ZeroVector;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	FVector Acceleration = FVector::ZeroVector;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	float GroundSpeed = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	float VerticalSpeed = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	bool bShouldMove = false;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|Movement")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|이동")
 	bool bIsFalling = false;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "Cheonbok|State")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "천복|상태")
 	bool bIsDead = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Settings",
-		meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|설정",
+		meta = (DisplayName = "최소 이동 판정 속도", ClampMin = "0.0"))
 	float MinimumMoveSpeed = 3.0f;
 };

@@ -17,11 +17,11 @@ public:
 protected:
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Debuff",
-		meta = (ClampMin = "0.1", Units = "s"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|디버프",
+		meta = (DisplayName = "감속 지속시간", ClampMin = "0.1", Units = "s"))
 	float SlowDuration = 5.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Debuff",
-		meta = (ClampMin = "0.1", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|디버프",
+		meta = (DisplayName = "속도 배율", ClampMin = "0.1", ClampMax = "1.0"))
 	float SpeedMultiplier = 0.5f;
 };

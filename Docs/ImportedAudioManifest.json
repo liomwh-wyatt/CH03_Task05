@@ -185,6 +185,22 @@
       ]
     },
     {
+      "unreal_name": "S_JumpPad_Bounce",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_JumpPad_Bounce.wav",
+      "destination_path": "/Game/Audio/SFX/Environment",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Environment/S_JumpPad_Bounce.S_JumpPad_Bounce"
+      ]
+    },
+    {
+      "unreal_name": "S_Hazard_Deactivate",
+      "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_Hazard_Deactivate.wav",
+      "destination_path": "/Game/Audio/SFX/Environment",
+      "imported_object_paths": [
+        "/Game/Audio/SFX/Environment/S_Hazard_Deactivate.S_Hazard_Deactivate"
+      ]
+    },
+    {
       "unreal_name": "S_GameClear",
       "source_file": "C:\\Users\\liomw\\Desktop\\Unreal\\CH03_Task05\\SourceAudio\\Procedural\\S_GameClear.wav",
       "destination_path": "/Game/Audio/UI",

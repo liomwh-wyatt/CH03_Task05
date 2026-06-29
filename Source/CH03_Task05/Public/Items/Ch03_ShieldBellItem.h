@@ -15,7 +15,7 @@ public:
 protected:
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Shield",
-		meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|보호막",
+		meta = (DisplayName = "보호막 수", ClampMin = "1"))
 	int32 ShieldStackAmount = 1;
 };

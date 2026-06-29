@@ -15,7 +15,7 @@ class CH03_TASK05_API UCh03_StatusEffectPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|HUD|Status Effect")
+	UFUNCTION(BlueprintCallable, Category = "천복|게임 화면|상태 효과")
 	void UpdateStatusEffect(
 		ECheonbokStatusEffect EffectType,
 		const FText& Label,
@@ -24,7 +24,7 @@ public:
 		float RemainingTime,
 		float MaxDuration);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|HUD|Status Effect")
+	UFUNCTION(BlueprintCallable, Category = "천복|게임 화면|상태 효과")
 	void ClearStatusEffects();
 
 protected:

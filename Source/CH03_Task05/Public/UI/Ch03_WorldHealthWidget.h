@@ -13,7 +13,7 @@ class CH03_TASK05_API UCh03_WorldHealthWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|World Health")
+	UFUNCTION(BlueprintCallable, Category = "천복|월드 체력바")
 	void SetHealthValues(float CurrentHealth, float MaxHealth);
 
 protected:

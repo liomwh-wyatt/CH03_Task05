@@ -46,14 +46,14 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> QuitButton;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "버튼 호버 사운드"))
 	TObjectPtr<USoundBase> ButtonHoverSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "버튼 클릭 사운드"))
 	TObjectPtr<USoundBase> ButtonClickSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
-		meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드",
+		meta = (DisplayName = "화면 사운드 볼륨 배율", ClampMin = "0.0"))
 	float UISoundVolumeMultiplier = 0.9f;
 
 private:

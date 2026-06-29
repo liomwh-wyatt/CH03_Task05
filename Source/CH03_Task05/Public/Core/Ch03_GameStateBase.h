@@ -65,145 +65,145 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Score")
+	UFUNCTION(BlueprintPure, Category = "천복|점수")
 	int32 GetScore() const { return CurrentScore; }
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	UFUNCTION(BlueprintCallable, Category = "천복|점수")
 	void AddScore(int32 Amount);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	UFUNCTION(BlueprintCallable, Category = "천복|점수")
 	int32 AddComboScore(int32 BaseAmount, AActor* ScoringActor);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	UFUNCTION(BlueprintCallable, Category = "천복|점수")
 	void ResetScore();
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Score")
+	UFUNCTION(BlueprintCallable, Category = "천복|점수")
 	void SetScore(int32 NewScore);
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintPure, Category = "천복|웨이브")
 	int32 GetCurrentWave() const { return CurrentWave; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintPure, Category = "천복|웨이브")
 	int32 GetMaxWave() const { return MaxWave; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintPure, Category = "천복|웨이브")
 	int32 GetRemainingTime() const { return RemainingTime; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintPure, Category = "천복|웨이브")
 	int32 GetWaveDuration() const { return WaveDuration; }
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintCallable, Category = "천복|웨이브")
 	void SetWave(int32 NewCurrentWave, int32 NewMaxWave);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintCallable, Category = "천복|웨이브")
 	void SetRemainingTime(int32 NewRemainingTime);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Wave")
+	UFUNCTION(BlueprintCallable, Category = "천복|웨이브")
 	void SetWaveDuration(int32 NewWaveDuration);
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Game Flow")
+	UFUNCTION(BlueprintPure, Category = "천복|게임 진행")
 	FText GetAnnouncementText() const { return AnnouncementText; }
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Game Flow")
+	UFUNCTION(BlueprintCallable, Category = "천복|게임 진행")
 	void SetAnnouncementText(const FText& NewAnnouncement);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Game Flow")
+	UFUNCTION(BlueprintCallable, Category = "천복|게임 진행")
 	void ClearAnnouncementText();
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintCallable, Category = "천복|우다다 콤보")
 	void BreakCombo();
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintCallable, Category = "천복|우다다 콤보")
 	void BreakComboWithReason(ECh03ComboBreakReason BreakReason);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintCallable, Category = "천복|우다다 콤보")
 	void ResetComboStats();
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintPure, Category = "천복|우다다 콤보")
 	int32 GetComboCount() const { return CurrentComboCount; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintPure, Category = "천복|우다다 콤보")
 	int32 GetBestComboCount() const { return BestComboCount; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintPure, Category = "천복|우다다 콤보")
 	float GetComboTimeRemaining() const { return ComboTimeRemaining; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintPure, Category = "천복|우다다 콤보")
 	float GetComboWindowSeconds() const { return ComboWindowSeconds; }
 
-	UFUNCTION(BlueprintPure, Category = "Cheonbok|Combo")
+	UFUNCTION(BlueprintPure, Category = "천복|우다다 콤보")
 	float GetCurrentComboScoreMultiplier() const
 	{
 		return CurrentComboScoreMultiplier;
 	}
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokScoreChanged OnScoreChanged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokComboChanged OnComboChanged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokComboRewardTriggered OnComboRewardTriggered;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokGoldenItemRequested OnGoldenItemRequested;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokComboBroken OnComboBroken;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokWaveChanged OnWaveChanged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokRemainingTimeChanged OnRemainingTimeChanged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Cheonbok|Events")
+	UPROPERTY(BlueprintAssignable, Category = "천복|이벤트")
 	FOnCheonbokAnnouncementChanged OnAnnouncementChanged;
 
 protected:
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Score")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|점수")
 	int32 CurrentScore = 0;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
-		meta = (ClampMin = "0.1", Units = "s"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|우다다 콤보",
+		meta = (DisplayName = "콤보 유지 시간", ClampMin = "0.1", Units = "s"))
 	float ComboWindowSeconds = 5.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Combo",
-		meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|우다다 콤보",
+		meta = (DisplayName = "12콤보 황금 사료 확률", ClampMin = "0.0", ClampMax = "1.0"))
 	float Combo12GoldenItemChance = 1.0f;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|우다다 콤보")
 	int32 CurrentComboCount = 0;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|우다다 콤보")
 	int32 BestComboCount = 0;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|우다다 콤보")
 	float ComboTimeRemaining = 0.0f;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Combo")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|우다다 콤보")
 	float CurrentComboScoreMultiplier = 1.0f;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|웨이브")
 	int32 CurrentWave = 0;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|웨이브")
 	int32 MaxWave = 3;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|웨이브")
 	int32 RemainingTime = 0;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Wave")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|웨이브")
 	int32 WaveDuration = 0;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Cheonbok|Game Flow")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "천복|게임 진행")
 	FText AnnouncementText;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "콤보 보상 사운드"))
 	TObjectPtr<USoundBase> ComboRewardSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "콤보 끊김 사운드"))
 	TObjectPtr<USoundBase> ComboBreakSound;
 
 private:

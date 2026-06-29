@@ -1,5 +1,5 @@
 {
-  "checked_count": 36,
+  "checked_count": 38,
   "missing_count": 0,
   "missing": [],
   "items": [
@@ -161,6 +161,20 @@
       "unreal_name": "S_HazardWarning",
       "loaded_object_paths": [
         "/Game/Audio/SFX/Environment/S_HazardWarning.S_HazardWarning"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_JumpPad_Bounce",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Environment/S_JumpPad_Bounce.S_JumpPad_Bounce"
+      ],
+      "loaded_count": 1
+    },
+    {
+      "unreal_name": "S_Hazard_Deactivate",
+      "loaded_object_paths": [
+        "/Game/Audio/SFX/Environment/S_Hazard_Deactivate.S_Hazard_Deactivate"
       ],
       "loaded_count": 1
     },

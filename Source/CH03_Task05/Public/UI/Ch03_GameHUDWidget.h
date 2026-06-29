@@ -73,55 +73,55 @@ protected:
 		int32 StackCount,
 		float RemainingTime);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnScoreUpdated(int32 NewScore);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnHealthUpdated(
 		float CurrentHealth,
 		float MaxHealth,
 		float HealthPercent);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnStaminaUpdated(
 		float CurrentStamina,
 		float MaxStamina,
 		float StaminaPercent);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnWaveUpdated(int32 CurrentWave, int32 MaxWave);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnRemainingTimeUpdated(int32 NewRemainingTime);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnAnnouncementUpdated(const FText& NewAnnouncement, bool bIsVisible);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnComboUpdated(
 		int32 ComboCount,
 		float ComboTimeRemaining,
 		float ScoreMultiplier,
 		bool bIsVisible);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnComboRewardUpdated(
 		int32 ComboCount,
 		const FText& RewardText);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnComboBroken(
 		int32 PreviousComboCount,
 		ECh03ComboBreakReason BreakReason);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnStatusEffectUpdated(
 		ECheonbokStatusEffect EffectType,
 		bool bIsActive,
 		int32 StackCount,
 		float RemainingTime);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|HUD")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|게임 화면")
 	void OnPortraitRenderTargetUpdated(UTextureRenderTarget2D* RenderTarget);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -175,12 +175,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UCh03_StatusEffectPanelWidget> StatusEffectPanel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
-		meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|초상화",
+		meta = (DisplayName = "초상화 텍스처 파라미터 이름", AllowPrivateAccess = "true"))
 	FName PortraitTextureParameterName = TEXT("PortraitTexture");
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cheonbok|HUD|Portrait",
-		meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "천복|게임 화면|초상화",
+		meta = (DisplayName = "초상화 브러시 머티리얼", AllowPrivateAccess = "true"))
 	TObjectPtr<UMaterialInterface> PortraitBrushMaterial;
 
 private:

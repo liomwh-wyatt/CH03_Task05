@@ -15,7 +15,7 @@ public:
 protected:
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Debuff",
-		meta = (ClampMin = "0.1", Units = "s"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|디버프",
+		meta = (DisplayName = "이동 잠금 지속시간", ClampMin = "0.1", Units = "s"))
 	float MovementLockDuration = 1.0f;
 };

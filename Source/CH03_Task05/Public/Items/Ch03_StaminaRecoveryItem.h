@@ -15,7 +15,7 @@ public:
 protected:
 	virtual void ActivateItem_Implementation(AActor* Activator) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Stamina",
-		meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "아이템|스태미나",
+		meta = (DisplayName = "스태미나 회복량", ClampMin = "0.0"))
 	float StaminaRecoveryAmount = 35.0f;
 };

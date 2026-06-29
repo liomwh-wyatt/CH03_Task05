@@ -19,7 +19,7 @@ class CH03_TASK05_API UCh03_GameResultWidget : public UUserWidget
 public:
 	UCh03_GameResultWidget(const FObjectInitializer& ObjectInitializer);
 
-	UFUNCTION(BlueprintCallable, Category = "Cheonbok|Result")
+	UFUNCTION(BlueprintCallable, Category = "천복|결과")
 	void InitializeResult(
 		bool bWasVictory,
 		int32 FinalScore,
@@ -48,18 +48,18 @@ protected:
 	UFUNCTION()
 	void HandleButtonHovered();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|결과")
 	void OnResultInitialized(
 		bool bWasVictory,
 		int32 FinalScore,
 		bool bCanContinue);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|결과")
 	void OnHighScoreEvaluated(
 		int32 HighestScore,
 		bool bIsNewHighScore);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Cheonbok|Result")
+	UFUNCTION(BlueprintImplementableEvent, Category = "천복|결과")
 	void OnBestComboEvaluated(int32 BestComboCount);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
@@ -89,17 +89,17 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<UButton> QuitButton;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Result")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|결과", meta = (DisplayName = "메인 메뉴 레벨 이름"))
 	FName MainMenuLevelName = TEXT("L_MainMenu");
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "버튼 호버 사운드"))
 	TObjectPtr<USoundBase> ButtonHoverSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드", meta = (DisplayName = "버튼 클릭 사운드"))
 	TObjectPtr<USoundBase> ButtonClickSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cheonbok|Audio",
-		meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "천복|사운드",
+		meta = (DisplayName = "화면 사운드 볼륨 배율", ClampMin = "0.0"))
 	float UISoundVolumeMultiplier = 0.9f;
 
 private:
