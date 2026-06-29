@@ -70,6 +70,12 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		TEXT("/Game/Blueprints/Items/BP_Item_Slowing"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ReverseControlClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_ReverseControl"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> StaminaRecoveryClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_StaminaRecovery"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> ShieldBellClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_ShieldBell"));
+	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> TangledYarnClass(
+		TEXT("/Game/Blueprints/Items/BP_Item_TangledYarn"));
 	static ConstructorHelpers::FClassFinder<ACh03_BaseItem> GoldenFeedClass(
 		TEXT("/Game/Blueprints/Items/BP_Item_GoldenFeed"));
 	static ConstructorHelpers::FClassFinder<UCh03_GameResultWidget> ResultWidgetClass(
@@ -141,23 +147,29 @@ ACh03_GameModeBase::ACh03_GameModeBase()
 		CheonbokLandMusic = CheonbokLandMusicFinder.Object;
 	}
 
-	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 60.0f);
-	AddSpawnEntry(WaveConfigs[0], LargeFeedClass.Class, 20.0f);
-	AddSpawnEntry(WaveConfigs[0], HeartTreatClass.Class, 15.0f);
+	AddSpawnEntry(WaveConfigs[0], SmallFeedClass.Class, 55.0f);
+	AddSpawnEntry(WaveConfigs[0], LargeFeedClass.Class, 18.0f);
+	AddSpawnEntry(WaveConfigs[0], StaminaRecoveryClass.Class, 12.0f);
+	AddSpawnEntry(WaveConfigs[0], HeartTreatClass.Class, 10.0f);
 	AddSpawnEntry(WaveConfigs[0], ToyBombClass.Class, 5.0f);
 
-	AddSpawnEntry(WaveConfigs[1], SmallFeedClass.Class, 50.0f);
-	AddSpawnEntry(WaveConfigs[1], LargeFeedClass.Class, 20.0f);
-	AddSpawnEntry(WaveConfigs[1], HeartTreatClass.Class, 15.0f);
-	AddSpawnEntry(WaveConfigs[1], ToyBombClass.Class, 15.0f);
-	AddSpawnEntry(WaveConfigs[1], SlowingClass.Class, 8.0f);
+	AddSpawnEntry(WaveConfigs[1], SmallFeedClass.Class, 43.0f);
+	AddSpawnEntry(WaveConfigs[1], LargeFeedClass.Class, 18.0f);
+	AddSpawnEntry(WaveConfigs[1], StaminaRecoveryClass.Class, 12.0f);
+	AddSpawnEntry(WaveConfigs[1], HeartTreatClass.Class, 8.0f);
+	AddSpawnEntry(WaveConfigs[1], ShieldBellClass.Class, 5.0f);
+	AddSpawnEntry(WaveConfigs[1], ToyBombClass.Class, 10.0f);
+	AddSpawnEntry(WaveConfigs[1], SlowingClass.Class, 4.0f);
 
-	AddSpawnEntry(WaveConfigs[2], SmallFeedClass.Class, 40.0f);
-	AddSpawnEntry(WaveConfigs[2], LargeFeedClass.Class, 20.0f);
-	AddSpawnEntry(WaveConfigs[2], HeartTreatClass.Class, 15.0f);
-	AddSpawnEntry(WaveConfigs[2], ToyBombClass.Class, 25.0f);
-	AddSpawnEntry(WaveConfigs[2], SlowingClass.Class, 12.0f);
-	AddSpawnEntry(WaveConfigs[2], ReverseControlClass.Class, 10.0f);
+	AddSpawnEntry(WaveConfigs[2], SmallFeedClass.Class, 34.0f);
+	AddSpawnEntry(WaveConfigs[2], LargeFeedClass.Class, 16.0f);
+	AddSpawnEntry(WaveConfigs[2], StaminaRecoveryClass.Class, 10.0f);
+	AddSpawnEntry(WaveConfigs[2], HeartTreatClass.Class, 7.0f);
+	AddSpawnEntry(WaveConfigs[2], ShieldBellClass.Class, 5.0f);
+	AddSpawnEntry(WaveConfigs[2], ToyBombClass.Class, 14.0f);
+	AddSpawnEntry(WaveConfigs[2], SlowingClass.Class, 6.0f);
+	AddSpawnEntry(WaveConfigs[2], ReverseControlClass.Class, 4.0f);
+	AddSpawnEntry(WaveConfigs[2], TangledYarnClass.Class, 4.0f);
 }
 
 void ACh03_GameModeBase::BeginPlay()

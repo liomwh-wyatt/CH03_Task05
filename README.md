@@ -36,7 +36,7 @@
 - [x] 일시정지 메뉴
 - [x] 슬로우 및 조작 반전 디버프 수직 슬라이스
 - [x] 웨이브별 환경 변화 Actor 연동 구조
-- [x] GameMode 레벨 플로우 프리셋 기반 웨이브·장애물 일괄 관리 구조
+- [x] GameMode 기본 WaveConfigs와 레벨 플로우 프리셋 기반 웨이브·장애물 일괄 관리 구조
 - [x] 이동식/회전식 장애물 C++ 부모 기능
 - [ ] 웨이브별 장애물/비주얼 폴리싱
 - [x] 웨이브 배너 UI 애니메이션
@@ -48,6 +48,8 @@
 - [x] 점수 획득, 회복, 디버프, 폭탄 폭발, 스프린트 Niagara 수직 슬라이스
 - [x] 절차적 생성 사운드 36종 임포트 및 주요 게임 흐름·아이템·UI 연결
 - [x] 메인 메뉴와 플레이 레벨별 BGM 기본 연결
+- [x] 웨이브 스폰 아이템 재구성: 스태미나 회복 1웨이브, 보호 방울 2웨이브, 엉킨 털실 3웨이브 투입
+- [x] `L_LivingRoom` 배치 메시의 Source 참조 제거 및 `Content/Art/BG/LivingRoom/BySource` 정리
 - [ ] 최종 맵 아트와 SpawnVolume 배치 폴리싱
 - [ ] 실시간 천복이 얼굴 초상화 RenderTarget 슬롯
 - [ ] 최종 테스트 및 시연 영상
@@ -76,7 +78,7 @@
 - 우다다 콤보 보상, 최고 콤보 결과 표시, 황금 날개 사료 확정 스폰
 - `WidgetComponent` 기반 천복이 머리 위 3D 체력바
 - TimerBar는 웨이브 종료 시각을 기준으로 매 프레임 연속 감소
-- `BP_Ch03_GameModeBase.LevelFlowPresets` 기반 레벨별 웨이브 구성과 장애물 규칙 일괄 관리
+- `ACh03_GameModeBase.WaveConfigs` 기반 기본 웨이브 구성과 `BP_Ch03_GameModeBase.LevelFlowPresets` 기반 레벨별 override 구조
 - `ACh03_WaveEnvironmentActor` 기반 웨이브별 장애물 활성/비활성, 지정 경로 이동, 진행 방향 회전 보간, 움직이는 부분 회전, 별도 안내 배너 구조
 - 회전 장애물은 `StationaryMesh`를 고정부로, `VisualMesh`와 `HazardVolume`을 `MovingRoot` 하위 회전부로 분리
 - `ACh03_CutsceneDirector` 기반 컷신 재생, 입력 잠금, HUD 숨김, Esc/P 스킵 구조
